@@ -26,7 +26,10 @@ export type DictionaryEntry = {
   id: string
   termZh: string
   termEn: string
+  /** 卡片上的说明 */
   description: string
+  /** 提示词中的口语化效果描述 */
+  effectFeel: string
   category: string
   preview: PreviewKind
   controls: ControlId[]

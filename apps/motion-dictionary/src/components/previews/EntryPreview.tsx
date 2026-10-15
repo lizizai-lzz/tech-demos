@@ -4,6 +4,7 @@ import {
   useScroll,
   useTransform,
 } from 'motion/react'
+import type React from 'react'
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { easingOnly, tweenTransition } from '@/lib/transitions'
@@ -14,34 +15,39 @@ type EntryPreviewProps = {
   kind: PreviewKind
   params: MotionParams
   replayKey: number
+  compact?: boolean
 }
 
-export function EntryPreview({ kind, params, replayKey }: EntryPreviewProps) {
+export function EntryPreview({ kind, params, replayKey, compact }: EntryPreviewProps) {
+  const wrap = (node: React.ReactNode) => (
+    <div className={compact ? 'scale-[0.82] origin-center' : undefined}>{node}</div>
+  )
+
   switch (kind) {
     case 'fade-in':
-      return <FadeInPreview params={params} replayKey={replayKey} />
+      return wrap(<FadeInPreview params={params} replayKey={replayKey} />)
     case 'easing':
-      return <EasingPreview params={params} replayKey={replayKey} />
+      return wrap(<EasingPreview params={params} replayKey={replayKey} />)
     case 'spring':
-      return <SpringPreview params={params} replayKey={replayKey} />
+      return wrap(<SpringPreview params={params} replayKey={replayKey} />)
     case 'scale':
-      return <ScalePreview params={params} replayKey={replayKey} />
+      return wrap(<ScalePreview params={params} replayKey={replayKey} />)
     case 'slide-in':
-      return <SlideInPreview params={params} replayKey={replayKey} />
+      return wrap(<SlideInPreview params={params} replayKey={replayKey} />)
     case 'stagger':
-      return <StaggerPreview params={params} replayKey={replayKey} />
+      return wrap(<StaggerPreview params={params} replayKey={replayKey} />)
     case 'parallax':
-      return <ParallaxPreview params={params} replayKey={replayKey} />
+      return wrap(<ParallaxPreview params={params} replayKey={replayKey} />)
     case 'scroll-triggered':
-      return <ScrollTriggeredPreview params={params} replayKey={replayKey} />
+      return wrap(<ScrollTriggeredPreview params={params} replayKey={replayKey} />)
     case 'hover':
-      return <HoverPreview params={params} />
+      return wrap(<HoverPreview params={params} />)
     case 'micro-interaction':
-      return <MicroInteractionPreview params={params} />
+      return wrap(<MicroInteractionPreview params={params} />)
     case 'skeleton':
-      return <SkeletonPreview params={params} replayKey={replayKey} />
+      return wrap(<SkeletonPreview params={params} replayKey={replayKey} />)
     case 'page-transition':
-      return <PageTransitionPreview params={params} />
+      return wrap(<PageTransitionPreview params={params} />)
     default:
       return null
   }

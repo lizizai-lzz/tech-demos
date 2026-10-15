@@ -122,6 +122,7 @@ export default function App() {
                     entry={entry}
                     params={paramsById[entry.id]}
                     reduceMotion={reduceMotion}
+                    gallerySuspended={selectedId !== null}
                     onOpen={() => setSelectedId(entry.id)}
                   />
                 ))}

@@ -20,6 +20,8 @@ type PreviewStageProps = {
   size?: 'sm' | 'lg'
   layoutId?: string
   galleryMode?: boolean
+  /** 详情打开时暂停画廊悬停循环 */
+  gallerySuspended?: boolean
   reduceMotion?: boolean
   showReplay?: boolean
   onManualReplay?: () => void
@@ -33,6 +35,7 @@ export function PreviewStage({
   size = 'lg',
   layoutId,
   galleryMode = false,
+  gallerySuspended = false,
   reduceMotion = false,
   showReplay = true,
   onManualReplay,
@@ -46,7 +49,7 @@ export function PreviewStage({
 
   // 画廊：悬停时完整播放 → 停留 → 再播；触屏仅进入视口播一次
   useEffect(() => {
-    if (!galleryMode || reduceMotion) return
+    if (!galleryMode || reduceMotion || gallerySuspended) return
 
     if (!canHover) {
       if (inView && !wasInView.current) {
@@ -75,7 +78,7 @@ export function PreviewStage({
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [galleryMode, reduceMotion, canHover, hovered, inView, kind, params])
+  }, [galleryMode, gallerySuspended, reduceMotion, canHover, hovered, inView, kind, params])
 
   const effectiveReplayKey = galleryMode ? galleryPlayKey : replayKey
 

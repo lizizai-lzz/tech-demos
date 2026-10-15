@@ -67,7 +67,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'stagger',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 600, delay: 140, easing: 'easeInOut' },
+    defaultParams: { duration: 750, delay: 180, easing: 'easeInOut' },
   },
   {
     id: 'parallax',

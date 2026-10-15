@@ -130,16 +130,24 @@ function SlideInPreview({ params, replayKey }: { params: MotionParams; replayKey
 
 function StaggerPreview({ params, replayKey }: { params: MotionParams; replayKey: number }) {
   const items = [0, 1, 2, 3, 4]
+  const staggerMs = params.delay > 0 ? params.delay : 120
+  const childTween = tweenTransition({
+    ...params,
+    delay: 0,
+    easing: params.easing === 'linear' ? 'easeInOut' : params.easing,
+  })
+
   return (
     <motion.ul
       key={replayKey}
-      className="flex gap-2"
+      className="flex gap-2.5"
       initial="hidden"
       animate="visible"
       variants={{
         visible: {
           transition: {
-            staggerChildren: seconds(params.delay > 0 ? params.delay : 80),
+            staggerChildren: seconds(staggerMs),
+            delayChildren: 0.05,
           },
         },
       }}
@@ -149,11 +157,12 @@ function StaggerPreview({ params, replayKey }: { params: MotionParams; replayKey
           key={i}
           className="size-8 rounded-md bg-primary"
           variants={{
-            hidden: { opacity: 0, y: 12 },
+            hidden: { opacity: 0, y: 6, scale: 0.94 },
             visible: {
               opacity: 1,
               y: 0,
-              transition: tweenTransition({ ...params, delay: 0 }),
+              scale: 1,
+              transition: childTween,
             },
           }}
         />

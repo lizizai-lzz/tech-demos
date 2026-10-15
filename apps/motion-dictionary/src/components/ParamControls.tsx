@@ -14,6 +14,7 @@ type ParamControlsProps = {
   controls: ControlId[]
   params: MotionParams
   onChange: (next: MotionParams) => void
+  layout?: 'compact' | 'comfortable'
 }
 
 function SliderRow({
@@ -56,11 +57,22 @@ function SliderRow({
   )
 }
 
-export function ParamControls({ controls, params, onChange }: ParamControlsProps) {
+export function ParamControls({
+  controls,
+  params,
+  onChange,
+  layout = 'compact',
+}: ParamControlsProps) {
   const patch = (partial: Partial<MotionParams>) => onChange({ ...params, ...partial })
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div
+      className={
+        layout === 'comfortable'
+          ? 'flex flex-col gap-7'
+          : 'grid gap-4 sm:grid-cols-2'
+      }
+    >
       {controls.includes('duration') && (
         <SliderRow
           label="时长 duration"

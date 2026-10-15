@@ -7,10 +7,17 @@ type GalleryCardProps = {
   entry: DictionaryEntry
   params: MotionParams
   reduceMotion: boolean
+  gallerySuspended: boolean
   onOpen: () => void
 }
 
-export function GalleryCard({ entry, params, reduceMotion, onOpen }: GalleryCardProps) {
+export function GalleryCard({
+  entry,
+  params,
+  reduceMotion,
+  gallerySuspended,
+  onOpen,
+}: GalleryCardProps) {
   return (
     <motion.li
       layout
@@ -44,6 +51,7 @@ export function GalleryCard({ entry, params, reduceMotion, onOpen }: GalleryCard
           replayKey={0}
           size="sm"
           galleryMode
+          gallerySuspended={gallerySuspended}
           reduceMotion={reduceMotion}
           showReplay={false}
         />

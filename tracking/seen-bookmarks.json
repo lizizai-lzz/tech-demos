@@ -1,1 +1,13 @@
-{"proposed": [], "approved": [], "skipped": []}
+{
+  "proposed": [],
+  "approved": [
+    {
+      "id": "2099485951701721585",
+      "title": "Vibe Coding 网页动效词典（上篇）：教你准确描述页面怎么动",
+      "url": "https://x.com/AdrianPunk115/status/2099485951701721585",
+      "date": "2026-10-15",
+      "slug": "motion-dictionary"
+    }
+  ],
+  "skipped": []
+}

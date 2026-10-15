@@ -11,8 +11,6 @@ type GalleryCardProps = {
 }
 
 export function GalleryCard({ entry, params, reduceMotion, onOpen }: GalleryCardProps) {
-  const layoutId = `preview-${entry.id}`
-
   return (
     <motion.li
       layout
@@ -45,7 +43,6 @@ export function GalleryCard({ entry, params, reduceMotion, onOpen }: GalleryCard
           params={params}
           replayKey={0}
           size="sm"
-          layoutId={layoutId}
           galleryMode
           reduceMotion={reduceMotion}
           showReplay={false}

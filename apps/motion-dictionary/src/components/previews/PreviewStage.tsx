@@ -2,6 +2,12 @@ import { RotateCcw } from 'lucide-react'
 import { motion, useInView } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useCanHover } from '@/hooks/use-can-hover'
+import {
+  estimatePreviewDurationMs,
+  GALLERY_HOLD_AFTER_MS,
+  GALLERY_MIN_GAP_MS,
+} from '@/lib/preview-duration'
 import { cn } from '@/lib/utils'
 import type { MotionParams, PreviewKind } from '@/types'
 import { EntryPreview } from './EntryPreview'
@@ -13,7 +19,6 @@ type PreviewStageProps = {
   replayKey: number
   size?: 'sm' | 'lg'
   layoutId?: string
-  /** 画廊卡片：悬停循环 / 进入视口播放 */
   galleryMode?: boolean
   reduceMotion?: boolean
   showReplay?: boolean
@@ -33,28 +38,54 @@ export function PreviewStage({
   onManualReplay,
 }: PreviewStageProps) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const inView = useInView(rootRef, { amount: 0.45, once: false })
+  const inView = useInView(rootRef, { amount: 0.5, margin: '-10% 0px' })
+  const wasInView = useRef(false)
+  const canHover = useCanHover()
   const [hovered, setHovered] = useState(false)
-  const [loopKey, setLoopKey] = useState(0)
+  const [galleryPlayKey, setGalleryPlayKey] = useState(0)
 
-  const shouldAnimate =
-    !reduceMotion && (galleryMode ? hovered || inView : true)
-
+  // 画廊：悬停时完整播放 → 停留 → 再播；触屏仅进入视口播一次
   useEffect(() => {
-    if (!galleryMode || reduceMotion || !hovered) return
-    const interval = window.setInterval(
-      () => setLoopKey((k) => k + 1),
-      Math.max(params.duration + 400, 900),
-    )
-    return () => window.clearInterval(interval)
-  }, [galleryMode, hovered, reduceMotion, params.duration])
+    if (!galleryMode || reduceMotion) return
 
-  const effectiveReplayKey = galleryMode ? replayKey + loopKey + (inView ? 1 : 0) : replayKey
+    if (!canHover) {
+      if (inView && !wasInView.current) {
+        setGalleryPlayKey((k) => k + 1)
+      }
+      wasInView.current = inView
+      return
+    }
 
-  const heightClass = size === 'sm' ? 'h-[7.5rem]' : 'h-[14rem] md:h-[16rem]'
+    if (!hovered) return
+
+    let cancelled = false
+    let timeoutId = 0
+
+    const scheduleNext = () => {
+      if (cancelled || !hovered) return
+      setGalleryPlayKey((k) => k + 1)
+      const animMs = estimatePreviewDurationMs(kind, params)
+      const wait = Math.max(animMs + GALLERY_HOLD_AFTER_MS, GALLERY_MIN_GAP_MS)
+      timeoutId = window.setTimeout(scheduleNext, wait)
+    }
+
+    scheduleNext()
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [galleryMode, reduceMotion, canHover, hovered, inView, kind, params])
+
+  const effectiveReplayKey = galleryMode ? galleryPlayKey : replayKey
+
+  const heightClass =
+    size === 'sm' ? 'h-[7.5rem]' : 'h-[15rem] sm:h-[17.5rem]'
+
+  const idleGallery = galleryMode && !reduceMotion && canHover && !hovered
 
   return (
-    <div className="space-y-2">
+    <div className={cn('space-y-3', size === 'lg' && 'space-y-4')}>
       {showReplay && (
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">实时预览</span>
@@ -71,15 +102,15 @@ export function PreviewStage({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className={cn(
-          'preview-stage relative flex items-center justify-center overflow-hidden rounded-xl border border-border/80 p-3',
+          'preview-stage relative flex items-center justify-center overflow-hidden rounded-xl border border-border/60 p-4',
           heightClass,
           galleryMode && 'cursor-pointer',
         )}
       >
         <div
           className={cn(
-            'flex size-full items-center justify-center transition-opacity duration-300',
-            galleryMode && !shouldAnimate && 'opacity-70',
+            'flex size-full items-center justify-center transition-opacity duration-500',
+            idleGallery && 'opacity-80',
           )}
         >
           <EntryPreview

@@ -1,4 +1,4 @@
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -67,7 +67,6 @@ export default function App() {
   }, [closeDetail])
 
   return (
-    <LayoutGroup>
       <div className="min-h-svh bg-background">
         <header className="border-b border-border/60 bg-card/40">
           <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-end sm:justify-between">
@@ -146,6 +145,5 @@ export default function App() {
           reduceMotion={reduceMotion}
         />
       </div>
-    </LayoutGroup>
   )
 }

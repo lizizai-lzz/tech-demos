@@ -93,6 +93,7 @@ function SpringPreview({ params, replayKey }: { params: MotionParams; replayKey:
         type: 'spring',
         stiffness: params.stiffness,
         damping: params.damping,
+        mass: 1.05,
         delay: seconds(params.delay),
       }}
     />

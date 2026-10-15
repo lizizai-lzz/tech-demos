@@ -12,7 +12,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'fade-in',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 700, easing: 'easeOut' },
+    defaultParams: { duration: 950, easing: 'easeInOut' },
   },
   {
     id: 'easing',
@@ -23,7 +23,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'easing',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 1200, easing: 'easeInOut' },
+    defaultParams: { duration: 1600, easing: 'easeInOut' },
   },
   {
     id: 'spring',
@@ -34,7 +34,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'spring',
     controls: ['stiffness', 'damping', 'delay'],
-    defaultParams: { stiffness: 320, damping: 14 },
+    defaultParams: { stiffness: 200, damping: 24 },
   },
   {
     id: 'scale',
@@ -45,7 +45,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'scale',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 500, easing: 'backOut' },
+    defaultParams: { duration: 750, easing: 'easeOut' },
   },
   {
     id: 'slide-in',
@@ -56,7 +56,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'slide-in',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 650, easing: 'circOut' },
+    defaultParams: { duration: 850, easing: 'easeOut' },
   },
   {
     id: 'stagger',
@@ -67,7 +67,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '基础',
     preview: 'stagger',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 400, delay: 80, easing: 'easeOut' },
+    defaultParams: { duration: 600, delay: 140, easing: 'easeInOut' },
   },
   {
     id: 'parallax',
@@ -89,7 +89,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '滚动',
     preview: 'scroll-triggered',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 550, easing: 'easeOut' },
+    defaultParams: { duration: 780, easing: 'easeOut' },
   },
   {
     id: 'hover',
@@ -100,7 +100,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '交互',
     preview: 'hover',
     controls: ['duration', 'easing'],
-    defaultParams: { duration: 200, easing: 'easeOut' },
+    defaultParams: { duration: 320, easing: 'easeOut' },
   },
   {
     id: 'micro-interaction',
@@ -111,7 +111,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '交互',
     preview: 'micro-interaction',
     controls: ['duration', 'stiffness', 'damping'],
-    defaultParams: { duration: 150, stiffness: 500, damping: 25 },
+    defaultParams: { duration: 200, stiffness: 380, damping: 30 },
   },
   {
     id: 'skeleton',
@@ -122,7 +122,7 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '交互',
     preview: 'skeleton',
     controls: ['duration', 'easing'],
-    defaultParams: { duration: 1400, easing: 'easeInOut' },
+    defaultParams: { duration: 2000, easing: 'easeInOut' },
   },
   {
     id: 'page-transition',
@@ -133,6 +133,6 @@ export const dictionaryEntries: DictionaryEntry[] = [
     category: '布局',
     preview: 'page-transition',
     controls: ['duration', 'easing', 'delay'],
-    defaultParams: { duration: 450, easing: 'easeInOut' },
+    defaultParams: { duration: 600, easing: 'easeInOut' },
   },
 ]

@@ -1,11 +1,11 @@
 import type { MotionParams } from '@/types'
 
 export const DEFAULT_MOTION_PARAMS: MotionParams = {
-  duration: 600,
+  duration: 800,
   delay: 0,
-  easing: 'easeOut',
-  stiffness: 280,
-  damping: 18,
+  easing: 'easeInOut',
+  stiffness: 200,
+  damping: 24,
 }
 
 export const EASING_OPTIONS: { value: string; label: string }[] = [

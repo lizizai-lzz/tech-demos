@@ -11,32 +11,43 @@ function ringToShape(ring: [number, number][]) {
   return shape
 }
 
+const waterMat = new THREE.MeshStandardMaterial({
+  color: '#1490d0',
+  roughness: 0.18,
+  metalness: 0.08,
+  emissive: '#1d6f9c',
+  emissiveIntensity: 0.12,
+})
+
 export function Water({ data }: { data: CityData }) {
   const meshes = useMemo(() => {
     return data.water.map((w) => {
-      const shape = ringToShape(w.ring)
-      const geo = new THREE.ShapeGeometry(shape)
+      const geo = new THREE.ShapeGeometry(ringToShape(w.ring))
       geo.rotateX(-Math.PI / 2)
       return geo
     })
   }, [data.water])
 
-  if (meshes.length === 0) return null
+  const river = useMemo(() => {
+    if (data.id !== 'shanghai-lujiazui') return null
+    const shape = new THREE.Shape()
+    shape.moveTo(-1900, -2200)
+    shape.lineTo(-280, -2000)
+    shape.lineTo(-120, 2400)
+    shape.lineTo(-1750, 2600)
+    shape.closePath()
+    const geo = new THREE.ShapeGeometry(shape)
+    geo.rotateX(-Math.PI / 2)
+    return geo
+  }, [data])
 
   return (
     <group>
+      {river && (
+        <mesh geometry={river} position={[0, 8, 0]} receiveShadow material={waterMat} />
+      )}
       {meshes.map((geo, i) => (
-        <mesh key={data.water[i].id} geometry={geo} position={[0, 0.55, 0]} receiveShadow>
-          <meshStandardMaterial
-            color="#7ec8e8"
-            emissive="#4aa8d0"
-            emissiveIntensity={0.08}
-            roughness={0.18}
-            metalness={0.22}
-            transparent
-            opacity={0.88}
-          />
-        </mesh>
+        <mesh key={data.water[i].id} geometry={geo} position={[0, 6, 0]} receiveShadow material={waterMat} />
       ))}
     </group>
   )

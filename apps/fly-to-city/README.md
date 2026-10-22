@@ -25,7 +25,16 @@ bun run bake:all
 ## 操作
 
 - 左侧面板：搜索 / 地标 / 画幅 / 录制。
-- **录制模式**：隐藏全部 UI，自动播放上海 → 东京（飞入 → 环绕 → 定格）。可加 `?autorecord=1` 便于录屏。
+- **录制模式**：隐藏全部 UI。
+- **离线成片**（推荐，避免实时录屏抖动）：
+
+```bash
+bun run dev
+bun run render -- 16:9
+bun run render -- 9:16
+```
+
+`?render=1&fps=30&duration=42` 用固定时间轴逐帧截 `#stage`，再由 ffmpeg 合成。画面只有应用画布。
 
 ## 数据致谢
 

@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "bake": "bun run scripts/bake.ts",
-    "bake:all": "bun run scripts/bake.ts --all"
+    "bake:all": "bun run scripts/bake.ts --all",
+    "render": "bun run scripts/render-video.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -39,6 +40,7 @@
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.88.0",
+    "puppeteer-core": "^24.15.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "pngjs": "^7.0.0",

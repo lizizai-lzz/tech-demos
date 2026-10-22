@@ -1,7 +1,9 @@
 # Fly to City — 全屏白模城市飞行 demo
 
 ## Goal
-从地球飞到地标，无缝切入**铺满全屏**的白模城市（无沙盘边缘、无剖切），适合录短视频。
+从地球飞到地标，无缝切入**铺满全屏**的白模城市（无沙盘边缘、无剖切），低机位电影感环绕，适合录短视频。
+
+离线成片：`bun run dev` 后执行 `bun run render -- 16:9` 与 `bun run render -- 9:16`（`?render=1` 固定时钟 + 逐帧截图 + ffmpeg）。
 
 ## MVP（in）
 1. MapLibre GL v5 地球 + OpenFreeMap；Photon 搜索 + 8 地标卡片 → 弧线飞入。

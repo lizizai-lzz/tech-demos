@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { toast } from 'sonner'
 import { ControlPanel } from '@/components/ControlPanel'
 import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
-import { CityScene, type CitySceneControls } from '@/components/diorama/DioramaScene'
+import { CityScene } from '@/components/diorama/DioramaScene'
+import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
+import { globePose, landmarkById, shotAt } from '@/lib/render-timeline'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
 import { loadCityForCoords } from '@/lib/load-city'
@@ -44,15 +47,14 @@ export default function App() {
   const [recStage, setRecStage] = useState<RecordingStage>('idle')
   const [autoOrbit, setAutoOrbit] = useState(false)
   const [recordLeg, setRecordLeg] = useState(0)
+  const [driven, setDriven] = useState(false)
+  const [orbit, setOrbit] = useState(0.2)
+  const [push, setPush] = useState(0)
   const viewportRef = useRef<HTMLDivElement>(null)
-
-  const sceneControls: CitySceneControls = useMemo(
-    () => ({
-      autoOrbit,
-      orbitSpeed: recording ? 0.14 : 0.12,
-    }),
-    [autoOrbit, recording],
-  )
+  const renderMode = new URLSearchParams(window.location.search).get('render') === '1'
+  const renderFps = Number(new URLSearchParams(window.location.search).get('fps') ?? 30)
+  const renderDuration = Number(new URLSearchParams(window.location.search).get('duration') ?? 42)
+  const citiesRef = useRef<Record<string, CityData>>({})
 
   const startJourney = useCallback(
     async (
@@ -207,8 +209,70 @@ export default function App() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    if (p.get('autorecord') === '1' && !recording) beginRecording()
-  }, [beginRecording, recording])
+    if (p.get('autorecord') === '1' && !recording && !renderMode) beginRecording()
+  }, [beginRecording, recording, renderMode])
+
+  useEffect(() => {
+    if (!renderMode) return
+    document.body.classList.add('render-mode')
+    let dead = false
+    const boot = async () => {
+      for (const id of ['shanghai-lujiazui', 'tokyo-shinjuku'] as const) {
+        const lm = landmarkById(id)
+        citiesRef.current[id] = await loadCityForCoords({
+          id: lm.id,
+          nameEn: lm.nameEn,
+          nameZh: lm.nameZh,
+          subtitle: lm.subtitle,
+          lng: lm.lng,
+          lat: lm.lat,
+          extentM: lm.extentM,
+        })
+      }
+      if (dead) return
+      flushSync(() => {
+        setPhase('globe')
+        setCity(citiesRef.current['shanghai-lujiazui'])
+        setDriven(true)
+      })
+      for (let i = 0; i < 400 && !dead; i++) {
+        if (globeIsReady() && window.__cityReady === 'shanghai-lujiazui') break
+        await new Promise((r) => setTimeout(r, 50))
+      }
+      window.__seek = async (frame: number) => {
+        const shot = shotAt(frame / renderFps, renderDuration)
+        const data = citiesRef.current[shot.cityId]
+        flushSync(() => {
+          setCity(data)
+          if (shot.kind === 'globe') {
+            setPhase('globe')
+            jumpGlobe(globePose(landmarkById(shot.cityId), shot.u))
+          } else {
+            setPhase('diorama')
+            setOrbit(shot.orbit)
+            setPush(shot.push)
+          }
+        })
+        if (shot.kind === 'globe') await waitGlobeIdle(800)
+        else {
+          for (let i = 0; i < 80; i++) {
+            if (window.__cityReady === shot.cityId) break
+            await new Promise((r) => setTimeout(r, 40))
+          }
+        }
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))
+        })
+      }
+      window.__flyReady = true
+    }
+    void boot()
+    return () => {
+      dead = true
+      document.body.classList.remove('render-mode')
+      window.__flyReady = false
+    }
+  }, [renderMode, renderFps, renderDuration])
 
   const aspectFrame =
     aspect === '9:16' && !recording
@@ -220,6 +284,7 @@ export default function App() {
       {!recording && <Toaster position="top-center" />}
 
       <div
+        id="stage"
         ref={viewportRef}
         className={`relative ${aspectFrame}`}
         style={
@@ -234,12 +299,24 @@ export default function App() {
           flyTrigger={flyTrigger}
           onFlyEnd={onFlyEnd}
           recording={recording}
+          hideChrome={renderMode}
         />
         <div
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ opacity: phase === 'diorama' ? 1 : 0, pointerEvents: phase === 'diorama' ? 'auto' : 'none' }}
+          className="absolute inset-0"
+          style={{
+            display: renderMode && phase !== 'diorama' ? 'none' : 'block',
+            opacity: phase === 'diorama' ? 1 : 0,
+            pointerEvents: phase === 'diorama' ? 'auto' : 'none',
+            transition: renderMode ? 'none' : 'opacity 1000ms',
+          }}
         >
-          {city && <CityScene data={city} controls={sceneControls} recording={recording} />}
+          {city && (
+            <CityScene
+              data={city}
+              interactive={!recording && !renderMode}
+              controls={{ autoOrbit: autoOrbit || recording, orbit, push, driven: driven || renderMode }}
+            />
+          )}
         </div>
         <TitleOverlay
           data={city}
@@ -248,7 +325,7 @@ export default function App() {
         />
       </div>
 
-      {!recording && (
+      {!recording && !renderMode && (
         <ControlPanel
           query={query}
           onQueryChange={setQuery}

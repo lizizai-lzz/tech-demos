@@ -1,6 +1,7 @@
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef } from 'react'
+import { attachGlobe } from '@/lib/globe-bridge'
 
 type Props = {
   visible: boolean
@@ -8,9 +9,10 @@ type Props = {
   onFlyEnd?: () => void
   flyTrigger: number
   recording: boolean
+  hideChrome?: boolean
 }
 
-export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording }: Props) {
+export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording, hideChrome }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const endHandler = useRef(onFlyEnd)
@@ -27,17 +29,18 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording }: 
       pitch: 0,
       bearing: 0,
       attributionControl: { compact: true },
+      canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true },
       projection: 'globe',
     } as maplibregl.MapOptions)
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
+    attachGlobe(map)
+    if (!hideChrome) map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
     map.on('load', () => {
-      ;(map as maplibregl.Map & { setFog: (f: object) => void }).setFog({
-        color: '#f5f5f3',
-        'high-color': '#dce8f5',
-        'horizon-blend': 0.08,
-        'space-color': '#e8eef5',
-        'star-intensity': 0.15,
-      })
+      map.resize()
+      try {
+        map.setProjection({ type: 'globe' })
+      } catch {
+        /* 旧构建无 globe 时保持平面 */
+      }
       try {
         map.addLayer({
           id: '3d-buildings',
@@ -72,7 +75,7 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording }: 
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !center || flyTrigger === 0) return
+    if (!map || !center || flyTrigger === 0 || hideChrome) return
     const duration = recording ? 7500 : 6800
     map.flyTo({
       center: [center.lng, center.lat],
@@ -89,12 +92,12 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording }: 
     return () => {
       map.off('moveend', onMoveEnd)
     }
-  }, [center, flyTrigger, recording])
+  }, [center, flyTrigger, recording, hideChrome])
 
   return (
     <div
       ref={container}
-      className="absolute inset-0 transition-opacity duration-1000"
+      className="absolute inset-0 h-full w-full"
       style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none' }}
     />
   )

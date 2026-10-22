@@ -1,6 +1,8 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { CityData } from '@/lib/types'
+import { createWhiteMaterial } from '@/lib/materials'
 
 function ringToShape(ring: [number, number][]) {
   const shape = new THREE.Shape()
@@ -15,24 +17,30 @@ export function Buildings({ data }: { data: CityData }) {
   const group = useRef<THREE.Group>(null)
 
   const shells = useMemo(() => {
-    const shellMeshes: THREE.Mesh[] = []
-    const shellMat = new THREE.MeshStandardMaterial({
-      color: '#f8f6f2',
-      roughness: 0.52,
-      metalness: 0.04,
-    })
-
+    const mat = createWhiteMaterial()
+    const chunk: THREE.BufferGeometry[] = []
+    const meshes: THREE.Mesh[] = []
+    const flush = () => {
+      if (!chunk.length) return
+      const merged = mergeGeometries(chunk, false)
+      chunk.forEach((g) => g.dispose())
+      chunk.length = 0
+      if (!merged) return
+      const mesh = new THREE.Mesh(merged, mat)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      meshes.push(mesh)
+    }
     for (const b of data.buildings) {
       if (b.ring.length < 3) continue
       const shape = ringToShape(b.ring)
       const geo = new THREE.ExtrudeGeometry(shape, { depth: b.height, bevelEnabled: false })
       geo.rotateX(-Math.PI / 2)
-      const shell = new THREE.Mesh(geo, shellMat.clone())
-      shell.castShadow = true
-      shell.receiveShadow = true
-      shellMeshes.push(shell)
+      chunk.push(geo)
+      if (chunk.length >= 350) flush()
     }
-    return shellMeshes
+    flush()
+    return meshes
   }, [data])
 
   useLayoutEffect(() => {
@@ -40,7 +48,8 @@ export function Buildings({ data }: { data: CityData }) {
     if (!g) return
     g.clear()
     for (const m of shells) g.add(m)
-  }, [shells])
+    window.__cityReady = data.id
+  }, [shells, data.id])
 
   return <group ref={group} />
 }

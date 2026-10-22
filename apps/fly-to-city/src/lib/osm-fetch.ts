@@ -54,7 +54,7 @@ function extractBuildings(
   extentM: number,
 ): BuildingFootprint[] {
   const half = extentM / 2
-  const out: BuildingFootprint[] = []
+  const out: (BuildingFootprint & { dist: number })[] = []
   for (const el of elements) {
     if (!el.tags?.building) continue
     let geom = el.geometry
@@ -69,14 +69,23 @@ function extractBuildings(
     if (Math.abs(cx) > half || Math.abs(cz) > half) continue
     const height = parseHeight(el.tags)
     const levels = Math.max(1, Math.round(height / 3.5))
+    const dist = Math.hypot(cx, cz)
     out.push({
       id: `${el.type}/${el.id}`,
       ring,
       height,
       levels,
+      dist,
     })
   }
-  return out.sort((a, b) => b.height - a.height).slice(0, 2800)
+  const inner = out.filter((b) => b.dist < 1800)
+  const outer = out.filter((b) => b.dist >= 1800).sort((a, b) => b.height - a.height)
+  return [...inner, ...outer].slice(0, 3200).map((b) => ({
+    id: b.id,
+    ring: b.ring,
+    height: b.height,
+    levels: b.levels,
+  }))
 }
 
 function extractWater(

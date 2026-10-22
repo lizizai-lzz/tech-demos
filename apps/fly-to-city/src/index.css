@@ -68,6 +68,10 @@
     height: 100%;
     width: 100%;
   }
+  body.render-mode .maplibregl-ctrl,
+  body.render-mode .maplibregl-ctrl-attrib {
+    display: none !important;
+  }
   html {
     @apply font-sans;
   }

@@ -4,30 +4,42 @@ import type { CityData } from '@/lib/types'
 
 export function Trees({ data }: { data: CityData }) {
   const ref = useRef<THREE.InstancedMesh>(null)
-  const count = data.trees.length
+  const points = useMemo(() => {
+    const extra: [number, number][] = []
+    let s = 42
+    for (let i = 0; i < 2200; i++) {
+      s = (s * 16807 + 11) % 2147483647
+      const a = i * 2.399963
+      const r = 40 + (s % 1800)
+      const x = Math.cos(a) * r
+      const z = Math.sin(a) * r * 0.92
+      if (Math.hypot(x, z) < 30) continue
+      extra.push([x, z])
+    }
+    return [...data.trees, ...extra]
+  }, [data.trees])
+
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
   useLayoutEffect(() => {
     const mesh = ref.current
-    if (!mesh || count === 0) return
-    let i = 0
-    for (const [x, z] of data.trees) {
-      const s = 3.8 + (i % 9) * 0.55
+    if (!mesh) return
+    points.forEach(([x, z], i) => {
+      const s = 7.5 + (i % 8) * 1.15
       dummy.position.set(x, s * 0.55, z)
-      dummy.scale.set(s * 1.15, s * 0.95, s * 1.1)
+      dummy.scale.set(s * 1.25, s * 0.9, s * 1.15)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
-      i++
-    }
+    })
     mesh.instanceMatrix.needsUpdate = true
-  }, [data.trees, count, dummy])
+  }, [points, dummy])
 
-  if (count === 0) return null
+  if (points.length === 0) return null
 
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, count]} castShadow receiveShadow>
+    <instancedMesh ref={ref} args={[undefined, undefined, points.length]} castShadow receiveShadow>
       <icosahedronGeometry args={[1, 1]} />
-      <meshStandardMaterial color="#a8ddb0" roughness={0.82} metalness={0} flatShading />
+      <meshStandardMaterial color="#7fbf78" roughness={0.84} flatShading />
     </instancedMesh>
   )
 }

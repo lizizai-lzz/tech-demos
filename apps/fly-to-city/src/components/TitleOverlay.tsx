@@ -12,11 +12,11 @@ export function TitleOverlay({ data, visible, recording }: Props) {
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center pt-10 text-center',
-        recording ? 'pt-[8vh]' : 'pt-10',
+        'pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start pl-[7vw] text-left',
+        recording ? 'pt-[8vh]' : 'pt-[6vh]',
       )}
     >
-      <h1 className="text-4xl font-semibold tracking-[0.35em] text-foreground md:text-5xl">
+      <h1 className="text-4xl font-semibold tracking-[0.22em] text-neutral-900 drop-shadow-[0_1px_0_rgba(255,255,255,0.85)] md:text-5xl">
         {data.nameEn}
         <span className="ml-3 text-2xl font-normal tracking-normal text-muted-foreground md:text-3xl">
           {data.nameZh}

@@ -1,127 +1,134 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { EffectComposer, N8AO, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { heroFocus } from '@/lib/heroes'
 import type { CityData } from '@/lib/types'
 import { Buildings } from './Buildings'
 import { Ground } from './Ground'
+import { Heroes } from './Heroes'
 import { Trees } from './Trees'
 import { Water } from './Water'
 
-export type DioramaControls = {
+export type CitySceneControls = {
   autoOrbit: boolean
-  orbitSpeed: number
+  /** 0..1 环绕进度；render 模式由外部时钟驱动 */
+  orbit: number
+  push: number
+  driven: boolean
 }
 
 type Props = {
   data: CityData
-  controls: DioramaControls
-  recording: boolean
+  controls: CitySceneControls
+  interactive: boolean
 }
 
-function SceneContent({ data, controls, recording }: Props) {
+function placeCamera(
+  cam: THREE.PerspectiveCamera,
+  focus: THREE.Vector3,
+  orbit: number,
+  push: number,
+) {
+  const ang = -Math.PI / 2 + (orbit - 0.5) * 0.55
+  const radius = 2100 - push * 220
+  const y = 42 + push * 28
+  cam.position.set(focus.x + Math.sin(ang) * radius, y, focus.z + Math.cos(ang) * radius)
+  cam.lookAt(focus.x, 110, focus.z)
+  cam.updateMatrixWorld()
+}
+
+function SceneContent({ data, controls, interactive }: Props) {
   const cam = useRef<THREE.PerspectiveCamera>(null)
-  const orbit = useRef(0)
-  const push = useRef(0)
+  const light = useRef<THREE.DirectionalLight>(null)
+  const orbitLive = useRef(0.15)
+  const pushLive = useRef(0)
   const { gl } = useThree()
-
-  const maxH = useMemo(
-    () => Math.max(80, ...data.buildings.map((b) => b.height)),
-    [data.buildings],
-  )
-
-  const half = data.extentM / 2
-  const fogNear = data.extentM * 0.28
-  const fogFar = data.extentM * 0.95
+  const focus = heroFocus(data.id, data.center.lng, data.center.lat)
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping
-    gl.toneMappingExposure = 1.1
+    gl.toneMappingExposure = 1.04
     gl.shadowMap.enabled = true
     gl.shadowMap.type = THREE.PCFSoftShadowMap
   }, [gl])
 
   useFrame((_, dt) => {
-    if (!cam.current) return
-    if (controls.autoOrbit || recording) {
-      orbit.current += dt * controls.orbitSpeed
-      push.current = Math.min(1, push.current + dt * 0.035)
-      const baseR = data.extentM * (0.38 - push.current * 0.06)
-      const y = data.extentM * (0.11 + push.current * 0.03)
-      cam.current.position.x = Math.sin(orbit.current) * baseR
-      cam.current.position.z = Math.cos(orbit.current) * baseR
-      cam.current.position.y = y
-      cam.current.lookAt(0, maxH * 0.08, 0)
+    if (!cam.current || !light.current) return
+    let orbit = controls.orbit
+    let push = controls.push
+    if (!controls.driven && controls.autoOrbit) {
+      orbitLive.current = (orbitLive.current + dt * 0.045) % 1
+      pushLive.current = Math.min(1, pushLive.current + dt * 0.03)
+      orbit = orbitLive.current
+      push = pushLive.current
     }
+    placeCamera(cam.current, focus, orbit, push)
+    const look = new THREE.Vector3(focus.x, 80, focus.z)
+    const sun = new THREE.Vector3(0.72, 1.35, 0.28).normalize()
+    light.current.position.copy(look).addScaledVector(sun, 1600)
+    light.current.target.position.copy(look)
+    light.current.target.updateMatrixWorld()
+    const sh = light.current.shadow.camera
+    const span = 620
+    sh.left = -span
+    sh.right = span
+    sh.top = span
+    sh.bottom = -span
+    sh.near = 400
+    sh.far = 3200
+    sh.updateProjectionMatrix()
   })
 
   return (
     <>
-      <color attach="background" args={['#f7f7f5']} />
-      <fog attach="fog" args={['#f4f4f2', fogNear, fogFar]} />
-      <PerspectiveCamera
-        ref={cam}
-        makeDefault
-        position={[data.extentM * 0.32, data.extentM * 0.14, data.extentM * 0.32]}
-        fov={42}
-        near={2}
-        far={data.extentM * 4}
-      />
-      {!recording && (
+      <color attach="background" args={['#efeae3']} />
+      <fog attach="fog" args={['#efeae3', 2600, 6200]} />
+      <PerspectiveCamera ref={cam} makeDefault fov={28} near={1} far={14000} position={[800, 80, 800]} />
+      {interactive && !controls.driven && (
         <OrbitControls
           enablePan={false}
-          minDistance={data.extentM * 0.15}
-          maxDistance={data.extentM * 1.2}
-          maxPolarAngle={Math.PI / 2.12}
-          target={[0, maxH * 0.06, 0]}
+          target={[focus.x, 140, focus.z]}
+          minDistance={280}
+          maxDistance={2200}
+          maxPolarAngle={Math.PI / 2.05}
         />
       )}
-      <ambientLight intensity={0.45} />
-      <hemisphereLight args={['#ffffff', '#e6e8e6', 0.4]} />
+      <ambientLight intensity={0.22} />
+      <hemisphereLight args={['#f4f1ea', '#8d8680', 0.28]} />
       <directionalLight
-        position={[half, data.extentM * 0.9, half * 0.6]}
-        intensity={1.7}
+        ref={light}
+        intensity={2.85}
         castShadow
         shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-half * 1.4}
-        shadow-camera-right={half * 1.4}
-        shadow-camera-top={half * 1.4}
-        shadow-camera-bottom={-half * 1.4}
-        shadow-camera-near={20}
-        shadow-camera-far={data.extentM * 2}
-        shadow-bias={-0.00012}
-        shadow-normalBias={0.02}
+        shadow-bias={-0.00025}
+        shadow-normalBias={0.04}
       />
-      <Environment preset="city" environmentIntensity={0.16} />
-
+      <directionalLight position={[-800, 300, -400]} intensity={0.22} color="#d7e4f2" />
       <Ground data={data} />
       <Water data={data} />
       <Trees data={data} />
       <Buildings data={data} />
-
-      <EffectComposer multisampling={4}>
-        <N8AO aoRadius={18} intensity={4.8} distanceFalloff={0.6} halfRes={false} />
+      <Heroes data={data} />
+      <EffectComposer multisampling={0} enableNormalPass={false}>
+        <N8AO aoRadius={22} intensity={5.6} distanceFalloff={0.45} halfRes />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     </>
   )
 }
 
-export type CitySceneControls = DioramaControls
-
-export function DioramaScene(props: Props) {
+export function CityScene(props: Props) {
   return (
     <Canvas
       shadows
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      dpr={1}
+      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       style={{ width: '100%', height: '100%' }}
     >
       <SceneContent {...props} />
     </Canvas>
   )
 }
-
-export { DioramaScene as CityScene }

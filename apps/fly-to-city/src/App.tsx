@@ -11,20 +11,23 @@ import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
 import { heroFocus } from '@/lib/heroes'
-import { arriveFromReveal, flightEase, globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
+import { flightEase, globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
 import {
   globeToLocal,
   photorealBlend,
   photorealFlightPose,
   PHOTOREAL_STREAM_U,
+  parseRoam,
   stageHeight,
   type LocalPose,
+  type RoamMode,
 } from '@/lib/view-pose'
 import { playWhoosh, primeWhoosh } from '@/lib/whoosh'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
-import { loadCityForCoords } from '@/lib/load-city'
-import { hasPhotorealCoverage } from '@/lib/photoreal-coverage'
+import { loadCityForCoords, placeholderCity } from '@/lib/load-city'
+import { loadBakedCity } from '@/lib/osm-fetch'
+import { hasPhotorealCoverage, isMainlandChina } from '@/lib/photoreal-coverage'
 import { cesiumIonToken, retryPhotorealTiles } from '@/lib/photoreal-tiles'
 import type { AppPhase, AspectRatio, CityData, RecordingStage } from '@/lib/types'
 import { Toaster } from '@/components/ui/sonner'
@@ -61,11 +64,8 @@ export default function App() {
   const [aspect, setAspect] = useState<AspectRatio>('16:9')
   const [recording, setRecording] = useState(false)
   const [recStage, setRecStage] = useState<RecordingStage>('idle')
-  const [autoOrbit, setAutoOrbit] = useState(false)
   const [recordLeg, setRecordLeg] = useState(0)
   const [driven, setDriven] = useState(false)
-  const [orbit, setOrbit] = useState(0.2)
-  const [push, setPush] = useState(0)
   const facadeLock = (() => {
     const v = new URLSearchParams(window.location.search).get('facade')
     if (v === '0') return 0
@@ -77,6 +77,11 @@ export default function App() {
   const [arrive, setArrive] = useState(0)
   const [flightBlend, setFlightBlend] = useState(0)
   const [matchedPose, setMatchedPose] = useState<LocalPose | null>(null)
+  const roamParam = parseRoam(new URLSearchParams(window.location.search).get('roam')) ?? 'flyover'
+  const [roamMode, setRoamMode] = useState<RoamMode>(roamParam)
+  const [roaming, setRoaming] = useState(true)
+  const [roamU, setRoamU] = useState(0)
+  const [uncovered, setUncovered] = useState(false)
   const [muted, setMuted] = useState(false)
   const photorealParam = new URLSearchParams(window.location.search).get('photoreal')
   const [preferPhotoreal, setPreferPhotoreal] = useState(photorealParam !== '0')
@@ -98,6 +103,8 @@ export default function App() {
   const renderTimeline: Timeline =
     timelineParam === 'lujiazui' || timelineParam === 'shinjuku' ? timelineParam : 'full'
   const shootMode = new URLSearchParams(window.location.search).get('shoot') === '1'
+  const cityParam = new URLSearchParams(window.location.search).get('city')
+  const cityOverride = cityParam && findLandmark(cityParam) ? cityParam : null
   const citiesRef = useRef<Record<string, CityData>>({})
   const cityRef = useRef<CityData | null>(null)
   cityRef.current = city
@@ -122,10 +129,29 @@ export default function App() {
       setArrive(0)
       setFlightBlend(0)
       setMatchedPose(null)
+      setRoaming(true)
+      setRoamU(0)
+      setUncovered(false)
       setCenter({ lng: meta.lng, lat: meta.lat })
-      setAutoOrbit(false)
       if (!keepRecordingStage) setRecStage('idle')
       try {
+        const baked = await loadBakedCity(meta.id)
+        const mainland = isMainlandChina(meta.lng, meta.lat)
+        if (!baked && !mainland) {
+          setCity(placeholderCity({ ...meta, extentM: meta.extentM }))
+          void bakeGroundCanvas(meta.lng, meta.lat)
+          setFlyTrigger((n) => n + 1)
+          if (recording) setRecStage('fly-in')
+          void loadCityForCoords(meta, (msg, p) => {
+            setLoadMessage(`${msg} ${Math.round(p * 100)}%`)
+          })
+            .then((data) => {
+              setCity((curr) => (curr?.id === meta.id ? { ...data, extentM: meta.extentM } : curr))
+            })
+            .catch(() => {})
+          setLoading(false)
+          return
+        }
         const data = await loadCityForCoords(meta, (msg, p) => {
           setLoadMessage(`${msg} ${Math.round(p * 100)}%`)
         })
@@ -144,15 +170,14 @@ export default function App() {
 
   const onFlyEnd = useCallback(() => {
     setArrive(0)
-    setOrbit(0)
-    setPush(0)
+    setRoamU(0)
+    setRoaming(true)
     setMatchedPose(null)
     setFlightBlend(1)
     setPhase('transition')
     window.setTimeout(() => {
       setPhase('diorama')
       setLoading(false)
-      setAutoOrbit(true)
       if (recording) setRecStage('orbit')
     }, 900)
   }, [recording])
@@ -184,7 +209,6 @@ export default function App() {
       if (next >= RECORD_SEQUENCE.length) {
         setRecording(false)
         setRecStage('idle')
-        setAutoOrbit(false)
         return
       }
       setRecordLeg(next)
@@ -268,6 +292,8 @@ export default function App() {
     setTileVisible(false)
     setTileCredits([])
     setTileFailed(false)
+    setUncovered(false)
+    window.__photorealBuilding = false
     retryPhotorealTiles()
   }, [city?.id])
 
@@ -341,7 +367,6 @@ export default function App() {
     }
     setRecording(false)
     setRecStage('idle')
-    setAutoOrbit(false)
   }
 
   useEffect(() => {
@@ -363,8 +388,9 @@ export default function App() {
       )
     }
     const boot = async () => {
-      const ids =
-        renderTimeline === 'lujiazui'
+      const ids = cityOverride
+        ? [cityOverride]
+        : renderTimeline === 'lujiazui'
           ? ['shanghai-lujiazui']
           : renderTimeline === 'shinjuku'
             ? shootMode
@@ -411,8 +437,8 @@ export default function App() {
           setPhase('diorama')
           setGlobeU(1)
           setArrive(1)
-          setOrbit(0.5)
-          setPush(0.5)
+          setRoamU(0.35)
+          setRoaming(true)
           setFacadeReveal(facadeLock ?? 1)
           setDriven(true)
           setFlightBlend(1)
@@ -442,8 +468,7 @@ export default function App() {
           setPhase('globe')
           setGlobeU(0.92)
           setArrive(0)
-          setOrbit(0)
-          setPush(0)
+          setRoamU(0)
           setFlightBlend(photorealBlend(0.92))
           setMatchedPose(local)
           setDriven(true)
@@ -454,7 +479,7 @@ export default function App() {
         })
       }
       window.__seek = async (frame: number) => {
-        const shot = shotAt(frame / renderFps, renderDuration, renderTimeline)
+        const shot = shotAt(frame / renderFps, renderDuration, renderTimeline, cityOverride)
         const data = citiesRef.current[shot.cityId]
         const tiles = wantTiles(shot.cityId)
         if (shot.kind === 'globe' && tiles) {
@@ -465,8 +490,7 @@ export default function App() {
             setPhase('globe')
             setGlobeU(shot.u)
             setArrive(0)
-            setOrbit(0)
-            setPush(0)
+            setRoamU(0)
             setFlightBlend(photorealBlend(shot.u))
             setMatchedPose(local)
           })
@@ -478,6 +502,7 @@ export default function App() {
             setPhase('globe')
             setGlobeU(shot.u)
             setArrive(0)
+            setRoamU(0)
             setFlightBlend(0)
             setMatchedPose(null)
           })
@@ -488,9 +513,8 @@ export default function App() {
             setCity(data)
             setPhase('diorama')
             setGlobeU(1)
-            setArrive(arriveFromReveal(shot.reveal))
-            setOrbit(shot.orbit)
-            setPush(shot.push)
+            setArrive(shot.arrive)
+            setRoamU(shot.roam)
             setFacadeReveal(facadeLock ?? shot.reveal)
             setFlightBlend(1)
             setMatchedPose(null)
@@ -522,11 +546,11 @@ export default function App() {
       document.body.classList.remove('render-mode')
       window.__flyReady = false
     }
-  }, [renderMode, renderFps, renderDuration, renderTimeline, facadeLock, shootMode])
+  }, [renderMode, renderFps, renderDuration, renderTimeline, facadeLock, shootMode, cityOverride])
 
   const tokenReady = cesiumIonToken() !== ''
   const covered = city ? hasPhotorealCoverage(city.id, city.center.lng, city.center.lat) : false
-  const wantPhotoreal = preferPhotoreal && tokenReady && covered && !tileFailed
+  const wantPhotoreal = preferPhotoreal && tokenReady && covered && !tileFailed && !uncovered
   const streaming = wantPhotoreal && globeU >= PHOTOREAL_STREAM_U
   const photoreal = wantPhotoreal && (phase === 'diorama' || streaming)
   const modeNote = !preferPhotoreal
@@ -534,14 +558,33 @@ export default function App() {
     : !tokenReady
       ? '没有 Cesium ion 令牌，已改用程序化城市。'
       : city && !covered
-        ? '这个城市没有 Google 实景覆盖，已改用程序化城市。'
+        ? '中国大陆没有这套实景，已改用程序化城市。'
         : tileFailed
           ? '实景瓦片没有加载成功，已改用程序化城市。'
-          : photoreal && !tileVisible
-            ? '正在加载实景瓦片…'
-            : tileVisible
-              ? '正在显示 Google 实景。'
-              : '实景会在下降途中淡入。'
+          : uncovered
+            ? '落地后没有看到高细节建筑，已改用程序化城市。'
+            : photoreal && !tileVisible
+              ? '正在确认实景覆盖…'
+              : tileVisible
+                ? '正在显示 Google 实景。'
+                : '实景会在下降途中淡入。'
+
+  useEffect(() => {
+    if (phase !== 'diorama' || !wantPhotoreal) return
+    let settledMs = 0
+    let last = performance.now()
+    const id = window.setInterval(() => {
+      const now = performance.now()
+      if (window.__photorealBuilding) {
+        window.clearInterval(id)
+        return
+      }
+      if (window.__photorealReady) settledMs += now - last
+      last = now
+      if (settledMs > 8000) setUncovered(true)
+    }, 400)
+    return () => window.clearInterval(id)
+  }, [phase, city?.id, wantPhotoreal])
 
   const aspectFrame =
     aspect === '9:16' && !recording
@@ -594,13 +637,14 @@ export default function App() {
                 if (status.failed) setTileFailed(true)
               }}
               controls={{
-                autoOrbit: autoOrbit || recording,
-                orbit,
-                push,
                 driven: driven || renderMode,
                 facadeReveal,
                 arrive: renderMode || wantPhotoreal || phase === 'diorama' ? arrive : 1,
                 matched: matchedPose,
+                roamMode,
+                roamU,
+                roaming: roaming && phase === 'diorama',
+                onStopRoam: () => setRoaming(false),
               }}
             />
           )}
@@ -637,6 +681,14 @@ export default function App() {
             if (!next) primeWhoosh()
             setMuted(next)
           }}
+          roamMode={roamMode}
+          onRoamMode={(next) => {
+            setRoamMode(next)
+            setRoaming(true)
+            setRoamU(0)
+          }}
+          roaming={roaming}
+          onToggleRoam={() => setRoaming((value) => !value)}
           preferPhotoreal={preferPhotoreal}
           onPhotoreal={(next) => {
             if (next) {

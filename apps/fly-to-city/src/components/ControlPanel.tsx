@@ -1,7 +1,8 @@
-import { ChevronLeft, ChevronRight, Film, MapPin, Search, Volume2, VolumeX } from 'lucide-react'
-import { useState } from 'react'
-import { LANDMARKS } from '@/lib/landmarks'
+import { ChevronLeft, ChevronRight, Film, Search, Volume2, VolumeX } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { landmarksByRegion } from '@/lib/landmarks'
 import type { AspectRatio } from '@/lib/types'
+import type { RoamMode } from '@/lib/view-pose'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -16,6 +17,10 @@ type Props = {
   suggestions: { label: string; lng: number; lat: number }[]
   onPickSuggestion: (s: { label: string; lng: number; lat: number }) => void
   onPickLandmark: (id: string) => void
+  roamMode: RoamMode
+  onRoamMode: (mode: RoamMode) => void
+  roaming: boolean
+  onToggleRoam: () => void
   aspect: AspectRatio
   onAspect: (a: AspectRatio) => void
   onToggleRecording: () => void
@@ -31,8 +36,33 @@ type Props = {
   phaseLabel: string
 }
 
+const ROAM_LABEL: { id: RoamMode; label: string }[] = [
+  { id: 'flyover', label: '掠过' },
+  { id: 'orbit', label: '环绕' },
+  { id: 'tour', label: '巡礼' },
+  { id: 'rise', label: '升起' },
+]
+
 export function ControlPanel(props: Props) {
   const [open, setOpen] = useState(true)
+  const [cityQuery, setCityQuery] = useState('')
+  const [citiesOpen, setCitiesOpen] = useState(false)
+  const groups = useMemo(() => {
+    const q = cityQuery.trim().toLowerCase()
+    return landmarksByRegion()
+      .map((region) => ({
+        ...region,
+        cities: region.cities.filter((city) => {
+          if (!q) return true
+          return (
+            city.nameZh.toLowerCase().includes(q) ||
+            city.nameEn.toLowerCase().includes(q) ||
+            city.subtitle.toLowerCase().includes(q)
+          )
+        }),
+      }))
+      .filter((region) => region.cities.length > 0)
+  }, [cityQuery])
 
   return (
     <>
@@ -85,20 +115,70 @@ export function ControlPanel(props: Props) {
           </Button>
         </div>
 
-        <div className="flex flex-wrap gap-1">
-          {LANDMARKS.map((lm) => (
-            <Button
-              key={lm.id}
-              size="sm"
-              variant="secondary"
-              className="h-7 px-2 text-xs"
-              disabled={props.loading}
-              onClick={() => props.onPickLandmark(lm.id)}
-            >
-              <MapPin className="size-3" />
-              {lm.nameZh}
-            </Button>
-          ))}
+        <div className="space-y-1">
+          <button
+            type="button"
+            className="flex h-8 w-full items-center justify-between rounded-md border bg-background px-2 text-xs"
+            onClick={() => setCitiesOpen((value) => !value)}
+          >
+            <span>预设城市</span>
+            <span className="text-muted-foreground">{citiesOpen ? '收起' : '展开'}</span>
+          </button>
+          {citiesOpen && (
+            <div className="rounded-md border bg-popover p-1">
+              <Input
+                className="mb-1 h-7 text-xs"
+                placeholder="筛选城市…"
+                value={cityQuery}
+                onChange={(e) => setCityQuery(e.target.value)}
+              />
+              <div className="max-h-40 overflow-y-auto">
+                {groups.map((region) => (
+                  <div key={region.id} className="mb-1">
+                    <p className="px-2 py-1 text-[10px] text-muted-foreground">{region.label}</p>
+                    {region.cities.map((city) => (
+                      <button
+                        key={city.id}
+                        type="button"
+                        disabled={props.loading}
+                        className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs hover:bg-muted disabled:opacity-50"
+                        onClick={() => {
+                          props.onPickLandmark(city.id)
+                          setCitiesOpen(false)
+                        }}
+                      >
+                        <span>{city.nameZh}</span>
+                        {city.procedural ? <Badge className="text-[9px]">程序化</Badge> : null}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-1 border-t border-border pt-2">
+          <Label className="text-xs">漫游</Label>
+          <div className="grid grid-cols-4 gap-1">
+            {ROAM_LABEL.map((mode) => (
+              <Button
+                key={mode.id}
+                size="sm"
+                className="h-7 px-1 text-[11px]"
+                variant={props.roamMode === mode.id ? 'default' : 'outline'}
+                onClick={() => props.onRoamMode(mode.id)}
+              >
+                {mode.label}
+              </Button>
+            ))}
+          </div>
+          <Button size="sm" variant="secondary" className="h-7 w-full text-xs" onClick={props.onToggleRoam}>
+            {props.roaming ? '自由浏览' : '继续漫游'}
+          </Button>
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            拖拽、滚轮或 Esc 也会停。左键平移，右键或 Ctrl 拖拽旋转，滚轮朝光标缩放。
+          </p>
         </div>
 
         <div className="space-y-2 border-t border-border pt-2">

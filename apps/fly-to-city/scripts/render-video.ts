@@ -4,7 +4,7 @@
  *   bun run render:16x9     1920×1080 30fps 42s（本机 GPU）
  *   bun run render:9x16     1080×1920 30fps 24s
  *   bun run render:preview  1280×720 24fps 15s，阴影 2048，只含地球→陆家嘴
- * 地球段是第一人称冲刺（速度线、云、视场），进城后按贴面进度收进定稿机位。
+ * 地球段是第一人称冲刺。进城后默认掠过（--roam=flyover|orbit|tour|rise）。
  * 无 GPU 时加 SWIFTSHADER=1。浏览器路径可用 CHROME_PATH。
  * 署名默认不画。公开发布的成片加上 `--attribution`。
  * 有 .env.local 里的 Cesium ion 令牌时，成片会等实景瓦片加载完再截。
@@ -15,6 +15,29 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { readEnvLocal } from './read-env-local.ts'
+import { findLandmark } from '../src/lib/landmarks.ts'
+import { parseRoam } from '../src/lib/view-pose.ts'
+
+function argValue(name: string) {
+  const eq = process.argv.find((item) => item.startsWith(`--${name}=`))
+  if (eq) return eq.slice(name.length + 3)
+  const index = process.argv.indexOf(`--${name}`)
+  const next = index >= 0 ? process.argv[index + 1] : ''
+  if (next && !next.startsWith('--')) return next
+  return ''
+}
+
+const roamArg = argValue('roam')
+const roamMode = roamArg ? parseRoam(roamArg) : 'flyover'
+if (!roamMode) {
+  console.error('漫游模式只能是 flyover、orbit、tour 或 rise。')
+  process.exit(1)
+}
+const cityArg = argValue('city')
+if (cityArg && !findLandmark(cityArg)) {
+  console.error(`没有这个预设：${cityArg}。城市 id 写在 README 的预设列表里。`)
+  process.exit(1)
+}
 
 type Profile = {
   id: string
@@ -172,9 +195,10 @@ if (token) {
 const facadeFlag = process.env.FACADE === '0' || process.env.FACADE === '1' ? `&facade=${process.env.FACADE}` : ''
 const attributionFlag = showAttribution ? '&attribution=1' : ''
 const photorealFlag = token ? '&photoreal=1' : '&photoreal=0'
+const cityFlag = cityArg ? `&city=${encodeURIComponent(cityArg)}` : ''
 const url =
   `http://localhost:5173/?render=1&fps=${profile.fps}&duration=${profile.duration}` +
-  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}${attributionFlag}${photorealFlag}`
+  `&shadow=${profile.shadow}&timeline=${profile.timeline}&roam=${roamMode}${cityFlag}${facadeFlag}${attributionFlag}${photorealFlag}`
 console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)', token ? '（已读取实景令牌）' : '（没有实景令牌，使用程序化城市）')
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })

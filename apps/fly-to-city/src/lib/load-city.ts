@@ -23,6 +23,33 @@ function applyLandmarkCopy(data: CityData): CityData {
   return { ...data, nameEn: lm.nameEn, nameZh: lm.nameZh, subtitle: lm.subtitle }
 }
 
+export function placeholderCity(meta: {
+  id: string
+  nameEn: string
+  nameZh: string
+  subtitle: string
+  lng: number
+  lat: number
+  extentM: number
+}): CityData {
+  return applyLandmarkCopy({
+    id: meta.id,
+    nameEn: meta.nameEn,
+    nameZh: meta.nameZh,
+    subtitle: meta.subtitle,
+    center: { lng: meta.lng, lat: meta.lat },
+    extentM: meta.extentM,
+    gridSize: 2,
+    terrainHeights: [0, 0, 0, 0],
+    minTerrain: 0,
+    maxTerrain: 0,
+    buildings: [],
+    trees: [],
+    water: [],
+    bakedAt: '',
+  })
+}
+
 export async function loadCityForLandmark(
   landmarkId: string,
   onProgress?: (msg: string, p: number) => void,

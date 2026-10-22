@@ -1,32 +1,40 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { MapControls, PerspectiveCamera } from '@react-three/drei'
 import { Bloom, EffectComposer, N8AO, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, type ComponentRef } from 'react'
 import * as THREE from 'three'
 import { facadeUniform } from '@/lib/facade-material'
 import { heroFocus } from '@/lib/heroes'
 import type { CityData } from '@/lib/types'
 import { cesiumIonToken } from '@/lib/photoreal-tiles'
-import { orbitPose, type LocalPose } from '@/lib/view-pose'
+import { orbitPose, roamPose, type LocalPose, type RoamMode } from '@/lib/view-pose'
 import { Buildings } from './Buildings'
 import { Ground } from './Ground'
 import { Heroes } from './Heroes'
 import { PhotorealTiles } from './PhotorealTiles'
 import { Trees } from './Trees'
 
+const ROAM_PERIOD: Record<RoamMode, number> = {
+  flyover: 64,
+  orbit: 36,
+  tour: 56,
+  rise: 40,
+}
+
 export type CitySceneControls = {
-  autoOrbit: boolean
-  /** 0..1 环绕进度；render 模式由外部时钟驱动 */
-  orbit: number
-  push: number
   driven: boolean
   /** 0 白模，1 贴面完全长出 */
   facadeReveal: number
   /** 0 刚落到城市上方，1 收到定稿机位。俯角不变。 */
   arrive: number
-  /** 下降段和地图共用的机位。有值时不再用环绕公式。 */
+  /** 下降段和地图共用的机位。有值时不再用漫游公式。 */
   matched: LocalPose | null
+  roamMode: RoamMode
+  /** 离线成片的漫游进度。交互时由场景自己累加。 */
+  roamU: number
+  roaming: boolean
+  onStopRoam?: () => void
 }
 
 type TileStatus = {
@@ -106,17 +114,49 @@ function applyPose(cam: THREE.PerspectiveCamera, pose: LocalPose) {
 function SceneContent({ data, controls, interactive, photoreal = false, onPhotorealStatus }: Props) {
   const cam = useRef<THREE.PerspectiveCamera>(null)
   const light = useRef<THREE.DirectionalLight>(null)
-  const orbitLive = useRef(0)
-  const pushLive = useRef(0)
+  const roamLive = useRef(0)
+  const mapRig = useRef<ComponentRef<typeof MapControls>>(null)
+  const stopRef = useRef(controls.onStopRoam)
   const { gl } = useThree()
   const focus = heroFocus(data.id, data.center.lng, data.center.lat)
   const token = photoreal ? cesiumIonToken() : ''
+  stopRef.current = controls.onStopRoam
 
   useEffect(() => {
     window.__cityReady = data.id
-    orbitLive.current = 0
-    pushLive.current = 0
-  }, [data.id])
+    roamLive.current = 0
+  }, [data.id, controls.roamMode])
+
+  useEffect(() => {
+    const el = gl.domElement
+    const stop = (event: Event) => {
+      if (event.type === 'keydown' && (event as KeyboardEvent).key !== 'Escape') return
+      if (controls.driven || !controls.roaming) return
+      const camNow = cam.current
+      const rig = mapRig.current
+      if (camNow && rig) {
+        const dir = new THREE.Vector3()
+        camNow.getWorldDirection(dir)
+        const dist = Math.min(4000, Math.max(80, camNow.position.y / Math.max(0.2, -dir.y)))
+        rig.target.copy(camNow.position).addScaledVector(dir, dist)
+        rig.target.y = Math.max(0, rig.target.y)
+        rig.enabled = true
+        rig.update()
+      }
+      stopRef.current?.()
+    }
+    const blockMenu = (event: Event) => event.preventDefault()
+    el.addEventListener('pointerdown', stop, true)
+    el.addEventListener('wheel', stop, { capture: true, passive: true })
+    el.addEventListener('contextmenu', blockMenu)
+    window.addEventListener('keydown', stop)
+    return () => {
+      el.removeEventListener('pointerdown', stop, true)
+      el.removeEventListener('wheel', stop, { capture: true })
+      el.removeEventListener('contextmenu', blockMenu)
+      window.removeEventListener('keydown', stop)
+    }
+  }, [gl, controls.driven, controls.roaming])
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping
@@ -127,17 +167,21 @@ function SceneContent({ data, controls, interactive, photoreal = false, onPhotor
 
   useFrame((_, dt) => {
     if (!cam.current || !light.current) return
-    let orbit = controls.orbit
-    let push = controls.push
-    if (!controls.driven && controls.autoOrbit) {
-      orbitLive.current = (orbitLive.current + dt * 0.045) % 1
-      pushLive.current = Math.min(1, pushLive.current + dt * 0.03)
-      orbit = orbitLive.current
-      push = pushLive.current
-    }
     facadeUniform.value = controls.facadeReveal
+    const free = interactive && !controls.driven && !controls.roaming
     if (controls.matched) applyPose(cam.current, controls.matched)
-    else applyPose(cam.current, orbitPose(data.id, orbit, push, controls.arrive, focus))
+    else if (!free) {
+      let roamU = controls.roamU
+      if (!controls.driven && controls.roaming && controls.arrive >= 0.999) {
+        roamLive.current += dt / ROAM_PERIOD[controls.roamMode]
+        roamU = roamLive.current
+      }
+      const pose =
+        controls.arrive < 0.999
+          ? orbitPose(data.id, 0, 0, controls.arrive, focus)
+          : roamPose(data.id, controls.roamMode, roamU, focus)
+      applyPose(cam.current, pose)
+    }
     const alt = Math.max(30, cam.current.position.y)
     const near = photoreal ? Math.min(20, Math.max(0.4, alt / 400)) : 2
     const far = photoreal ? Math.max(80000, alt * 30) : 14000
@@ -162,6 +206,13 @@ function SceneContent({ data, controls, interactive, photoreal = false, onPhotor
     sh.updateProjectionMatrix()
   })
 
+  useFrame(() => {
+    if (!cam.current || controls.driven || controls.roaming) return
+    if (cam.current.position.y < 36) cam.current.position.y = 36
+    const rig = mapRig.current
+    if (rig && rig.target.y < 0) rig.target.y = 0
+  }, 1)
+
   return (
     <>
       <SkyDome />
@@ -169,12 +220,17 @@ function SceneContent({ data, controls, interactive, photoreal = false, onPhotor
       {!photoreal && <fog attach="fog" args={['#d5e0ea', 3800, 9200]} />}
       <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={photoreal ? 800000 : 14000} position={[1600, 780, 1600]} />
       {interactive && !controls.driven && (
-        <OrbitControls
-          enablePan={false}
-          target={[focus.x, 50, focus.z]}
-          minDistance={900}
-          maxDistance={4000}
-          maxPolarAngle={Math.PI / 2.15}
+        <MapControls
+          ref={mapRig}
+          enabled={!controls.roaming}
+          enableDamping
+          dampingFactor={0.08}
+          zoomToCursor
+          minDistance={40}
+          maxDistance={12000}
+          minPolarAngle={0.08}
+          maxPolarAngle={Math.PI / 2.02}
+          target={[focus.x, 40, focus.z]}
         />
       )}
       <ambientLight intensity={0.42} color="#fff3e4" />

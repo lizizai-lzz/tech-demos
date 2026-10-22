@@ -4,6 +4,7 @@ import {
   acquirePhotorealTiles,
   bindPhotorealRenderer,
   orientTilesToCity,
+  tileBuildingSignal,
   tileCreditLines,
   tilesBusy,
 } from '@/lib/photoreal-tiles'
@@ -32,12 +33,14 @@ export function PhotorealTiles({ token, lng, lat, onStatus }: Props) {
   const failedRef = useRef(false)
   const lastKey = useRef('')
   const quiet = useRef(0)
+  const detailTick = useRef(0)
   onStatusRef.current = onStatus
 
   useEffect(() => {
     orientTilesToCity(tiles, lng, lat)
     quiet.current = 0
     window.__photorealReady = false
+    window.__photorealBuilding = false
   }, [tiles, lng, lat])
 
   useEffect(() => {
@@ -69,6 +72,10 @@ export function PhotorealTiles({ token, lng, lat, onStatus }: Props) {
     quiet.current = settled ? quiet.current + 1 : 0
     window.__photorealVisible = visible
     window.__photorealReady = failedRef.current || quiet.current >= 2
+    detailTick.current += 1
+    if (detailTick.current % 12 === 0 && !window.__photorealBuilding) {
+      window.__photorealBuilding = tileBuildingSignal(tiles).building
+    }
     const credits = visible ? tileCreditLines(tiles) : []
     const key = `${visible ? 1 : 0}|${failedRef.current ? 1 : 0}|${credits.join('\n')}`
     if (key === lastKey.current) return

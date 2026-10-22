@@ -1,4 +1,5 @@
 import { lngLatToLocal, localToLngLat } from './geo'
+import { findLandmark, type TourStop } from './landmarks'
 
 /** 与 MapLibre 默认瓦片尺寸一致，用来互算 zoom 和米。 */
 const TILE_SIZE = 512
@@ -27,6 +28,15 @@ export type GlobeCam = {
 
 const PITCH_TAN = 940 / 3168
 
+export type RoamMode = 'flyover' | 'orbit' | 'tour' | 'rise'
+
+export const ROAM_MODES: RoamMode[] = ['flyover', 'orbit', 'tour', 'rise']
+
+export function parseRoam(value: string | null | undefined): RoamMode | null {
+  if (value === 'flyover' || value === 'orbit' || value === 'tour' || value === 'rise') return value
+  return null
+}
+
 function clamp01(v: number) {
   return Math.min(1, Math.max(0, v))
 }
@@ -40,31 +50,162 @@ function lerpAngle(a: number, b: number, t: number) {
   return a + delta * t
 }
 
+type Tune = {
+  bearing0: number
+  lookEast: number
+  lookNorth: number
+  closeness: number
+  lookHero: boolean
+  tour: TourStop[]
+}
+
+function tuneOf(cityId: string): Tune {
+  const city = findLandmark(cityId)
+  return {
+    bearing0: city?.bearing0 ?? 0.7,
+    lookEast: city?.lookEast ?? 0,
+    lookNorth: city?.lookNorth ?? 0,
+    closeness: city?.closeness ?? 1,
+    lookHero: Boolean(city?.lookHero),
+    tour: city?.tour ?? [],
+  }
+}
+
+function homeLook(tune: Tune, focus: Focus) {
+  if (tune.lookHero) return { x: focus.x, z: focus.z }
+  return { x: tune.lookEast, z: -tune.lookNorth }
+}
+
 /**
  * 定稿斜俯视。俯角始终是 atan(940/3168)，只改距离，不抬头。
- * 新宿看西口楼群，并且更近，让塔楼占住画面中部。香港和其他城市保持原来的距离。
+ * 新宿看西口楼群，并且更近。陆家嘴看向地标重心，从黄浦西岸看过去。
  */
 export function orbitPose(cityId: string, orbit: number, push: number, arrive: number, focus: Focus): LocalPose {
+  const tune = tuneOf(cityId)
   const settled = clamp01(arrive)
   const settle = 0.75 + (1 - settled) * 0.5
-  const tokyo = cityId === 'tokyo-shinjuku'
-  const closeness = tokyo ? 0.4 : 1
-  const scale = (settle / 0.75) * (0.75 - push * 0.1) * closeness
+  const scale = (settle / 0.75) * (0.75 - push * 0.1) * tune.closeness
   const horiz = 3168 * scale
   const lookY = 50
-  const shanghai = cityId === 'shanghai-lujiazui'
-  const lookX = shanghai ? focus.x : tokyo ? -700 : 0
-  const lookZ = shanghai ? focus.z : tokyo ? -30 : 0
-  const bearing0 = shanghai ? -2.35 : 0.7
-  const ang = bearing0 + orbit * 1.15
+  const look = homeLook(tune, focus)
+  const ang = tune.bearing0 + orbit * 1.15
   return {
-    x: lookX + Math.sin(ang) * horiz,
+    x: look.x + Math.sin(ang) * horiz,
     y: lookY + horiz * PITCH_TAN,
-    z: lookZ + Math.cos(ang) * horiz,
-    lookX,
+    z: look.z + Math.cos(ang) * horiz,
+    lookX: look.x,
     lookY,
-    lookZ,
+    lookZ: look.z,
     fov: 42,
+  }
+}
+
+function loopUnit(u: number) {
+  return u - Math.floor(u)
+}
+
+function smooth(t: number) {
+  const x = clamp01(t)
+  return x * x * (3 - 2 * x)
+}
+
+/** 掠过、巡礼、升起在 u=0 时都等于环绕的落点，下降交接不会跳。 */
+export function roamPose(cityId: string, mode: RoamMode, u: number, focus: Focus): LocalPose {
+  const home = orbitPose(cityId, 0, 0, 1, focus)
+  if (mode === 'orbit') return orbitPose(cityId, u, 0, 1, focus)
+  if (mode === 'tour') return tourPose(cityId, home, loopUnit(u), focus)
+  if (mode === 'rise') return risePose(home, loopUnit(u))
+  return flyoverPose(home, loopUnit(u))
+}
+
+function flyoverPose(home: LocalPose, e: number): LocalPose {
+  const ox = home.x - home.lookX
+  const oz = home.z - home.lookZ
+  const horiz = Math.hypot(ox, oz) || 1
+  const fx = -ox / horiz
+  const fz = -oz / horiz
+  const rx = -fz
+  const rz = fx
+  const along = Math.sin(e * Math.PI * 2) * horiz * 0.34
+  const cross = Math.sin(e * Math.PI * 4) * horiz * 0.1
+  const lx = home.lookX + fx * along + rx * cross
+  const lz = home.lookZ + fz * along + rz * cross
+  return {
+    x: lx + ox,
+    y: home.y,
+    z: lz + oz,
+    lookX: lx,
+    lookY: home.lookY,
+    lookZ: lz,
+    fov: home.fov,
+  }
+}
+
+function tourPoints(cityId: string, home: LocalPose, focus: Focus) {
+  const tune = tuneOf(cityId)
+  const look = homeLook(tune, focus)
+  const named = tune.tour.map((stop) => {
+    const raw = { x: stop.east, z: -stop.north }
+    const dx = raw.x - home.lookX
+    const dz = raw.z - home.lookZ
+    const dist = Math.hypot(dx, dz)
+    if (dist <= 1100) return raw
+    const scale = 1100 / dist
+    return { x: home.lookX + dx * scale, z: home.lookZ + dz * scale }
+  })
+  const around =
+    named.length >= 2
+      ? named
+      : [
+          { x: look.x + 650, z: look.z - 180 },
+          { x: look.x - 220, z: look.z + 720 },
+          { x: look.x + 180, z: look.z - 680 },
+        ]
+  return [{ x: home.lookX, z: home.lookZ }, ...around]
+}
+
+function tourPose(cityId: string, home: LocalPose, e: number, focus: Focus): LocalPose {
+  const points = tourPoints(cityId, home, focus)
+  const n = points.length
+  const scaled = e * n
+  const i = Math.min(n - 1, Math.floor(scaled))
+  const f = smooth(scaled - i)
+  const a = points[i % n]
+  const b = points[(i + 1) % n]
+  const lookX = lerp(a.x, b.x, f)
+  const lookZ = lerp(a.z, b.z, f)
+  const ox = home.x - home.lookX
+  const oz = home.z - home.lookZ
+  return {
+    x: lookX + ox,
+    y: home.y,
+    z: lookZ + oz,
+    lookX,
+    lookY: home.lookY,
+    lookZ,
+    fov: home.fov,
+  }
+}
+
+function riseScale(e: number) {
+  if (e < 0.34) return lerp(1, 0.48, smooth(e / 0.34))
+  if (e < 0.78) return lerp(0.48, 1.45, smooth((e - 0.34) / 0.44))
+  return lerp(1.45, 1, smooth((e - 0.78) / 0.22))
+}
+
+function risePose(home: LocalPose, e: number): LocalPose {
+  const ox = home.x - home.lookX
+  const oz = home.z - home.lookZ
+  const horiz = Math.hypot(ox, oz) || 1
+  const pull = Math.max(riseScale(e), 780 / horiz)
+  return {
+    x: home.lookX + ox * pull,
+    y: home.lookY + horiz * pull * PITCH_TAN,
+    z: home.lookZ + oz * pull,
+    lookX: home.lookX,
+    lookY: home.lookY,
+    lookZ: home.lookZ,
+    fov: home.fov,
   }
 }
 

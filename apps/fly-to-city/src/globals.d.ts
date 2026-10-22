@@ -13,5 +13,7 @@ declare global {
     __photorealReady?: boolean
     __photorealVisible?: boolean
     __photorealRootLoads?: number
+    /** 当前城市已经看到高细节建筑网格 */
+    __photorealBuilding?: boolean
   }
 }

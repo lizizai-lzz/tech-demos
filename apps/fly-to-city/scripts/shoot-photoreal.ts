@@ -9,6 +9,29 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { readEnvLocal } from './read-env-local.ts'
+import { findLandmark } from '../src/lib/landmarks.ts'
+import { parseRoam } from '../src/lib/view-pose.ts'
+
+function argValue(name: string) {
+  const eq = process.argv.find((item) => item.startsWith(`--${name}=`))
+  if (eq) return eq.slice(name.length + 3)
+  const index = process.argv.indexOf(`--${name}`)
+  const next = index >= 0 ? process.argv[index + 1] : ''
+  if (next && !next.startsWith('--')) return next
+  return ''
+}
+
+const cityArg = argValue('city')
+const roamArg = argValue('roam')
+if (cityArg && !findLandmark(cityArg)) {
+  console.error(`没有这个预设：${cityArg}。城市 id 写在 README 的预设列表里。`)
+  process.exit(1)
+}
+const roam = roamArg ? parseRoam(roamArg) : 'flyover'
+if (!roam) {
+  console.error('漫游模式只能是 flyover、orbit、tour 或 rise。')
+  process.exit(1)
+}
 
 const appDir = path.join(import.meta.dir, '..')
 const fromFile = readEnvLocal(appDir).VITE_CESIUM_ION_TOKEN?.trim() ?? ''
@@ -77,9 +100,10 @@ try {
     window.__CESIUM_ION_TOKEN = value
   }, token)
   const attributionFlag = process.argv.includes('--attribution') ? '&attribution=1' : ''
+  const cityFlag = cityArg ? `&city=${encodeURIComponent(cityArg)}` : ''
   const url =
     'http://127.0.0.1:5173/?render=1&photoreal=1&shoot=1&fps=24&duration=15&shadow=2048&timeline=shinjuku' +
-    attributionFlag
+    `&roam=${roam}${cityFlag}${attributionFlag}`
   console.log('打开实景拍摄页', swift ? '(SwiftShader)' : '(GPU)', '令牌已注入，不打印内容')
   await page.goto(url, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })
@@ -125,10 +149,13 @@ try {
 
   const stage = await page.$('#stage')
   if (!stage) throw new Error('缺少 #stage')
-  for (const [id, name] of [
-    ['tokyo-shinjuku', 'shinjuku.png'],
-    ['hongkong-central', 'hongkong.png'],
-  ] as const) {
+  const stills: [string, string][] = cityArg
+    ? [[cityArg, `${cityArg}.png`]]
+    : [
+        ['tokyo-shinjuku', 'shinjuku.png'],
+        ['hongkong-central', 'hongkong.png'],
+      ]
+  for (const [id, name] of stills) {
     await page.evaluate(async (cityId) => {
       await window.__showCity?.(cityId)
     }, id)

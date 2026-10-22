@@ -35,7 +35,9 @@ bun run bake:heights
 - 左侧面板：搜索 / 地标 / 画幅 / **白模 / 贴面** / **实景 / 程序化** / **飞行音效** / 录制。
 - 输入城市或点地标后，镜头自己飞过去。呼啸声是 WebAudio 合成的，没有音频文件；「关」会静音。离线成片不播放声音。
 - **贴面**（默认）：程序化窗格（没有贴图文件）。超高塔是间距更大的蓝灰反射幕墙，住宅是砖色小窗加阳台，多层是混凝土，首层店铺会亮。屋顶是深色。地标单独编号（明珠和茧是玻璃，帝国大厦是石材开窗，铁塔是格构）。**白模**把同一套几何涂回浅色。
-- **录制模式**：隐藏全部 UI。进入城市后约 3.6 秒，贴面从下往上长出来，镜头沿同一俯角收进定稿机位。离线成片用同一条时间轴。
+- **预设城市**：面板里按地区筛选，大约 40 座。标了「程序化」的是中国大陆，不会请求实景。其余城市以及搜索框里的地点都会试实景；落地后如果几秒内看不到高细节建筑，就回到程序化。
+- **漫游**（默认「掠过」）：掠过、环绕、巡礼、升起，都是斜俯视，不抬头。「自由浏览」或 Esc、拖拽、滚轮会停下：左键平移，右键或 Ctrl 拖拽旋转，滚轮朝光标缩放。镜头不会钻到地面下面。
+- **录制模式**：隐藏全部 UI。进入城市后约 3.6 秒，贴面从下往上长出来，然后按当前漫游方式移动。离线成片用同一条时间轴。
 - **离线成片**（逐帧截 `#stage`，画面只有应用画布，不要用桌面录屏）。正式成片请在有 GPU 的机器上跑，一条命令即可：
 
 ```bash
@@ -82,7 +84,21 @@ bun run shoot:photoreal --attribution
 
 有 Google 覆盖的城市可以改看 Cesium ion 上的 Google Photorealistic 3D Tiles（资产 `2275207`）。瓦片只在内存里流式加载，不落盘，也不导出模型。一次打开页面只创建一次瓦片集，换城市只改坐标。
 
-这些城市下降时不显示 MapLibre 的灰色挤出楼。瓦片在下降中段开始流入，并和地球交叉淡化；镜头从地球连续落到斜俯视环绕，位置、朝向和俯角都不跳。离线拍摄会在逐帧开始前先预加载这段下降。
+这些城市下降时不显示 MapLibre 的灰色挤出楼。瓦片在下降中段开始流入，并和地球交叉淡化；镜头从地球连续落到斜俯视，位置、朝向和俯角都不跳。离线拍摄会在逐帧开始前先预加载这段下降。
+
+覆盖不是一张写死的城市名单。中国大陆（不含香港、澳门、台湾）直接程序化。其他地方先用同一个瓦片集去看：可见瓦片的几何误差要小于约 48 米，而且网格要有明显高度，才算有建筑。安静大约 8 秒还没有，就改回程序化，瓦片集仍然留着。陡坡可能被当成建筑；网络一直在加载时，这 8 秒会计时暂停。
+
+预设 id（`shoot:photoreal --city=` 用这些）：
+
+东亚 `tokyo-shinjuku` `tokyo-shibuya` `osaka-umeda` `kyoto-station` `hongkong-central` `taipei-101` `seoul-city-hall` `shanghai-lujiazui`（程序化） `beijing-cbd`（程序化）
+
+东南亚与大洋洲 `singapore-marina-bay` `bangkok-sathorn` `sydney-opera` `melbourne-cbd`
+
+中东与非洲 `dubai-burj` `istanbul-sultanahmet` `cairo-pyramids` `cape-town`
+
+美洲 `nyc-midtown` `nyc-downtown` `chicago-loop` `san-francisco` `los-angeles` `las-vegas` `seattle-downtown` `toronto-downtown` `mexico-city` `rio-copacabana` `miami-downtown` `vancouver-downtown`
+
+欧洲 `london-westminster` `paris-eiffel` `rome-colosseum` `barcelona-sagrada` `madrid-gran-via` `berlin-alex` `amsterdam-canals` `prague-old-town` `vienna-stephansdom` `venice-san-marco` `lisbon-baixa` `athens-acropolis`
 
 中国大陆（陆家嘴、国贸，以及搜索到的大陆地点）没有这套实景，会自动回到程序化城市。没有令牌、令牌无效，或根瓦片加载失败时也一样。面板上的「实景 / 程序化」可以手动切回去。
 
@@ -101,6 +117,16 @@ cp .env.example .env.local
 ```bash
 bun run dev
 bun run shoot:photoreal
+bun run shoot:photoreal -- --city=paris-eiffel --roam=tour
+```
+
+`--roam` 可以是 `flyover`（默认）、`orbit`、`tour`、`rise`。不写 `--city` 时仍是新宿飞入，再定格新宿和香港。写了就只拍这一座。
+
+离线成片同样可以指定漫游，预览默认掠过：
+
+```bash
+bun run render:preview -- --roam=orbit
+bun run render:16x9 -- --roam=flyover
 ```
 
 输出默认在 `apps/fly-to-city/photoreal-out/`（`shinjuku-preview.mp4`、`shinjuku.png`、`hongkong.png`、`globe-midflight.png`）。目录可用 `RENDER_OUT` 改。没有令牌时这条命令会直接退出，不会打开浏览器。
@@ -131,4 +157,4 @@ bun run shoot:photoreal
 - 车道线是主干道上的中心线，不是逐车道标线。
 - 速度线画在地球上面的透明层里，不会去模糊 MapLibre 那张画布。视场只在飞行途中拉开，进城后回到斜俯视。
 - 实景是流式网格，锚在城市中心的椭球面上。镜头高度相对这个锚点，不是相对屋顶。推荐误差保持插件给的 20，没有把瓦片缓存到磁盘。
-- 这台机器没有 ion 令牌，所以这里的预览只验证了没有令牌时的程序化回退，和飞行途中的云、速度线。真实实景要在你自己的机器上用 `bun run shoot:photoreal` 看。
+- 这台机器没有 ion 令牌，所以这里的预览只验证了没有令牌时的程序化回退。真实实景要在你自己的机器上用 `bun run shoot:photoreal` 看。建筑探测的误差阈值没有用真瓦片核对过。

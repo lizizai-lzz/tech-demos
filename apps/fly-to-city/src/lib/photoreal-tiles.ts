@@ -118,6 +118,28 @@ export function tilesBusy(tiles: TilesRenderer) {
   return queued > 0 || tiles.downloadQueue.running || tiles.parseQueue.running
 }
 
+/**
+ * 可见瓦片里有没有「又细又高」的网格。
+ * 没有令牌时对不了真瓦片，所以这只是几何上的建筑迹象：误差小于约 48 米，高度够，而且不像一整片平地。
+ */
+export function tileBuildingSignal(tiles: TilesRenderer) {
+  let minError = Number.POSITIVE_INFINITY
+  let building = false
+  const box = new THREE.Box3()
+  tiles.forEachLoadedModel((scene, tile) => {
+    if (!tiles.visibleTiles.has(tile)) return
+    const err = Number.isFinite(tile.geometricError) ? tile.geometricError : Number.POSITIVE_INFINITY
+    if (err < minError) minError = err
+    if (err > 48) return
+    box.setFromObject(scene)
+    if (box.isEmpty()) return
+    const height = box.max.y - box.min.y
+    const span = Math.max(box.max.x - box.min.x, box.max.z - box.min.z, 1)
+    if (height >= 16 && (height >= 30 || height / span >= 0.12)) building = true
+  })
+  return { building, minError }
+}
+
 export function tileCreditLines(tiles: TilesRenderer) {
   const lines: string[] = []
   for (const item of tiles.getAttributions()) {

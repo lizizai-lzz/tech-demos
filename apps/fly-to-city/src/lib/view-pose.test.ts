@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { landmarkById, globePose } from './render-timeline'
-import { globeToLocal, localToGlobe, orbitPose, photorealBlend, photorealFlightPose } from './view-pose'
+import { globeToLocal, localToGlobe, orbitPose, photorealBlend, photorealFlightPose, roamPose } from './view-pose'
 
 const focus = { x: 12, y: 150, z: -40 }
 
@@ -51,5 +51,23 @@ describe('实景机位和地图机位', () => {
     expect(photorealBlend(0.9)).toBe(1)
     const city = landmarkById('tokyo-shinjuku')
     expect(photorealFlightPose(city, 0.7, 720, focus).zoom).toBeLessThan(12)
+  })
+
+  test('四种漫游从落点出发，并且一直往下看', () => {
+    const home = orbitPose('hongkong-central', 0, 0, 1, focus)
+    for (const mode of ['flyover', 'orbit', 'tour', 'rise'] as const) {
+      const start = roamPose('hongkong-central', mode, 0, focus)
+      expect(start.x).toBeCloseTo(home.x, 4)
+      expect(start.y).toBeCloseTo(home.y, 4)
+      expect(start.z).toBeCloseTo(home.z, 4)
+      for (const u of [0.2, 0.55, 0.9]) {
+        const pose = roamPose('tokyo-shinjuku', mode, u, focus)
+        const horiz = Math.hypot(pose.x - pose.lookX, pose.z - pose.lookZ)
+        expect(pose.y).toBeGreaterThan(pose.lookY + 40)
+        expect((pose.y - pose.lookY) / horiz).toBeCloseTo((home.y - home.lookY) / Math.hypot(home.x - home.lookX, home.z - home.lookZ), 4)
+      }
+    }
+    const flown = roamPose('hongkong-central', 'flyover', 0.25, focus)
+    expect(Math.hypot(flown.lookX - home.lookX, flown.lookZ - home.lookZ)).toBeGreaterThan(100)
   })
 })

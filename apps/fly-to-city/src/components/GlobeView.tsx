@@ -73,7 +73,7 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording }: 
   useEffect(() => {
     const map = mapRef.current
     if (!map || !center || flyTrigger === 0) return
-    const duration = recording ? 5200 : 6800
+    const duration = recording ? 7500 : 6800
     map.flyTo({
       center: [center.lng, center.lat],
       zoom: 16.2,

@@ -7,12 +7,14 @@ import {
   DioramaScene,
   type DioramaControls,
 } from '@/components/diorama/DioramaScene'
-import { findLandmark, LANDMARKS } from '@/lib/landmarks'
+import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
 import { loadCityForCoords } from '@/lib/load-city'
 import type { AppPhase, AspectRatio, CityData, RecordingStage } from '@/lib/types'
 import { Toaster } from '@/components/ui/sonner'
 import './App.css'
+
+const RECORD_SEQUENCE = ['shanghai-lujiazui', 'tokyo-shinjuku'] as const
 
 function phaseLabel(phase: AppPhase, stage: RecordingStage) {
   if (stage !== 'idle') {
@@ -43,13 +45,14 @@ export default function App() {
   const [loadMessage, setLoadMessage] = useState('')
   const [clipEnabled, setClipEnabled] = useState(true)
   const [buildingsOnlyClip, setBuildingsOnlyClip] = useState(true)
-  const [sectionPos, setSectionPos] = useState(0)
+  const [sectionPos, setSectionPos] = useState(-200)
   const [sectionAxis, setSectionAxis] = useState<'x' | 'z'>('x')
   const [aspect, setAspect] = useState<AspectRatio>('16:9')
   const [recording, setRecording] = useState(false)
   const [recStage, setRecStage] = useState<RecordingStage>('idle')
   const [autoOrbit, setAutoOrbit] = useState(false)
   const [autoSection, setAutoSection] = useState(false)
+  const [recordLeg, setRecordLeg] = useState(0)
   const viewportRef = useRef<HTMLDivElement>(null)
 
   const half = (city?.extentM ?? extentM) / 2
@@ -62,38 +65,45 @@ export default function App() {
       buildingsOnlyClip,
       autoOrbit,
       autoSection,
-      orbitSpeed: recording ? 0.22 : 0.18,
+      orbitSpeed: recording ? 0.16 : 0.14,
     }),
     [sectionPos, sectionAxis, clipEnabled, buildingsOnlyClip, autoOrbit, autoSection, recording],
   )
 
   const startJourney = useCallback(
-    async (meta: {
-      id: string
-      nameEn: string
-      nameZh: string
-      subtitle: string
-      lng: number
-      lat: number
-      extentM: number
-    }) => {
+    async (
+      meta: {
+        id: string
+        nameEn: string
+        nameZh: string
+        subtitle: string
+        lng: number
+        lat: number
+        extentM: number
+      },
+      keepRecordingStage = false,
+    ) => {
       setLoading(true)
       setLoadMessage('准备数据…')
       setPhase('globe')
       setCenter({ lng: meta.lng, lat: meta.lat })
+      setAutoOrbit(false)
+      setAutoSection(false)
+      if (!keepRecordingStage) setRecStage('idle')
       try {
         const data = await loadCityForCoords(meta, (msg, p) => {
           setLoadMessage(`${msg} ${Math.round(p * 100)}%`)
         })
         setCity({ ...data, extentM: meta.extentM })
         setFlyTrigger((n) => n + 1)
+        if (recording) setRecStage('fly-in')
       } catch (e) {
         console.error(e)
         toast.error('数据加载失败，请稍后重试或换用地标卡片')
         setLoading(false)
       }
     },
-    [],
+    [recording],
   )
 
   const onFlyEnd = useCallback(() => {
@@ -102,9 +112,10 @@ export default function App() {
       setPhase('diorama')
       setLoading(false)
       setAutoOrbit(true)
+      setSectionPos(-half)
       if (recording) setRecStage('orbit')
     }, 900)
-  }, [recording])
+  }, [recording, half])
 
   useEffect(() => {
     if (!recording || recStage !== 'orbit') return
@@ -112,8 +123,9 @@ export default function App() {
       setRecStage('section')
       setAutoSection(true)
       setClipEnabled(true)
+      setBuildingsOnlyClip(true)
       setSectionPos(-half)
-    }, 5200)
+    }, 9000)
     return () => clearTimeout(t)
   }, [recording, recStage, half])
 
@@ -121,20 +133,50 @@ export default function App() {
     if (!autoSection) return
     let frame = 0
     const start = performance.now()
-    const duration = recording ? 6500 : 8000
+    const duration = recording ? 10000 : 9000
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration)
       const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
       setSectionPos(-half + eased * half * 2)
       if (t < 1) frame = requestAnimationFrame(tick)
-      else if (recording) {
-        setRecStage('hold')
+      else {
         setAutoSection(false)
+        if (recording) setRecStage('hold')
       }
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [autoSection, half, recording])
+
+  useEffect(() => {
+    if (!recording || recStage !== 'hold') return
+    const t = window.setTimeout(() => {
+      const next = recordLeg + 1
+      if (next >= RECORD_SEQUENCE.length) {
+        setRecording(false)
+        setRecStage('idle')
+        setAutoOrbit(false)
+        return
+      }
+      setRecordLeg(next)
+      const lm = findLandmark(RECORD_SEQUENCE[next])
+      if (!lm) return
+      setExtentM(lm.extentM)
+      startJourney(
+        {
+          id: lm.id,
+          nameEn: lm.nameEn,
+          nameZh: lm.nameZh,
+          subtitle: lm.subtitle,
+          lng: lm.lng,
+          lat: lm.lat,
+          extentM: lm.extentM,
+        },
+        true,
+      )
+    }, 6000)
+    return () => clearTimeout(t)
+  }, [recording, recStage, recordLeg, startJourney])
 
   useEffect(() => {
     if (!query.trim()) {
@@ -151,7 +193,6 @@ export default function App() {
     const lm = findLandmark(id)
     if (!lm) return
     setExtentM(lm.extentM)
-    if (recording) setRecStage('fly-in')
     startJourney({
       id: lm.id,
       nameEn: lm.nameEn,
@@ -169,7 +210,6 @@ export default function App() {
       toast.message('请输入并选择搜索结果')
       return
     }
-    if (recording) setRecStage('fly-in')
     startJourney({
       id: `custom-${s.lng.toFixed(4)}-${s.lat.toFixed(4)}`,
       nameEn: s.label.split(',')[0]?.toUpperCase() ?? 'CUSTOM',
@@ -181,38 +221,31 @@ export default function App() {
     })
   }
 
-  const startMediaCapture = useCallback(() => {
-    const el = viewportRef.current
-    if (!el || typeof MediaRecorder === 'undefined') return
-    try {
-      const stream = (el as HTMLElement & { captureStream?: () => MediaStream }).captureStream?.()
-      if (!stream) return
-      const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' })
-      const chunks: BlobPart[] = []
-      rec.ondataavailable = (e) => chunks.push(e.data)
-      rec.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `fly-to-city-${Date.now()}.webm`
-        a.click()
-        URL.revokeObjectURL(url)
-      }
-      rec.start()
-      window.setTimeout(() => rec.stop(), 32000)
-    } catch {
-      /* 部分浏览器不支持 captureStream */
+  const beginRecording = useCallback(() => {
+    setRecording(true)
+    setRecordLeg(0)
+    setRecStage('fly-in')
+    setAspect('16:9')
+    setBuildingsOnlyClip(true)
+    setClipEnabled(true)
+    const lm = findLandmark(RECORD_SEQUENCE[0])
+    if (lm) {
+      setExtentM(lm.extentM)
+      startJourney({
+        id: lm.id,
+        nameEn: lm.nameEn,
+        nameZh: lm.nameZh,
+        subtitle: lm.subtitle,
+        lng: lm.lng,
+        lat: lm.lat,
+        extentM: lm.extentM,
+      })
     }
-  }, [])
+  }, [startJourney])
 
   const toggleRecording = () => {
     if (!recording) {
-      setRecording(true)
-      setRecStage('fly-in')
-      setAspect('16:9')
-      startMediaCapture()
-      pickLandmark(LANDMARKS[3].id)
+      beginRecording()
       return
     }
     setRecording(false)
@@ -221,25 +254,44 @@ export default function App() {
     setAutoSection(false)
   }
 
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('autorecord') === '1' && !recording) beginRecording()
+  }, [beginRecording, recording])
+
+  const aspectStyle =
+    aspect === '16:9'
+      ? recording
+        ? { width: 1920, height: 1080, maxWidth: '100%', maxHeight: '100vh' }
+        : undefined
+      : { maxWidth: 420 }
+
   const aspectClass =
     aspect === '16:9'
-      ? 'aspect-video max-h-[calc(100vh-12rem)]'
-      : 'aspect-[9/16] max-h-[calc(100vh-6rem)] w-full max-w-md mx-auto'
+      ? recording
+        ? 'h-auto w-full max-h-[100vh]'
+        : 'aspect-video w-full max-h-[calc(100vh-4rem)]'
+      : 'aspect-[9/16] w-full max-w-[420px]'
 
   return (
     <div className="relative min-h-screen bg-[#f3f3f1] text-foreground">
-      <Toaster position="top-center" />
-      <header className="absolute left-0 right-0 top-0 z-40 flex items-center justify-between px-6 py-4">
-        <div>
-          <p className="text-lg font-semibold">Fly to City</p>
-          <p className="text-xs text-muted-foreground">地球飞入 · 白模沙盘 · 剖切录屏</p>
-        </div>
-      </header>
+      {!recording && <Toaster position="top-center" />}
+      {!recording && (
+        <header className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-6 py-3">
+          <div>
+            <p className="text-base font-semibold">Fly to City</p>
+            <p className="text-xs text-muted-foreground">地球飞入 · 白模沙盘 · 剖切录屏</p>
+          </div>
+        </header>
+      )}
 
-      <div className="flex min-h-screen flex-col items-center justify-center px-4 pb-36 pt-16">
+      <div
+        className={`flex min-h-screen items-center justify-center ${recording ? 'p-0' : 'px-0 pb-4 pt-14 pl-[min(0px,0)]'}`}
+      >
         <div
           ref={viewportRef}
-          className={`relative w-full overflow-hidden rounded-2xl border border-border bg-white shadow-lg ${aspectClass} ${recording ? 'record-frame' : ''}`}
+          className={`relative overflow-hidden bg-white ${recording ? '' : 'rounded-2xl border border-border shadow-lg'} ${aspectClass} ${recording ? 'record-frame' : ''}`}
+          style={aspectStyle}
         >
           <GlobeView
             visible={phase !== 'diorama'}
@@ -254,7 +306,11 @@ export default function App() {
           >
             {city && <DioramaScene data={city} controls={dioramaControls} recording={recording} />}
           </div>
-          <TitleOverlay data={city} visible={phase === 'diorama' || recording} recording={recording} />
+          <TitleOverlay
+            data={city}
+            visible={(phase === 'diorama' || recording) && !!city}
+            recording={recording}
+          />
         </div>
       </div>
 
@@ -281,7 +337,6 @@ export default function App() {
           onSectionAxis={setSectionAxis}
           aspect={aspect}
           onAspect={setAspect}
-          recording={recording}
           onToggleRecording={toggleRecording}
           loading={loading}
           loadMessage={loadMessage}

@@ -5,7 +5,6 @@ import type { CityData } from '@/lib/types'
 export function Trees({ data }: { data: CityData }) {
   const ref = useRef<THREE.InstancedMesh>(null)
   const count = data.trees.length
-
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
   useLayoutEffect(() => {
@@ -13,9 +12,9 @@ export function Trees({ data }: { data: CityData }) {
     if (!mesh || count === 0) return
     let i = 0
     for (const [x, z] of data.trees) {
-      const scale = 2.2 + (i % 7) * 0.35
-      dummy.position.set(x, scale * 0.45, z)
-      dummy.scale.setScalar(scale)
+      const s = 3.8 + (i % 9) * 0.55
+      dummy.position.set(x, s * 0.55, z)
+      dummy.scale.set(s * 1.15, s * 0.95, s * 1.1)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
       i++
@@ -27,8 +26,8 @@ export function Trees({ data }: { data: CityData }) {
 
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, count]} castShadow receiveShadow>
-      <sphereGeometry args={[1, 10, 10]} />
-      <meshStandardMaterial color="#9fd4a0" roughness={0.85} metalness={0} />
+      <icosahedronGeometry args={[1, 1]} />
+      <meshStandardMaterial color="#a8ddb0" roughness={0.82} metalness={0} flatShading />
     </instancedMesh>
   )
 }

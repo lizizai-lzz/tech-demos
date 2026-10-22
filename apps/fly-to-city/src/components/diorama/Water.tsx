@@ -21,16 +21,20 @@ export function Water({ data }: { data: CityData }) {
     })
   }, [data.water])
 
+  if (meshes.length === 0) return null
+
   return (
     <group>
       {meshes.map((geo, i) => (
-        <mesh key={data.water[i].id} geometry={geo} position={[0, 0.35, 0]} receiveShadow>
+        <mesh key={data.water[i].id} geometry={geo} position={[0, 0.55, 0]} receiveShadow>
           <meshStandardMaterial
-            color="#9ed4f0"
-            roughness={0.25}
-            metalness={0.15}
+            color="#7ec8e8"
+            emissive="#4aa8d0"
+            emissiveIntensity={0.08}
+            roughness={0.18}
+            metalness={0.22}
             transparent
-            opacity={0.92}
+            opacity={0.88}
           />
         </mesh>
       ))}

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Film, MapPin, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Film, MapPin, Search, Volume2, VolumeX } from 'lucide-react'
 import { useState } from 'react'
 import { LANDMARKS } from '@/lib/landmarks'
 import type { AspectRatio } from '@/lib/types'
@@ -21,6 +21,8 @@ type Props = {
   onToggleRecording: () => void
   facadeOn: boolean
   onFacade: (on: boolean) => void
+  muted: boolean
+  onMuted: (muted: boolean) => void
   loading: boolean
   loadMessage: string
   phaseLabel: string
@@ -133,6 +135,27 @@ export function ControlPanel(props: Props) {
               onClick={() => props.onFacade(true)}
             >
               贴面
+            </Button>
+          </div>
+          <Label className="text-xs">飞行音效</Label>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.muted ? 'outline' : 'default'}
+              onClick={() => props.onMuted(false)}
+            >
+              <Volume2 className="size-3.5" />
+              开
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.muted ? 'default' : 'outline'}
+              onClick={() => props.onMuted(true)}
+            >
+              <VolumeX className="size-3.5" />
+              关
             </Button>
           </div>
           <div className="flex flex-wrap gap-1">

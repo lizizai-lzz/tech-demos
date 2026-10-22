@@ -4,10 +4,12 @@ import { toast } from 'sonner'
 import { ControlPanel } from '@/components/ControlPanel'
 import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
+import { Flyer } from '@/components/Flyer'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
-import { globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
+import { arriveFromReveal, flightEase, globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
+import { playWhoosh, primeWhoosh } from '@/lib/whoosh'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
 import { loadCityForCoords } from '@/lib/load-city'
@@ -30,8 +32,8 @@ function phaseLabel(phase: AppPhase, stage: RecordingStage) {
     return map[stage]
   }
   if (phase === 'globe') return '地球视角'
-  if (phase === 'transition') return '进入白模城市'
-  return '白模城市'
+  if (phase === 'transition') return '飞向城市'
+  return '彩色城市'
 }
 
 export default function App() {
@@ -58,6 +60,13 @@ export default function App() {
     return null
   })()
   const [facadeReveal, setFacadeReveal] = useState(facadeLock ?? 1)
+  const [globeU, setGlobeU] = useState(0)
+  const [arrive, setArrive] = useState(0)
+  const [muted, setMuted] = useState(false)
+  const [flightClock, setFlightClock] = useState(-1)
+  const mutedRef = useRef(false)
+  const whooshSent = useRef(false)
+  mutedRef.current = muted
   const viewportRef = useRef<HTMLDivElement>(null)
   const renderMode = new URLSearchParams(window.location.search).get('render') === '1'
   const renderFps = Number(new URLSearchParams(window.location.search).get('fps') ?? 30)
@@ -82,6 +91,8 @@ export default function App() {
       setLoading(true)
       setLoadMessage('准备数据…')
       setPhase('globe')
+      setGlobeU(0)
+      setArrive(0)
       setCenter({ lng: meta.lng, lat: meta.lat })
       setAutoOrbit(false)
       if (!keepRecordingStage) setRecStage('idle')
@@ -162,6 +173,41 @@ export default function App() {
   }, [recording, recStage, recordLeg, startJourney])
 
   useEffect(() => {
+    if (renderMode || flyTrigger === 0) return
+    whooshSent.current = false
+    const duration = recording ? 7500 : 6800
+    const t0 = performance.now()
+    let raf = 0
+    setGlobeU(0)
+    setArrive(0)
+    const tick = () => {
+      const u = Math.min(1, (performance.now() - t0) / duration)
+      const eased = flightEase(u)
+      if (!whooshSent.current && eased >= 0.18 && !mutedRef.current) {
+        whooshSent.current = true
+        playWhoosh()
+      }
+      setGlobeU(eased)
+      if (u < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [flyTrigger, recording, renderMode])
+
+  useEffect(() => {
+    if (renderMode || phase !== 'diorama') return
+    const t0 = performance.now()
+    let raf = 0
+    const tick = () => {
+      const u = Math.min(1, (performance.now() - t0) / 2800)
+      setArrive(u)
+      if (u < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [phase, city?.id, renderMode])
+
+  useEffect(() => {
     if (!query.trim()) {
       setSuggestions([])
       return
@@ -173,6 +219,7 @@ export default function App() {
   }, [query])
 
   const pickLandmark = (id: string) => {
+    primeWhoosh()
     const lm = findLandmark(id)
     if (!lm) return
     startJourney({
@@ -187,6 +234,7 @@ export default function App() {
   }
 
   const onSearch = () => {
+    primeWhoosh()
     const s = suggestions[0]
     if (!s) {
       toast.message('请输入并选择搜索结果')
@@ -274,11 +322,16 @@ export default function App() {
         const data = citiesRef.current[shot.cityId]
         flushSync(() => {
           setCity(data)
+          setFlightClock(frame / renderFps)
           if (shot.kind === 'globe') {
             setPhase('globe')
+            setGlobeU(shot.u)
+            setArrive(0)
             jumpGlobe(globePose(landmarkById(shot.cityId), shot.u))
           } else {
             setPhase('diorama')
+            setGlobeU(1)
+            setArrive(arriveFromReveal(shot.reveal))
             setOrbit(shot.orbit)
             setPush(shot.push)
             setFacadeReveal(facadeLock ?? shot.reveal)
@@ -358,10 +411,23 @@ export default function App() {
                 push,
                 driven: driven || renderMode,
                 facadeReveal,
+                arrive: renderMode ? arrive : phase === 'diorama' ? arrive : 1,
               }}
             />
           )}
         </div>
+        <div
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{ visibility: globeU > 0.9 && arrive > 0.98 ? 'hidden' : 'visible' }}
+          aria-hidden
+        >
+          <Flyer globeU={globeU} arrive={phase === 'globe' ? 0 : arrive} flightClock={flightClock} />
+        </div>
+        {!recording && !renderMode && (
+          <p className="pointer-events-none absolute bottom-2 right-3 z-30 max-w-[28rem] text-right text-[10px] leading-snug text-neutral-800/80">
+            地图 © OpenStreetMap / OpenFreeMap · 影像 Sentinel-2 cloudless © EOX CC BY 4.0（含 Copernicus Sentinel 数据）
+          </p>
+        )}
         <TitleOverlay
           data={city}
           visible={(phase === 'diorama' || recording) && !!city}
@@ -385,6 +451,11 @@ export default function App() {
           onToggleRecording={toggleRecording}
           facadeOn={facadeReveal > 0.5}
           onFacade={(on) => setFacadeReveal(on ? 1 : 0)}
+          muted={muted}
+          onMuted={(next) => {
+            if (!next) primeWhoosh()
+            setMuted(next)
+          }}
           loading={loading}
           loadMessage={loadMessage}
           phaseLabel={phaseLabel(phase, recStage)}

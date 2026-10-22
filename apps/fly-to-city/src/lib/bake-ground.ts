@@ -12,7 +12,8 @@ const cache = new Map<string, HTMLCanvasElement>()
 const pending = new Map<string, Promise<HTMLCanvasElement>>()
 
 function keyOf(lng: number, lat: number) {
-  return `${lng.toFixed(4)},${lat.toFixed(4)}`
+  // v3：卫星底图 + 深色路网。换样式时必须换键，否则会一直用旧贴图。
+  return `v4:${lng.toFixed(4)},${lat.toFixed(4)}`
 }
 
 export function peekGround(lng: number, lat: number) {
@@ -79,26 +80,37 @@ function bakeOnce(lng: number, lat: number) {
       else resolve(canvas)
     }
 
-    const timer = window.setTimeout(() => finish(new Error('地面地图烘焙超时')), 90000)
+    const timer = window.setTimeout(() => finish(new Error('地面地图烘焙超时')), 150000)
+
+    const copy = () => {
+      const src = map.getCanvas()
+      const out = document.createElement('canvas')
+      out.width = GROUND_TEX
+      out.height = GROUND_TEX
+      const ctx = out.getContext('2d')
+      if (!ctx || src.width < 64) {
+        finish(new Error('地面地图画布为空'))
+        return
+      }
+      ctx.drawImage(src, 0, 0, GROUND_TEX, GROUND_TEX)
+      finish(undefined, out)
+    }
 
     map.on('load', () => {
       map.resize()
       alignZoom(map)
-      map.once('idle', () => {
-        requestAnimationFrame(() => {
-          const src = map.getCanvas()
-          const out = document.createElement('canvas')
-          out.width = GROUND_TEX
-          out.height = GROUND_TEX
-          const ctx = out.getContext('2d')
-          if (!ctx || src.width < 64) {
-            finish(new Error('地面地图画布为空'))
-            return
-          }
-          ctx.drawImage(src, 0, 0, GROUND_TEX, GROUND_TEX)
-          finish(undefined, out)
-        })
-      })
+      const started = performance.now()
+      const check = () => {
+        if (settled) return
+        const waited = performance.now() - started
+        // 卫星瓦片比矢量慢。等它进画面，但不要无限等。
+        if ((map.areTilesLoaded() && waited > 900) || waited > 28000) {
+          requestAnimationFrame(copy)
+          return
+        }
+        window.setTimeout(check, 250)
+      }
+      window.setTimeout(check, 400)
     })
   })
 }

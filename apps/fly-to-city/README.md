@@ -1,6 +1,6 @@
-# Fly to City · 全屏白模城市
+# Fly to City · 飞入彩色城市
 
-MapLibre 地球飞入 → **铺满视口** 的 three.js 白模城市（约 3.5km 范围 OSM 建筑）。地面是同一套 OpenFreeMap 矢量瓦片烘焙出的浅色地图（道路、公园、水面，无标注、无建筑），阴影落在这张图上。支持 8 地标预烘焙、Photon 搜索、录制模式与标题叠层。
+MapLibre 地球上有一个程序化的翼装飞行者。搜索或点地标后，镜头从背后追上他，穿过云层，再减速俯冲进铺满视口的 three.js 城市（约 3.5km）。地面是 OpenFreeMap 矢量（道路、公园、水面、广场）叠在 EOX Sentinel-2 卫星影像上烘焙出来的，阴影落在这张图上。建筑默认是彩色立面，白模只是开关。支持 8 地标预烘焙、Photon 搜索、录制模式与标题叠层。
 
 ## 运行
 
@@ -32,9 +32,10 @@ bun run bake:heights
 
 ## 操作
 
-- 左侧面板：搜索 / 地标 / 画幅 / **白模 / 贴面** / 录制。
-- **贴面**：程序化窗格（没有贴图文件）。办公塔是玻璃幕墙，住宅是小窗加阳台带，低层首层是大玻璃。地标有单独的材质（明珠和茧是玻璃，帝国大厦是石材开窗，铁塔是格构）。
-- **录制模式**：隐藏全部 UI。进入城市后约 3.6 秒，贴面从下往上长出来。离线成片用同一条时间轴。
+- 左侧面板：搜索 / 地标 / 画幅 / **白模 / 贴面** / **飞行音效** / 录制。
+- 打开页面时，角色在云层上慢慢飘。输入城市或点地标，他会转向并飞过去。呼啸声是 WebAudio 合成的，没有音频文件；「关」会静音。离线成片不播放声音。
+- **贴面**（默认）：程序化窗格（没有贴图文件）。玻璃塔是蓝灰幕墙，住宅是砖色小窗加阳台，多层是混凝土，首层店铺会亮。屋顶是深色，带空调箱和女儿墙。地标单独编号（明珠和茧是玻璃，帝国大厦是石材开窗，铁塔是格构）。**白模**把同一套几何涂回浅色。
+- **录制模式**：隐藏全部 UI。进入城市后约 3.6 秒，贴面从下往上长出来，镜头沿同一俯角收进定稿机位。离线成片用同一条时间轴，飞行者姿态由 `shot.u` 决定。
 - **离线成片**（逐帧截 `#stage`，画面只有应用画布，不要用桌面录屏）。正式成片请在有 GPU 的机器上跑，一条命令即可：
 
 ```bash
@@ -60,6 +61,18 @@ bun run render:reveal   # 只要陆家嘴贴面长出的 4 秒，12fps，用来�
 - 东京新宿：[PLATEAU 新宿区 2025 CityGML](https://www.geospatial.jp/ckan/dataset/plateau-13104-shinjuku-ku-2025) 的 measuredHeight。LOD2 贴图是另一套 3D Tiles（约 560MB），和当前挤出体不是同一几何，所以新宿贴面仍用程序化窗格
 - 纽约：[NYC Building Footprints](https://data.cityofnewyork.us/Housing-Development/Building-Footprints/5zhs-2jue) 的 `height_roof`（英尺换算成米）
 - 巴黎：IGN BD TOPO 需要账号，高度来自 Overture 和楼层数，没有官方覆盖
-- [OpenFreeMap](https://openfreemap.org) 地面
+- [OpenFreeMap](https://openfreemap.org) / [OpenMapTiles](https://openmaptiles.org) 地面矢量（道路、水系、绿地、铁路）。© OpenStreetMap 贡献者，[ODbL](https://www.openstreetmap.org/copyright)
+- 卫星底图：[Sentinel-2 cloudless 2020 by EOX](https://s2maps.eu)（CC BY 4.0），含修改过的 Copernicus Sentinel 数据。当前 WMTS 没有 2016 图层，所以用同一产品的 2020 版，并且只请求到 14 级，城市范围会略放大
+- 飞行者：本仓库里的程序化 three.js 网格，没有下载模型，不使用 Mixamo 或其他第三方角色
+- 呼啸声：WebAudio 实时合成，没有采样
 - [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/)（Terrarium）
 - Photon 地理编码（Komoot）
+
+## 局限
+
+- 大陆超高层往往不在 CMAB / CNBH 里。CNBH 在这几个 CBD 的 zonal mean 大约到 45 米，CMAB 按 IoU>0.5 对上的楼不多，塔楼高度仍靠 Overture 和手工地标。
+- 香港地政总署三维数据是网格场景，没有逐栋高度。巴黎没有 IGN 账号，高度来自 Overture 和楼层数。
+- 新宿 PLATEAU LOD2 贴图和当前挤出体不是同一套几何，所以没有贴上去。
+- 卫星被矢量盖住的地方（路、公园、水面）以矢量颜色为准；没有盖住的地面能看到放大后的 14 级影像。
+- 车道线是主干道上的中心线，不是逐车道标线。
+- 角色是低多边形翼装人，不是扫描人体。速度模糊是贴在角色层上的速度线，不会去模糊 MapLibre 那张画布。

@@ -10,9 +10,14 @@ function revealAt(tInCity: number) {
   return Math.min(1, Math.max(0, tInCity / 3.6))
 }
 
-function ease(u: number) {
+export function flightEase(u: number) {
   const t = Math.min(1, Math.max(0, u))
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
+}
+
+/** 贴面还在长的时候，角色和镜头已经收进定稿机位。 */
+export function arriveFromReveal(reveal: number) {
+  return Math.min(1, Math.max(0, reveal) * 1.35)
 }
 
 export type Timeline = 'full' | 'lujiazui'
@@ -24,7 +29,7 @@ export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): S
   if (timeline === 'lujiazui') {
     const fly = duration * 0.45
     if (t < fly) {
-      return { kind: 'globe', cityId: 'shanghai-lujiazui', u: ease(t / Math.max(0.001, fly)) }
+      return { kind: 'globe', cityId: 'shanghai-lujiazui', u: flightEase(t / Math.max(0.001, fly)) }
     }
     const u = Math.min(1, (t - fly) / Math.max(0.001, duration - fly))
     return {
@@ -40,7 +45,7 @@ export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): S
   const shCityEnd = 23 * scale
   const tkFlyEnd = 31 * scale
   if (t < shFlyEnd) {
-    return { kind: 'globe', cityId: 'shanghai-lujiazui', u: ease(t / shFlyEnd) }
+    return { kind: 'globe', cityId: 'shanghai-lujiazui', u: flightEase(t / shFlyEnd) }
   }
   if (t < shCityEnd) {
     const u = (t - shFlyEnd) / (shCityEnd - shFlyEnd)
@@ -54,7 +59,7 @@ export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): S
   }
   if (t < tkFlyEnd) {
     const u = (t - shCityEnd) / (tkFlyEnd - shCityEnd)
-    return { kind: 'globe', cityId: 'tokyo-shinjuku', u: ease(u) }
+    return { kind: 'globe', cityId: 'tokyo-shinjuku', u: flightEase(u) }
   }
   const u = Math.min(1, (t - tkFlyEnd) / Math.max(0.001, duration - tkFlyEnd))
   return {

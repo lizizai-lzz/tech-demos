@@ -7,54 +7,84 @@ const COLOR = /* glsl */ `
 float facadeWin = 0.0;
 float facadeRoof = 0.0;
 float facadeMix = 0.0;
+float facadeGlow = 0.0;
+float facadeWarm = 0.0;
 {
-  vec3 plaster = vec3(0.957, 0.949, 0.933);
   float style = vStyle;
   float floorH = 3.5;
   float floors = max(vFloors, 1.0);
   float v = vWorldPos.y / floorH;
-  float cell = style < 0.5 ? 2.35 : style < 1.5 ? 3.7 : style < 2.5 ? 4.4 : style < 3.5 ? 6.5 : style < 4.5 ? 4.8 : 9.0;
+  float cell = style < 0.5 ? 2.2 : style < 1.5 ? 3.4 : style < 2.5 ? 4.2 : style < 3.5 ? 5.5 : style < 4.5 ? 4.6 : 8.0;
   float u = (abs(vWorldN.x) > abs(vWorldN.z) ? vWorldPos.z : vWorldPos.x) / cell;
   vec2 fuv = fract(vec2(u, v));
-  float mx = style < 0.5 ? 0.07 : style < 1.5 ? 0.30 : 0.16;
-  float my = style < 0.5 ? 0.12 : style < 1.5 ? 0.24 : 0.18;
-  if (style > 2.5 && style < 3.5) { mx = 0.08; my = 0.10; }
-  if (style > 3.5 && style < 4.5) { mx = 0.34; my = 0.30; }
+  float mx = 0.08;
+  float my = 0.12;
+  if (style >= 0.5 && style < 1.5) { mx = 0.32; my = 0.26; }
+  else if (style >= 1.5 && style < 2.5) { mx = 0.16; my = 0.16; }
+  else if (style >= 2.5 && style < 3.5) { mx = 0.05; my = 0.07; }
+  else if (style >= 3.5 && style < 4.5) { mx = 0.30; my = 0.26; }
   float win = step(mx, fuv.x) * step(fuv.x, 1.0 - mx) * step(my, fuv.y) * step(fuv.y, 1.0 - my);
-  if (style > 1.5 && style < 2.5 && v < 1.05) {
-    win = step(0.06, fuv.x) * step(fuv.x, 0.94) * step(0.05, fuv.y) * step(fuv.y, 0.90);
-  }
-  float balcony = 0.0;
-  if (style > 0.5 && style < 1.5) {
-    balcony = step(fuv.y, 0.14) * step(0.10, fuv.x) * step(fuv.x, 0.90);
-  }
-  float sep = smoothstep(0.055, 0.012, min(fuv.y, 1.0 - fuv.y));
-  float onWall = step(0.2, vWorldPos.y) * step(v, floors - 0.02);
-  if (style < 0.5) plaster = vec3(0.910, 0.925, 0.945);
-  else if (style < 1.5) plaster = vec3(0.953, 0.941, 0.918);
-  else if (style > 2.5 && style < 3.5) plaster = vec3(0.86, 0.90, 0.94);
-  else if (style > 3.5 && style < 4.5) plaster = vec3(0.910, 0.890, 0.855);
-  else if (style > 4.5) plaster = vec3(0.78, 0.76, 0.72);
-  vec3 glass = vec3(0.58, 0.72, 0.82);
-  vec3 facade = plaster;
-  if (style > 4.5) {
-    float lx = 1.0 - smoothstep(0.03, 0.09, abs(fract(vWorldPos.x * 0.12) - 0.5));
-    float lz = 1.0 - smoothstep(0.03, 0.09, abs(fract(vWorldPos.z * 0.12) - 0.5));
-    float ly = 1.0 - smoothstep(0.02, 0.08, abs(fract(v * 0.35) - 0.5));
-    facade = mix(plaster, vec3(0.45, 0.44, 0.42), clamp(max(max(lx, lz) * 0.45, ly), 0.0, 1.0));
+  float onWall = step(0.15, vWorldPos.y) * step(v, floors - 0.05);
+  vec3 body = vec3(0.48, 0.58, 0.68);
+  vec3 glass = vec3(0.07, 0.15, 0.24);
+  if (style >= 0.5 && style < 1.5) {
+    body = vec3(0.74, 0.48, 0.32);
+    glass = vec3(0.09, 0.11, 0.14);
+    float course = smoothstep(0.08, 0.0, abs(fract(vWorldPos.y * 2.2) - 0.5));
+    body = mix(body, body * vec3(0.78, 0.74, 0.70), course * 0.65);
+  } else if (style >= 1.5 && style < 2.5) {
+    body = vec3(0.55, 0.53, 0.49);
+    glass = vec3(0.10, 0.14, 0.18);
+  } else if (style >= 2.5 && style < 3.5) {
+    body = vec3(0.40, 0.56, 0.68);
+    glass = vec3(0.10, 0.22, 0.34);
+  } else if (style >= 3.5 && style < 4.5) {
+    body = vec3(0.70, 0.64, 0.52);
+    glass = vec3(0.11, 0.13, 0.15);
+  } else if (style >= 4.5) {
+    body = vec3(0.30, 0.31, 0.33);
     win = 0.0;
-  } else {
-    facade = mix(facade, glass, win * onWall);
-    facade = mix(facade, vec3(0.84, 0.82, 0.78), balcony * onWall * (1.0 - win));
-    facade = mix(facade, plaster * 0.78, sep * onWall * 0.85);
   }
-  float roof = smoothstep(0.42, 0.78, abs(vWorldN.y));
-  facade = mix(facade, vec3(0.90, 0.89, 0.86), roof);
+  float salt = fract(sin(dot(floor(vWorldPos.xz / 70.0), vec2(12.9898, 78.233))) * 43758.5453);
+  body *= mix(vec3(0.90, 0.94, 0.98), vec3(1.08, 1.0, 0.92), salt);
+  float fres = pow(1.0 - abs(dot(normalize(vWorldN), normalize(vec3(0.35, 0.86, 0.28)))), 1.45);
+  vec3 pane = mix(glass, vec3(0.80, 0.90, 1.0), 0.22 + 0.72 * fres);
+  vec3 facade = body;
+  if (style < 4.5) {
+    facade = mix(body, pane, win * onWall);
+    if (style >= 0.5 && style < 1.5) {
+      float balcony = step(fuv.y, 0.16) * step(0.12, fuv.x) * step(fuv.x, 0.88);
+      facade = mix(facade, body * 1.15, balcony * onWall * (1.0 - win));
+    }
+    float sep = smoothstep(0.055, 0.0, min(fuv.y, 1.0 - fuv.y));
+    facade = mix(facade, body * 0.55, sep * onWall * 0.95);
+  } else {
+    float lx = 1.0 - smoothstep(0.02, 0.08, abs(fract(vWorldPos.x * 0.11) - 0.5));
+    float lz = 1.0 - smoothstep(0.02, 0.08, abs(fract(vWorldPos.z * 0.11) - 0.5));
+    float ly = 1.0 - smoothstep(0.015, 0.06, abs(fract(v * 0.32) - 0.5));
+    facade = mix(body, vec3(0.14, 0.15, 0.16), clamp(max(max(lx, lz), ly), 0.0, 1.0));
+  }
+  float shopBand = step(0.5, style) * step(style, 2.5) * step(0.2, v) * step(v, 1.05);
+  float shop = shopBand * step(0.05, fuv.x) * step(fuv.x, 0.95) * step(0.06, fuv.y);
+  facade = mix(facade, vec3(1.0, 0.68, 0.28), shop);
+  float parapet = onWall * smoothstep(floors - 0.72, floors - 0.08, v);
+  facade = mix(facade, facade * 0.48, parapet * (1.0 - step(0.5, abs(vWorldN.y))));
+  float roof = smoothstep(0.5, 0.84, abs(vWorldN.y));
+  vec2 rc = fract(vWorldPos.xz * 0.055);
+  float ac = step(0.56, rc.x) * step(rc.x, 0.92) * step(0.16, rc.y) * step(rc.y, 0.55);
+  float pad = step(0.62, rc.x) * step(rc.x, 0.86) * step(0.24, rc.y) * step(rc.y, 0.48);
+  vec3 roofCol = vec3(0.11, 0.11, 0.12);
+  roofCol = mix(roofCol, vec3(0.12, 0.13, 0.14), ac);
+  roofCol = mix(roofCol, vec3(0.55, 0.60, 0.64), pad);
+  facade = mix(facade, roofCol, roof);
   float sweep = facadeUniformReveal * 760.0;
   float reveal = 1.0 - smoothstep(sweep - 42.0, sweep + 6.0, vWorldPos.y);
-  facadeWin = win * (1.0 - roof);
+  facadeWin = win * onWall * (1.0 - roof);
   facadeRoof = roof;
   facadeMix = reveal;
+  facadeGlow = facadeWin * (0.16 + 0.7 * fres);
+  facadeGlow = max(facadeGlow, shop * 1.2);
+  facadeWarm = shop;
   diffuseColor.rgb = mix(vec3(0.957, 0.949, 0.933), facade, reveal);
 }
 `
@@ -72,10 +102,10 @@ export function getFacadeMaterial() {
   if (shared) return shared
   const mat = new THREE.MeshStandardMaterial({
     color: '#f4f2ee',
-    roughness: 0.62,
-    metalness: 0.04,
+    roughness: 0.78,
+    metalness: 0.02,
   })
-  mat.customProgramCacheKey = () => 'facade-v1'
+  mat.customProgramCacheKey = () => 'facade-v2'
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.facadeUniformReveal = facadeUniform
     shader.vertexShader =
@@ -95,13 +125,20 @@ export function getFacadeMaterial() {
         .replace(
           '#include <roughnessmap_fragment>',
           `#include <roughnessmap_fragment>
-          roughnessFactor = mix(roughnessFactor, 0.16, facadeWin * facadeMix);
-          roughnessFactor = mix(roughnessFactor, 0.92, facadeRoof * facadeMix);`,
+          roughnessFactor = mix(roughnessFactor, 0.07, facadeWin * facadeMix);
+          roughnessFactor = mix(roughnessFactor, 0.95, facadeRoof * facadeMix);`,
+        )
+        .replace(
+          '#include <metalnessmap_fragment>',
+          `#include <metalnessmap_fragment>
+          metalnessFactor = mix(metalnessFactor, 0.66, facadeWin * facadeMix);`,
         )
         .replace(
           '#include <opaque_fragment>',
-          `float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 1.8);
-          outgoingLight += rim * mix(vec3(0.16, 0.18, 0.22), vec3(0.20, 0.24, 0.30), facadeWin) * (0.35 + 0.65 * facadeMix);
+          `vec3 glowCol = mix(vec3(0.42, 0.60, 0.86), vec3(1.0, 0.52, 0.16), facadeWarm);
+          outgoingLight += glowCol * facadeGlow * facadeMix;
+          float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 1.55);
+          outgoingLight += rim * mix(vec3(0.04, 0.05, 0.07), vec3(0.38, 0.52, 0.68), facadeWin) * (0.2 + 0.8 * facadeMix);
           #include <opaque_fragment>`,
         )
   }

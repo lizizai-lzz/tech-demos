@@ -6,6 +6,7 @@ export type GlobeCam = {
   zoom: number
   pitch: number
   bearing: number
+  fov?: number
 }
 
 let map: maplibregl.Map | null = null
@@ -31,6 +32,9 @@ export function jumpGlobe(cam: GlobeCam) {
     pitch: cam.pitch,
     bearing: cam.bearing,
   })
+  if (map && cam.fov != null && Math.abs(map.getVerticalFieldOfView() - cam.fov) > 0.2) {
+    map.setVerticalFieldOfView(cam.fov)
+  }
 }
 
 export function waitGlobeIdle(timeoutMs = 1200) {

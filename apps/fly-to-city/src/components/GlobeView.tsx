@@ -10,9 +10,11 @@ type Props = {
   flyTrigger: number
   recording: boolean
   hideChrome?: boolean
+  /** 0..1，速度最高时略为拉开地球视场 */
+  rush: number
 }
 
-export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording, hideChrome }: Props) {
+export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording, hideChrome, rush }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const endHandler = useRef(onFlyEnd)
@@ -85,14 +87,17 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording, hi
       duration,
       essential: true,
     })
-    const onMoveEnd = () => {
-      endHandler.current?.()
-    }
-    map.once('moveend', onMoveEnd)
-    return () => {
-      map.off('moveend', onMoveEnd)
-    }
+    // 视场会在飞行中改，不能用 moveend，否则中途就被当成飞完。
+    const timer = window.setTimeout(() => endHandler.current?.(), duration + 160)
+    return () => window.clearTimeout(timer)
   }, [center, flyTrigger, recording, hideChrome])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || hideChrome) return
+    const fov = 36.87 + Math.min(1, Math.max(0, rush)) * 9
+    if (Math.abs(map.getVerticalFieldOfView() - fov) > 0.2) map.setVerticalFieldOfView(fov)
+  }, [rush, hideChrome])
 
   return (
     <div

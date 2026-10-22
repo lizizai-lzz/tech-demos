@@ -15,7 +15,7 @@ export function flightEase(u: number) {
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
 }
 
-/** 贴面还在长的时候，角色和镜头已经收进定稿机位。 */
+/** 贴面还在长的时候，镜头已经收进定稿机位。 */
 export function arriveFromReveal(reveal: number) {
   return Math.min(1, Math.max(0, reveal) * 1.35)
 }
@@ -77,11 +77,14 @@ export function landmarkById(id: string): LandmarkPreset {
 
 export function globePose(city: LandmarkPreset, u: number) {
   const e = Math.min(1, Math.max(0, u))
+  const surge = Math.sin(e * Math.PI)
   return {
     lng: city.lng,
     lat: city.lat,
     zoom: 1.15 + (16.2 - 1.15) * e ** 2.6,
     pitch: 68 * e ** 2.2,
     bearing: -24 + 60 * e,
+    // 默认约 36.9°。速度最高时略为拉开，仍然朝目的地冲，不抬头。
+    fov: 36.87 + surge * 9,
   }
 }

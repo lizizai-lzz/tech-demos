@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { ControlPanel } from '@/components/ControlPanel'
 import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
-import { Flyer } from '@/components/Flyer'
+import { FlightRush } from '@/components/FlightRush'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
@@ -63,7 +63,6 @@ export default function App() {
   const [globeU, setGlobeU] = useState(0)
   const [arrive, setArrive] = useState(0)
   const [muted, setMuted] = useState(false)
-  const [flightClock, setFlightClock] = useState(-1)
   const mutedRef = useRef(false)
   const whooshSent = useRef(false)
   mutedRef.current = muted
@@ -322,7 +321,6 @@ export default function App() {
         const data = citiesRef.current[shot.cityId]
         flushSync(() => {
           setCity(data)
-          setFlightClock(frame / renderFps)
           if (shot.kind === 'globe') {
             setPhase('globe')
             setGlobeU(shot.u)
@@ -391,6 +389,7 @@ export default function App() {
           onFlyEnd={onFlyEnd}
           recording={recording}
           hideChrome={renderMode}
+          rush={phase === 'diorama' ? 0 : Math.sin(Math.min(1, Math.max(0, globeU)) * Math.PI)}
         />
         <div
           className="absolute inset-0"
@@ -416,12 +415,8 @@ export default function App() {
             />
           )}
         </div>
-        <div
-          className="pointer-events-none absolute inset-0 z-10"
-          style={{ visibility: globeU > 0.9 && arrive > 0.98 ? 'hidden' : 'visible' }}
-          aria-hidden
-        >
-          <Flyer globeU={globeU} arrive={phase === 'globe' ? 0 : arrive} flightClock={flightClock} />
+        <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
+          <FlightRush globeU={globeU} arrive={phase === 'globe' ? 0 : arrive} />
         </div>
         {!recording && !renderMode && (
           <p className="pointer-events-none absolute bottom-2 right-3 z-30 max-w-[28rem] text-right text-[10px] leading-snug text-neutral-800/80">

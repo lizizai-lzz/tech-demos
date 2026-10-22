@@ -4,7 +4,7 @@
  *   bun run render:16x9     1920×1080 30fps 42s（本机 GPU）
  *   bun run render:9x16     1080×1920 30fps 24s
  *   bun run render:preview  1280×720 24fps 15s，阴影 2048，只含地球→陆家嘴
- * 地球段按 shot.u 摆第三人称飞行者；进城后按贴面进度收进定稿机位。
+ * 地球段是第一人称冲刺（速度线、云、视场），进城后按贴面进度收进定稿机位。
  * 无 GPU 时加 SWIFTSHADER=1。浏览器路径可用 CHROME_PATH。
  */
 import { mkdir } from 'node:fs/promises'

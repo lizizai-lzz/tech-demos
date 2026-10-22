@@ -2,8 +2,8 @@ import * as THREE from 'three'
 
 export function createWhiteMaterial() {
   const mat = new THREE.MeshStandardMaterial({
-    color: '#fffcf8',
-    roughness: 0.78,
+    color: '#f4f2ee',
+    roughness: 0.5,
     metalness: 0.02,
   })
   mat.onBeforeCompile = (shader) => {

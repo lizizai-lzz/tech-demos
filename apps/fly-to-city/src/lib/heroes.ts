@@ -37,7 +37,7 @@ const BY_CITY: Record<string, HeroDef[]> = {
 }
 
 const white = () =>
-  new THREE.MeshStandardMaterial({ color: '#fffcf8', roughness: 0.62, metalness: 0.04 })
+  new THREE.MeshStandardMaterial({ color: '#f4f2ee', roughness: 0.48, metalness: 0.03 })
 
 function box(w: number, h: number, d: number, x: number, y: number, z: number, mat: THREE.Material) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)
@@ -70,11 +70,11 @@ function addEdges(mesh: THREE.Mesh, group: THREE.Group) {
 function buildKind(kind: HeroKind, h: number, mat: THREE.Material) {
   const g = new THREE.Group()
   if (kind === 'pearl') {
-    g.add(box(16, h, 16, 0, h / 2, 0, mat))
-    g.add(sphere(42, 0, h * 0.28, 0, mat))
-    g.add(sphere(28, 0, h * 0.55, 0, mat))
-    g.add(sphere(16, 0, h * 0.82, 0, mat))
-    g.add(sphere(9, 0, h * 0.96, 0, mat))
+    g.add(box(18, h, 18, 0, h / 2, 0, mat))
+    g.add(sphere(52, 0, h * 0.28, 0, mat))
+    g.add(sphere(34, 0, h * 0.55, 0, mat))
+    g.add(sphere(20, 0, h * 0.8, 0, mat))
+    g.add(sphere(11, 0, h * 0.95, 0, mat))
   } else if (kind === 'shanghai-tower') {
     const steps = 28
     for (let i = 0; i < steps; i++) {
@@ -165,12 +165,15 @@ function buildKind(kind: HeroKind, h: number, mat: THREE.Material) {
 
 export function heroFocus(cityId: string, centerLng: number, centerLat: number) {
   const list = BY_CITY[cityId]
-  if (!list?.length) return new THREE.Vector3(0, 160, 0)
-  const primary =
-    list.find((h) => h.kind === 'shanghai-tower' || h.kind === 'twin' || h.kind === 'eiffel') ??
-    list[0]
-  const [x, z] = lngLatToLocal(primary.lng, primary.lat, centerLng, centerLat)
-  return new THREE.Vector3(x, Math.min(220, primary.h * 0.32), z)
+  if (!list?.length) return new THREE.Vector3(0, 140, 0)
+  let x = 0
+  let z = 0
+  for (const hero of list) {
+    const p = lngLatToLocal(hero.lng, hero.lat, centerLng, centerLat)
+    x += p[0]
+    z += p[1]
+  }
+  return new THREE.Vector3(x / list.length, 150, z / list.length)
 }
 
 export function createHeroGroup(cityId: string, centerLng: number, centerLat: number) {

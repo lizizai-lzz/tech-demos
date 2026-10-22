@@ -7,8 +7,8 @@ import { createWhiteMaterial } from '@/lib/materials'
 function ringToShape(ring: [number, number][]) {
   const shape = new THREE.Shape()
   if (ring.length < 3) return shape
-  shape.moveTo(ring[0][0], ring[0][1])
-  for (let i = 1; i < ring.length; i++) shape.lineTo(ring[i][0], ring[i][1])
+  shape.moveTo(ring[0][0], -ring[0][1])
+  for (let i = 1; i < ring.length; i++) shape.lineTo(ring[i][0], -ring[i][1])
   shape.closePath()
   return shape
 }

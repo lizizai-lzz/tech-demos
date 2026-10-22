@@ -32,11 +32,11 @@ function placeCamera(
   orbit: number,
   push: number,
 ) {
-  const ang = -Math.PI / 2 + (orbit - 0.5) * 0.55
-  const radius = 2100 - push * 220
-  const y = 42 + push * 28
+  const ang = -2.2 + orbit * 0.5
+  const radius = 2300 - push * 200
+  const y = 250 - push * 40
   cam.position.set(focus.x + Math.sin(ang) * radius, y, focus.z + Math.cos(ang) * radius)
-  cam.lookAt(focus.x, 110, focus.z)
+  cam.lookAt(focus.x, 70, focus.z)
   cam.updateMatrixWorld()
 }
 
@@ -50,7 +50,7 @@ function SceneContent({ data, controls, interactive }: Props) {
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping
-    gl.toneMappingExposure = 1.04
+    gl.toneMappingExposure = 1.38
     gl.shadowMap.enabled = true
     gl.shadowMap.type = THREE.PCFSoftShadowMap
   }, [gl])
@@ -72,7 +72,7 @@ function SceneContent({ data, controls, interactive }: Props) {
     light.current.target.position.copy(look)
     light.current.target.updateMatrixWorld()
     const sh = light.current.shadow.camera
-    const span = 620
+    const span = 980
     sh.left = -span
     sh.right = span
     sh.top = span
@@ -86,7 +86,7 @@ function SceneContent({ data, controls, interactive }: Props) {
     <>
       <color attach="background" args={['#efeae3']} />
       <fog attach="fog" args={['#efeae3', 2600, 6200]} />
-      <PerspectiveCamera ref={cam} makeDefault fov={28} near={1} far={14000} position={[800, 80, 800]} />
+      <PerspectiveCamera ref={cam} makeDefault fov={32} near={2} far={14000} position={[800, 240, 800]} />
       {interactive && !controls.driven && (
         <OrbitControls
           enablePan={false}
@@ -96,11 +96,11 @@ function SceneContent({ data, controls, interactive }: Props) {
           maxPolarAngle={Math.PI / 2.05}
         />
       )}
-      <ambientLight intensity={0.22} />
-      <hemisphereLight args={['#f4f1ea', '#8d8680', 0.28]} />
+      <ambientLight intensity={0.38} />
+      <hemisphereLight args={['#fffaf4', '#c4beb6', 0.22]} />
       <directionalLight
         ref={light}
-        intensity={2.85}
+        intensity={2.45}
         castShadow
         shadow-mapSize={[4096, 4096]}
         shadow-bias={-0.00025}
@@ -113,7 +113,7 @@ function SceneContent({ data, controls, interactive }: Props) {
       <Buildings data={data} />
       <Heroes data={data} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <N8AO aoRadius={22} intensity={5.6} distanceFalloff={0.45} halfRes />
+        <N8AO aoRadius={12} intensity={1.25} distanceFalloff={0.6} halfRes />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     </>

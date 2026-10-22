@@ -25,6 +25,12 @@ type Props = {
   interactive: boolean
 }
 
+function shadowMapSize() {
+  const n = Number(new URLSearchParams(window.location.search).get('shadow') ?? 4096)
+  if (!Number.isFinite(n)) return 4096
+  return Math.min(4096, Math.max(512, Math.round(n)))
+}
+
 function placeCamera(
   cam: THREE.PerspectiveCamera,
   focus: THREE.Vector3,
@@ -112,7 +118,7 @@ function SceneContent({ data, controls, interactive }: Props) {
         ref={light}
         intensity={2.45}
         castShadow
-        shadow-mapSize={[4096, 4096]}
+        shadow-mapSize={[shadowMapSize(), shadowMapSize()]}
         shadow-bias={-0.00025}
         shadow-normalBias={0.04}
       />

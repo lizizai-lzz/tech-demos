@@ -7,7 +7,7 @@ import { TitleOverlay } from '@/components/TitleOverlay'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
-import { globePose, landmarkById, shotAt } from '@/lib/render-timeline'
+import { globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
 import { loadCityForCoords } from '@/lib/load-city'
@@ -55,6 +55,8 @@ export default function App() {
   const renderMode = new URLSearchParams(window.location.search).get('render') === '1'
   const renderFps = Number(new URLSearchParams(window.location.search).get('fps') ?? 30)
   const renderDuration = Number(new URLSearchParams(window.location.search).get('duration') ?? 42)
+  const renderTimeline: Timeline =
+    new URLSearchParams(window.location.search).get('timeline') === 'lujiazui' ? 'lujiazui' : 'full'
   const citiesRef = useRef<Record<string, CityData>>({})
 
   const startJourney = useCallback(
@@ -219,7 +221,11 @@ export default function App() {
     document.body.classList.add('render-mode')
     let dead = false
     const boot = async () => {
-      for (const id of ['shanghai-lujiazui', 'tokyo-shinjuku'] as const) {
+      const ids =
+        renderTimeline === 'lujiazui'
+          ? (['shanghai-lujiazui'] as const)
+          : (['shanghai-lujiazui', 'tokyo-shinjuku'] as const)
+      for (const id of ids) {
         const lm = landmarkById(id)
         citiesRef.current[id] = await loadCityForCoords({
           id: lm.id,
@@ -243,7 +249,7 @@ export default function App() {
         await new Promise((r) => setTimeout(r, 50))
       }
       window.__seek = async (frame: number) => {
-        const shot = shotAt(frame / renderFps, renderDuration)
+        const shot = shotAt(frame / renderFps, renderDuration, renderTimeline)
         const data = citiesRef.current[shot.cityId]
         flushSync(() => {
           setCity(data)
@@ -275,7 +281,7 @@ export default function App() {
       document.body.classList.remove('render-mode')
       window.__flyReady = false
     }
-  }, [renderMode, renderFps, renderDuration])
+  }, [renderMode, renderFps, renderDuration, renderTimeline])
 
   const aspectFrame =
     aspect === '9:16' && !recording

@@ -26,15 +26,21 @@ bun run bake:all
 
 - 左侧面板：搜索 / 地标 / 画幅 / 录制。
 - **录制模式**：隐藏全部 UI。
-- **离线成片**（推荐，避免实时录屏抖动）：
+- **离线成片**（逐帧截 `#stage`，画面只有应用画布，不要用桌面录屏）。正式成片请在有 GPU 的机器上跑，一条命令即可：
 
 ```bash
 bun run dev
-bun run render -- 16:9
-bun run render -- 9:16
+bun run render:16x9   # 1920×1080，30fps，42s，地球 → 陆家嘴 → 东京
+bun run render:9x16   # 1080×1920，30fps，24s
 ```
 
-`?render=1&fps=30&duration=42` 用固定时间轴逐帧截 `#stage`，再由 ffmpeg 合成。画面只有应用画布。
+短预览（1280×720，24fps，15s，只含地球飞入和陆家嘴环绕，阴影贴图 2048，像素比 1）：
+
+```bash
+bun run render:preview
+```
+
+无独立 GPU 的环境可加 `SWIFTSHADER=1`，会慢非常多，不适合正式成片。浏览器路径用 `CHROME_PATH`，输出目录用 `RENDER_OUT`（默认 `/opt/cursor/artifacts`）。
 
 ## 数据致谢
 

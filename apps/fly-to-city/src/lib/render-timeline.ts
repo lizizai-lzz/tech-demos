@@ -10,8 +10,20 @@ function ease(u: number) {
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
 }
 
-/** 16:9 默认 42s：地球 → 上海飞入 → 低机位环绕 → 硬切东京飞入 → 环绕定格 */
-export function shotAt(t: number, duration = 42): Shot {
+export type Timeline = 'full' | 'lujiazui'
+
+/** 16:9 默认 42s：地球 → 上海飞入 → 斜俯视环绕 → 硬切东京飞入 → 环绕定格。
+ *  lujiazui：只保留地球飞入和陆家嘴环绕，给短预览用。
+ */
+export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): Shot {
+  if (timeline === 'lujiazui') {
+    const fly = duration * 0.45
+    if (t < fly) {
+      return { kind: 'globe', cityId: 'shanghai-lujiazui', u: ease(t / Math.max(0.001, fly)) }
+    }
+    const u = Math.min(1, (t - fly) / Math.max(0.001, duration - fly))
+    return { kind: 'city', cityId: 'shanghai-lujiazui', orbit: u, push: u * 0.85 }
+  }
   const scale = duration / 42
   const shFlyEnd = 9 * scale
   const shCityEnd = 23 * scale

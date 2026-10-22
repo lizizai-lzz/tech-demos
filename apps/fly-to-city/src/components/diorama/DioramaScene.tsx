@@ -31,16 +31,23 @@ function placeCamera(
   focus: THREE.Vector3,
   orbit: number,
   push: number,
+  cityId: string,
 ) {
   // 与东京参考截图相同的斜俯视：水平距离约 3.2km、离地约 980m，俯角约 17°（画面观感为斜 3/4 向下）。
-  // 高度与距离一起收到 75%，俯角不变，建筑更大；推进时继续等比靠近。
+  // 高度与距离一起收到 75%，俯角不变，建筑更大；推进时继续等比靠近。绝不抬头。
   const pitchTan = 940 / 3168
   const scale = 0.75 - push * 0.1
   const horiz = 3168 * scale
   const lookY = 50
-  const ang = 0.7 + orbit * 1.15
-  cam.position.set(focus.x + Math.sin(ang) * horiz, lookY + horiz * pitchTan, focus.z + Math.cos(ang) * horiz)
-  cam.lookAt(focus.x, lookY, focus.z)
+  // 上海对准陆家嘴地标，并从黄浦西岸看过去，东方明珠在塔楼前方。
+  // 东京对准市中心，方位与参考截图一致（东南斜俯视）。
+  const shanghai = cityId === 'shanghai-lujiazui'
+  const lookX = shanghai ? focus.x : 0
+  const lookZ = shanghai ? focus.z : 0
+  const bearing0 = shanghai ? -2.35 : 0.7
+  const ang = bearing0 + orbit * 1.15
+  cam.position.set(lookX + Math.sin(ang) * horiz, lookY + horiz * pitchTan, lookZ + Math.cos(ang) * horiz)
+  cam.lookAt(lookX, lookY, lookZ)
   cam.updateMatrixWorld()
 }
 
@@ -69,7 +76,7 @@ function SceneContent({ data, controls, interactive }: Props) {
       orbit = orbitLive.current
       push = pushLive.current
     }
-    placeCamera(cam.current, focus, orbit, push)
+    placeCamera(cam.current, focus, orbit, push, data.id)
     const look = new THREE.Vector3(focus.x, 80, focus.z)
     const sun = new THREE.Vector3(0.72, 1.35, 0.28).normalize()
     light.current.position.copy(look).addScaledVector(sun, 1600)
@@ -89,7 +96,7 @@ function SceneContent({ data, controls, interactive }: Props) {
   return (
     <>
       <color attach="background" args={['#efeae3']} />
-      <fog attach="fog" args={['#efeae3', 3800, 7800]} />
+      <fog attach="fog" args={['#efeae3', 2800, 5400]} />
       <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={14000} position={[1600, 780, 1600]} />
       {interactive && !controls.driven && (
         <OrbitControls

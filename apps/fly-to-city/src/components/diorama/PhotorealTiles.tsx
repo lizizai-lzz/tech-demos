@@ -68,6 +68,9 @@ export function PhotorealTiles({ token, lng, lat, onStatus }: Props) {
     }
   }, [gl, scene, tiles])
 
+  // 优先级必须保持 0。fiber 里只要有 priority > 0 的 useFrame，就会关掉自动 gl.render。
+  // 实景模式卸掉了 EffectComposer，这里自己也不调用 gl.render。优先级一旦大于 0，
+  // 瓦片计算仍会跑，画布却只剩色调映射后的清屏色。
   useFrame(() => {
     const size = viewSize.current
     gl.getSize(size)
@@ -109,7 +112,7 @@ export function PhotorealTiles({ token, lng, lat, onStatus }: Props) {
     if (key === lastKey.current) return
     lastKey.current = key
     onStatusRef.current({ visible, credits, failed: failedRef.current })
-  }, 1)
+  })
 
   return null
 }

@@ -206,12 +206,14 @@ function SceneContent({ data, controls, interactive, photoreal = false, onPhotor
     sh.updateProjectionMatrix()
   })
 
+  // 不设正优先级。正优先级会关掉自动 gl.render，而这个回调不负责绘制。
+  // MapControls 自己是 -1，默认 0 仍然排在它后面，能把镜头抬回地面以上。
   useFrame(() => {
     if (!cam.current || controls.driven || controls.roaming) return
     if (cam.current.position.y < 36) cam.current.position.y = 36
     const rig = mapRig.current
     if (rig && rig.target.y < 0) rig.target.y = 0
-  }, 1)
+  })
 
   return (
     <>

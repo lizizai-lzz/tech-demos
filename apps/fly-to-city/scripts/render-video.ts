@@ -47,11 +47,11 @@ const browser = await puppeteer.launch({
 })
 
 const page = await browser.newPage()
-page.setDefaultTimeout(180000)
+page.setDefaultTimeout(240000)
 const url = `http://localhost:5173/?render=1&fps=${fps}&duration=${duration}`
 console.log('打开', url)
 await page.goto(url, { waitUntil: 'domcontentloaded' })
-await page.waitForFunction(() => window.__flyReady === true, { timeout: 180000 })
+await page.waitForFunction(() => window.__flyReady === true, { timeout: 240000 })
 console.log('场景就绪，开始', frames, '帧')
 
 for (let i = 0; i < frames; i++) {

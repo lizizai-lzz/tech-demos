@@ -10,7 +10,6 @@ import { Buildings } from './Buildings'
 import { Ground } from './Ground'
 import { Heroes } from './Heroes'
 import { Trees } from './Trees'
-import { Water } from './Water'
 
 export type CitySceneControls = {
   autoOrbit: boolean
@@ -95,8 +94,8 @@ function SceneContent({ data, controls, interactive }: Props) {
 
   return (
     <>
-      <color attach="background" args={['#efeae3']} />
-      <fog attach="fog" args={['#efeae3', 2800, 5400]} />
+      <color attach="background" args={['#e6e1d8']} />
+      <fog attach="fog" args={['#e6e1d8', 4600, 9800]} />
       <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={14000} position={[1600, 780, 1600]} />
       {interactive && !controls.driven && (
         <OrbitControls
@@ -119,7 +118,6 @@ function SceneContent({ data, controls, interactive }: Props) {
       />
       <directionalLight position={[-800, 300, -400]} intensity={0.22} color="#d7e4f2" />
       <Ground data={data} />
-      <Water data={data} />
       <Trees data={data} />
       <Buildings data={data} />
       <Heroes data={data} />

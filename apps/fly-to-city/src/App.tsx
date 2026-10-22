@@ -5,6 +5,7 @@ import { ControlPanel } from '@/components/ControlPanel'
 import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
 import { CityScene } from '@/components/diorama/DioramaScene'
+import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
 import { globePose, landmarkById, shotAt } from '@/lib/render-timeline'
 import { findLandmark } from '@/lib/landmarks'
@@ -80,6 +81,7 @@ export default function App() {
           setLoadMessage(`${msg} ${Math.round(p * 100)}%`)
         })
         setCity({ ...data, extentM: meta.extentM })
+        void bakeGroundCanvas(meta.lng, meta.lat)
         setFlyTrigger((n) => n + 1)
         if (recording) setRecStage('fly-in')
       } catch (e) {
@@ -228,6 +230,7 @@ export default function App() {
           lat: lm.lat,
           extentM: lm.extentM,
         })
+        await bakeGroundCanvas(lm.lng, lm.lat)
       }
       if (dead) return
       flushSync(() => {

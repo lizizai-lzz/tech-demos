@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC ICE probe (free)</title>
+<style>body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:2em;max-width:760px}pre{background:#f4f4f4;padding:1em;white-space:pre-wrap}#r{font-size:20px;font-weight:600}</style>
+<h1>WebRTC ICE 探测（免费，不连 Vidu）</h1>
+<p>用你要开播的同一个浏览器打开本文件（OBS 浏览器源也可以加载它）。出现 <b>srflx</b> 候选 = 浏览器能走 UDP，数字人画面才连得上。</p>
+<div id="r">探测中…</div>
+<pre id="log"></pre>
+<script>
+const log = s => (document.getElementById('log').textContent += s + '\n');
+const pc = new RTCPeerConnection({iceServers: [
+  {urls: 'stun:stun.miwifi.com:3478'}, {urls: 'stun:stun.l.google.com:19302'}, {urls: 'stun:stun.cloudflare.com:3478'}]});
+const seen = {host: 0, srflx: 0, relay: 0, prflx: 0};
+pc.createDataChannel('probe');
+pc.onicecandidate = e => {
+  if (!e.candidate) return finish();
+  const c = e.candidate.candidate; const m = c.match(/ typ (\w+)/); const t = m ? m[1] : '?';
+  seen[t] = (seen[t] || 0) + 1; log(t.padEnd(6) + ' ' + c);
+};
+pc.createOffer().then(o => pc.setLocalDescription(o));
+let done = false;
+function finish() {
+  if (done) return; done = true;
+  const ok = seen.srflx > 0;
+  document.getElementById('r').textContent = (ok ? 'PASS' : 'FAIL') + `  host=${seen.host} srflx=${seen.srflx}`;
+  document.getElementById('r').style.color = ok ? 'green' : 'red';
+  document.title = ok ? 'ICE PASS' : 'ICE FAIL';
+  if (!ok) log('\n没有 srflx：此网络没有 UDP 出口，或被代理/TUN 拦截。不要在这里开付费会话。');
+}
+setTimeout(finish, 8000);
+</script>

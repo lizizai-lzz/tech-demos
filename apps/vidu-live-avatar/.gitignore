@@ -1,0 +1,18 @@
+# Never commit secrets, the owner's images, or the cloned upstream
+keys/
+assets/
+*.key
+*.password
+config.json
+.env
+ai-live-avatar/
+logs/
+*.log
+*.pid
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.mov
+__pycache__/
+.venv/

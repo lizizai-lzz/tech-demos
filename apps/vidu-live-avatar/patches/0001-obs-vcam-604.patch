@@ -1,0 +1,35 @@
+Accept OBS error 604 from GetVirtualCamStatus (no virtual camera device, e.g. Linux without
+v4l2loopback or a box without the macOS camera extension) so `obs_control.py setup/status/vcam`
+do not abort. Applies to garycaogan/ai-live-avatar @ 5559ec5440c93814737155183dbe832df0b9f215.
+
+diff --git a/tools/obs_control.py b/tools/obs_control.py
+index 724ae3b..33cda23 100644
+--- a/tools/obs_control.py
++++ b/tools/obs_control.py
+@@ -85,7 +85,7 @@ async def prepare_scene(obs: OBS, scene: str, canvas: tuple[int, int]):
+     status = await obs.call("GetStreamStatus")
+     if status.get("outputActive"):
+         raise SystemExit("OBS 正在推流，先停掉再重新配置")
+-    if (await obs.call("GetVirtualCamStatus")).get("outputActive"):
++    if (await obs.call("GetVirtualCamStatus", ok_codes=(100, 604))).get("outputActive"):
+         raise SystemExit("OBS 虚拟摄像头开着（直播伴侣可能正在用），先 vcam stop 再重新配置")
+     w, h = canvas
+     await obs.call("SetVideoSettings", {"baseWidth": w, "baseHeight": h, "outputWidth": w, "outputHeight": h,
+@@ -245,7 +245,7 @@ async def vcam(action: str) -> None:
+         if action in ("start", "stop"):
+             await obs.call("StartVirtualCam" if action == "start" else "StopVirtualCam", ok_codes=(100, 500))
+             await asyncio.sleep(1)
+-        print(json.dumps({"virtual_camera": (await obs.call("GetVirtualCamStatus")).get("outputActive")}))
++        print(json.dumps({"virtual_camera": (await obs.call("GetVirtualCamStatus", ok_codes=(100, 604))).get("outputActive")}))
+         await obs.ws.close()
+ 
+ 
+@@ -267,7 +267,7 @@ async def status(seconds: float = 6) -> None:
+         items = (await obs.call("GetSceneItemList", {"sceneName": scene}))["sceneItems"]
+         stream = await obs.call("GetStreamStatus")
+         record = await obs.call("GetRecordStatus")
+-        virtual = await obs.call("GetVirtualCamStatus")
++        virtual = await obs.call("GetVirtualCamStatus", ok_codes=(100, 604))
+         peak = -200.0
+         end = asyncio.get_running_loop().time() + seconds
+         while asyncio.get_running_loop().time() < end:

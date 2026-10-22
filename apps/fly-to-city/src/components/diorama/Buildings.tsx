@@ -1,8 +1,8 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { facadeStyleForHeight, getFacadeMaterial, setFacadeAttrs } from '@/lib/facade-material'
 import type { CityData } from '@/lib/types'
-import { createWhiteMaterial } from '@/lib/materials'
 
 function ringToShape(ring: [number, number][]) {
   const shape = new THREE.Shape()
@@ -17,7 +17,7 @@ export function Buildings({ data }: { data: CityData }) {
   const group = useRef<THREE.Group>(null)
 
   const shells = useMemo(() => {
-    const mat = createWhiteMaterial()
+    const mat = getFacadeMaterial()
     const chunk: THREE.BufferGeometry[] = []
     const meshes: THREE.Mesh[] = []
     const flush = () => {
@@ -36,6 +36,8 @@ export function Buildings({ data }: { data: CityData }) {
       const shape = ringToShape(b.ring)
       const geo = new THREE.ExtrudeGeometry(shape, { depth: b.height, bevelEnabled: false })
       geo.rotateX(-Math.PI / 2)
+      const floors = b.levels > 0 ? b.levels : Math.max(1, Math.round(b.height / 3.5))
+      setFacadeAttrs(geo, floors, facadeStyleForHeight(b.height, b.facade))
       chunk.push(geo)
       if (chunk.length >= 350) flush()
     }
@@ -49,6 +51,9 @@ export function Buildings({ data }: { data: CityData }) {
     g.clear()
     for (const m of shells) g.add(m)
     window.__cityReady = data.id
+    return () => {
+      for (const m of shells) m.geometry.dispose()
+    }
   }, [shells, data.id])
 
   return <group ref={group} />

@@ -4,6 +4,7 @@ import { EffectComposer, N8AO, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { facadeUniform } from '@/lib/facade-material'
 import { heroFocus } from '@/lib/heroes'
 import type { CityData } from '@/lib/types'
 import { Buildings } from './Buildings'
@@ -17,6 +18,8 @@ export type CitySceneControls = {
   orbit: number
   push: number
   driven: boolean
+  /** 0 白模，1 贴面完全长出 */
+  facadeReveal: number
 }
 
 type Props = {
@@ -81,6 +84,7 @@ function SceneContent({ data, controls, interactive }: Props) {
       orbit = orbitLive.current
       push = pushLive.current
     }
+    facadeUniform.value = controls.facadeReveal
     placeCamera(cam.current, focus, orbit, push, data.id)
     const look = new THREE.Vector3(focus.x, 80, focus.z)
     const sun = new THREE.Vector3(0.72, 1.35, 0.28).normalize()

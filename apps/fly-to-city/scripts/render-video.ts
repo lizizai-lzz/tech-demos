@@ -20,11 +20,15 @@ type Profile = {
   shadow: number
   timeline: 'full' | 'lujiazui'
   frames?: number
+  /** 从这一帧开始写序列，给短预览用 */
+  start?: number
   videoName: string | null
+  /** 同一机位各存一张白模和一张贴面 */
+  compareFacade?: boolean
   shots: Record<string, number>
 }
 
-const arg = process.argv.find((a) => ['16:9', '9:16', 'preview', 'still-9x16'].includes(a)) ?? '16:9'
+const arg = process.argv.find((a) => ['16:9', '9:16', 'preview', 'still-9x16', 'stills', 'reveal'].includes(a)) ?? '16:9'
 
 const profiles: Record<string, Profile> = {
   '16:9': {
@@ -77,7 +81,36 @@ const profiles: Record<string, Profile> = {
     timeline: 'lujiazui',
     frames: 1,
     videoName: null,
-    shots: { 'frame-9x16': Math.round(10 * 24) },
+    shots: { 'frame-9x16': Math.round(12 * 24) },
+  },
+  stills: {
+    id: 'stills',
+    width: 1280,
+    height: 720,
+    fps: 24,
+    duration: 42,
+    shadow: 2048,
+    timeline: 'full',
+    frames: 1,
+    videoName: null,
+    compareFacade: true,
+    shots: {
+      'lujiazui-orbit': Math.round(16 * 24),
+      'shinjuku-orbit': Math.round(36 * 24),
+    },
+  },
+  reveal: {
+    id: 'reveal',
+    width: 1280,
+    height: 720,
+    fps: 12,
+    duration: 15,
+    shadow: 2048,
+    timeline: 'lujiazui',
+    start: Math.round(15 * 0.45 * 12),
+    frames: 48,
+    videoName: 'fly-to-city-reveal.mp4',
+    shots: {},
   },
 }
 
@@ -124,16 +157,18 @@ const browser = await puppeteer.launch({
 
 const page = await browser.newPage()
 page.setDefaultTimeout(240000)
+const facadeFlag = process.env.FACADE === '0' || process.env.FACADE === '1' ? `&facade=${process.env.FACADE}` : ''
 const url =
   `http://localhost:5173/?render=1&fps=${profile.fps}&duration=${profile.duration}` +
-  `&shadow=${profile.shadow}&timeline=${profile.timeline}`
+  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}`
 console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)')
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForFunction(() => window.__flyReady === true, { timeout: 240000 })
 console.log('场景就绪，开始', frames, '帧', profile.width + 'x' + profile.height)
 
+const start = profile.start ?? 0
 const only = profile.frames === 1 ? Object.values(profile.shots) : null
-const indexes = only ?? Array.from({ length: frames }, (_, i) => i)
+const indexes = only ?? Array.from({ length: frames }, (_, i) => start + i)
 
 for (const i of indexes) {
   await page.evaluate(async (frame) => {
@@ -146,7 +181,20 @@ for (const i of indexes) {
     await stage.screenshot({ path: file, type: 'jpeg', quality: 86 })
   }
   for (const [name, at] of Object.entries(profile.shots)) {
-    if (i === at) {
+    if (i !== at) continue
+    if (profile.compareFacade) {
+      await page.evaluate(async () => {
+        await window.__setFacade?.(0)
+      })
+      const white = path.join(shotDir, `${name}-white.png`)
+      await stage.screenshot({ path: white, type: 'png' })
+      await page.evaluate(async () => {
+        await window.__setFacade?.(1)
+      })
+      const facade = path.join(shotDir, `${name}-facade.png`)
+      await stage.screenshot({ path: facade, type: 'png' })
+      console.log('截图', white, facade)
+    } else {
       const png = path.join(shotDir, `${name}.png`)
       await stage.screenshot({ path: png, type: 'png' })
       console.log('截图', png)
@@ -163,7 +211,9 @@ if (!profile.videoName) {
 }
 
 const videoPath = path.join(outRoot, profile.videoName)
-const ffmpeg = `ffmpeg -y -framerate ${profile.fps} -i ${frameDir}/f-%05d.jpg -c:v libx264 -pix_fmt yuv420p -crf 18 -movflags +faststart ${videoPath}`
+const ffmpeg =
+  `ffmpeg -y -framerate ${profile.fps} -start_number ${start} -i ${frameDir}/f-%05d.jpg` +
+  ` -frames:v ${indexes.length} -c:v libx264 -pix_fmt yuv420p -crf 18 -movflags +faststart ${videoPath}`
 console.log(ffmpeg)
 const proc = Bun.spawn(['bash', '-lc', ffmpeg], { stdout: 'inherit', stderr: 'inherit' })
 const code = await proc.exited

@@ -51,6 +51,13 @@ export default function App() {
   const [driven, setDriven] = useState(false)
   const [orbit, setOrbit] = useState(0.2)
   const [push, setPush] = useState(0)
+  const facadeLock = (() => {
+    const v = new URLSearchParams(window.location.search).get('facade')
+    if (v === '0') return 0
+    if (v === '1') return 1
+    return null
+  })()
+  const [facadeReveal, setFacadeReveal] = useState(facadeLock ?? 1)
   const viewportRef = useRef<HTMLDivElement>(null)
   const renderMode = new URLSearchParams(window.location.search).get('render') === '1'
   const renderFps = Number(new URLSearchParams(window.location.search).get('fps') ?? 30)
@@ -110,6 +117,20 @@ export default function App() {
     const t = window.setTimeout(() => setRecStage('hold'), 12000)
     return () => clearTimeout(t)
   }, [recording, recStage])
+
+  useEffect(() => {
+    if (renderMode || !recording || recStage !== 'orbit') return
+    const t0 = performance.now()
+    let raf = 0
+    const tick = () => {
+      const u = Math.min(1, (performance.now() - t0) / 3600)
+      setFacadeReveal(facadeLock ?? u)
+      if (u < 1) raf = requestAnimationFrame(tick)
+    }
+    setFacadeReveal(facadeLock ?? 0)
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [recording, recStage, recordLeg, renderMode, facadeLock])
 
   useEffect(() => {
     if (!recording || recStage !== 'hold') return
@@ -260,6 +281,7 @@ export default function App() {
             setPhase('diorama')
             setOrbit(shot.orbit)
             setPush(shot.push)
+            setFacadeReveal(facadeLock ?? shot.reveal)
           }
         })
         if (shot.kind === 'globe') await waitGlobeIdle(800)
@@ -273,6 +295,13 @@ export default function App() {
           requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))
         })
       }
+      window.__setFacade = async (value: number) => {
+        const next = facadeLock ?? Math.min(1, Math.max(0, value))
+        flushSync(() => setFacadeReveal(next))
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))
+        })
+      }
       window.__flyReady = true
     }
     void boot()
@@ -281,7 +310,7 @@ export default function App() {
       document.body.classList.remove('render-mode')
       window.__flyReady = false
     }
-  }, [renderMode, renderFps, renderDuration, renderTimeline])
+  }, [renderMode, renderFps, renderDuration, renderTimeline, facadeLock])
 
   const aspectFrame =
     aspect === '9:16' && !recording
@@ -323,7 +352,13 @@ export default function App() {
             <CityScene
               data={city}
               interactive={!recording && !renderMode}
-              controls={{ autoOrbit: autoOrbit || recording, orbit, push, driven: driven || renderMode }}
+              controls={{
+                autoOrbit: autoOrbit || recording,
+                orbit,
+                push,
+                driven: driven || renderMode,
+                facadeReveal,
+              }}
             />
           )}
         </div>
@@ -348,6 +383,8 @@ export default function App() {
           aspect={aspect}
           onAspect={setAspect}
           onToggleRecording={toggleRecording}
+          facadeOn={facadeReveal > 0.5}
+          onFacade={(on) => setFacadeReveal(on ? 1 : 0)}
           loading={loading}
           loadMessage={loadMessage}
           phaseLabel={phaseLabel(phase, recStage)}

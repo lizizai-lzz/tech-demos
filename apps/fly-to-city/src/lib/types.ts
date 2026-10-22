@@ -5,6 +5,11 @@ export type BuildingFootprint = {
   ring: Vec2[]
   height: number
   levels: number
+  /** 贴面类型：0 办公 / 1 住宅 / 2 低层 / 3 玻璃 / 4 石材 / 5 格构 */
+  facade?: number
+  /** 高度来源，开发统计用 */
+  src?: string
+  use?: string
 }
 
 export type WaterPolygon = {

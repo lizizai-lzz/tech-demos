@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { getFacadeMaterial, setFacadeAttrs } from './facade-material'
 import { lngLatToLocal } from './geo'
 
 export type HeroKind =
@@ -36,8 +37,20 @@ const BY_CITY: Record<string, HeroDef[]> = {
   'nyc-midtown': [{ kind: 'empire', lng: -73.9857, lat: 40.7484, h: 443 }],
 }
 
-const white = () =>
-  new THREE.MeshStandardMaterial({ color: '#f4f2ee', roughness: 0.48, metalness: 0.03 })
+const HERO_STYLE: Record<HeroKind, number> = {
+  pearl: 3,
+  'shanghai-tower': 0,
+  swfc: 0,
+  jinmao: 0,
+  twin: 0,
+  cocoon: 3,
+  eiffel: 5,
+  opera: 4,
+  mbs: 0,
+  ifc: 0,
+  zun: 0,
+  empire: 4,
+}
 
 function box(w: number, h: number, d: number, x: number, y: number, z: number, mat: THREE.Material) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)
@@ -179,10 +192,17 @@ export function heroFocus(cityId: string, centerLng: number, centerLat: number) 
 export function createHeroGroup(cityId: string, centerLng: number, centerLat: number) {
   const group = new THREE.Group()
   const list = BY_CITY[cityId] ?? []
-  const mat = white()
+  const mat = getFacadeMaterial()
   for (const hero of list) {
     const [x, z] = lngLatToLocal(hero.lng, hero.lat, centerLng, centerLat)
     const piece = buildKind(hero.kind, hero.h, mat)
+    const style = HERO_STYLE[hero.kind]
+    const floors = Math.max(1, Math.round(hero.h / 3.5))
+    piece.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj.material === mat) {
+        setFacadeAttrs(obj.geometry, floors, style)
+      }
+    })
     piece.position.set(x, 0, z)
     group.add(piece)
   }

@@ -19,6 +19,8 @@ type Props = {
   aspect: AspectRatio
   onAspect: (a: AspectRatio) => void
   onToggleRecording: () => void
+  facadeOn: boolean
+  onFacade: (on: boolean) => void
   loading: boolean
   loadMessage: string
   phaseLabel: string
@@ -112,6 +114,25 @@ export function ControlPanel(props: Props) {
               onClick={() => props.onAspect('9:16')}
             >
               9:16
+            </Button>
+          </div>
+          <Label className="text-xs">建筑外观</Label>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.facadeOn ? 'outline' : 'default'}
+              onClick={() => props.onFacade(false)}
+            >
+              白模
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.facadeOn ? 'default' : 'outline'}
+              onClick={() => props.onFacade(true)}
+            >
+              贴面
             </Button>
           </div>
           <div className="flex flex-wrap gap-1">

@@ -3,7 +3,12 @@ import { LANDMARKS } from './landmarks'
 
 export type Shot =
   | { kind: 'globe'; cityId: string; u: number }
-  | { kind: 'city'; cityId: string; orbit: number; push: number }
+  | { kind: 'city'; cityId: string; orbit: number; push: number; reveal: number }
+
+/** 进入城市后贴面从下往上长出来，大约 3.6 秒。 */
+function revealAt(tInCity: number) {
+  return Math.min(1, Math.max(0, tInCity / 3.6))
+}
 
 function ease(u: number) {
   const t = Math.min(1, Math.max(0, u))
@@ -22,7 +27,13 @@ export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): S
       return { kind: 'globe', cityId: 'shanghai-lujiazui', u: ease(t / Math.max(0.001, fly)) }
     }
     const u = Math.min(1, (t - fly) / Math.max(0.001, duration - fly))
-    return { kind: 'city', cityId: 'shanghai-lujiazui', orbit: u, push: u * 0.85 }
+    return {
+      kind: 'city',
+      cityId: 'shanghai-lujiazui',
+      orbit: u,
+      push: u * 0.85,
+      reveal: revealAt(t - fly),
+    }
   }
   const scale = duration / 42
   const shFlyEnd = 9 * scale
@@ -33,14 +44,26 @@ export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): S
   }
   if (t < shCityEnd) {
     const u = (t - shFlyEnd) / (shCityEnd - shFlyEnd)
-    return { kind: 'city', cityId: 'shanghai-lujiazui', orbit: u, push: u }
+    return {
+      kind: 'city',
+      cityId: 'shanghai-lujiazui',
+      orbit: u,
+      push: u,
+      reveal: revealAt(t - shFlyEnd),
+    }
   }
   if (t < tkFlyEnd) {
     const u = (t - shCityEnd) / (tkFlyEnd - shCityEnd)
     return { kind: 'globe', cityId: 'tokyo-shinjuku', u: ease(u) }
   }
   const u = Math.min(1, (t - tkFlyEnd) / Math.max(0.001, duration - tkFlyEnd))
-  return { kind: 'city', cityId: 'tokyo-shinjuku', orbit: u, push: Math.min(1, u * 1.1) }
+  return {
+    kind: 'city',
+    cityId: 'tokyo-shinjuku',
+    orbit: u,
+    push: Math.min(1, u * 1.1),
+    reveal: revealAt(t - tkFlyEnd),
+  }
 }
 
 export function landmarkById(id: string): LandmarkPreset {

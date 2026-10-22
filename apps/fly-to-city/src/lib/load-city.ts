@@ -2,12 +2,28 @@ import { LANDMARKS } from './landmarks'
 import { buildCityDataFromOsm, loadBakedCity } from './osm-fetch'
 import type { CityData } from './types'
 
+function logHeightSources(data: CityData) {
+  if (!import.meta.env.DEV || !data.buildings?.length) return
+  const counts: Record<string, number> = {}
+  for (const b of data.buildings) {
+    const s = b.src ?? 'unknown'
+    counts[s] = (counts[s] ?? 0) + 1
+  }
+  const total = data.buildings.length
+  const parts = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => `${k} ${Math.round((n / total) * 100)}%`)
+    .join('  ')
+  console.info(`[高度来源] ${data.id} ${total} 栋  ${parts}`)
+}
+
 export async function loadCityForLandmark(
   landmarkId: string,
   onProgress?: (msg: string, p: number) => void,
 ): Promise<CityData> {
   const baked = await loadBakedCity(landmarkId)
   if (baked) {
+    logHeightSources(baked)
     onProgress?.('已加载预烘焙沙盘数据', 1)
     return baked
   }
@@ -40,6 +56,9 @@ export async function loadCityForCoords(
   onProgress?: (msg: string, p: number) => void,
 ): Promise<CityData> {
   const baked = await loadBakedCity(meta.id)
-  if (baked) return baked
+  if (baked) {
+    logHeightSources(baked)
+    return baked
+  }
   return buildCityDataFromOsm(meta, onProgress)
 }

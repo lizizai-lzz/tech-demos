@@ -15,6 +15,11 @@ export function Heroes({ data }: { data: CityData }) {
     if (!g) return
     g.clear()
     g.add(group)
+    return () => {
+      group.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) obj.geometry.dispose()
+      })
+    }
   }, [group])
 
   return <group ref={ref} />

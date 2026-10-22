@@ -5,20 +5,13 @@ import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { CityData } from '@/lib/types'
-import { clipPlaneFromAxis } from '@/lib/stencil-clipping'
-import { Buildings, buildingClipGeometries } from './Buildings'
-import { ClipCaps } from './ClipCaps'
-import { TerrainBlock, terrainClipGeometries } from './TerrainBlock'
+import { Buildings } from './Buildings'
+import { Ground } from './Ground'
 import { Trees } from './Trees'
 import { Water } from './Water'
 
 export type DioramaControls = {
-  sectionPos: number
-  sectionAxis: 'x' | 'z'
-  clipEnabled: boolean
-  buildingsOnlyClip: boolean
   autoOrbit: boolean
-  autoSection: boolean
   orbitSpeed: number
 }
 
@@ -39,130 +32,96 @@ function SceneContent({ data, controls, recording }: Props) {
     [data.buildings],
   )
 
-  const clipPlane = useMemo(
-    () => clipPlaneFromAxis(controls.sectionAxis, controls.sectionPos),
-    [controls.sectionAxis, controls.sectionPos],
-  )
-
-  const buildingGeos = useMemo(() => buildingClipGeometries(data), [data])
-  const terrainGeos = useMemo(() => terrainClipGeometries(data), [data])
-
-  const capGeometries = useMemo(() => {
-    if (!controls.clipEnabled) return []
-    if (controls.buildingsOnlyClip) return buildingGeos
-    return [...buildingGeos, ...terrainGeos]
-  }, [controls.clipEnabled, controls.buildingsOnlyClip, buildingGeos, terrainGeos])
+  const half = data.extentM / 2
+  const fogNear = data.extentM * 0.28
+  const fogFar = data.extentM * 0.95
 
   useEffect(() => {
-    gl.localClippingEnabled = true
     gl.toneMapping = THREE.ACESFilmicToneMapping
-    gl.toneMappingExposure = 1.12
+    gl.toneMappingExposure = 1.1
     gl.shadowMap.enabled = true
     gl.shadowMap.type = THREE.PCFSoftShadowMap
-    gl.autoClearStencil = true
   }, [gl])
-
-  const half = data.extentM / 2
 
   useFrame((_, dt) => {
     if (!cam.current) return
     if (controls.autoOrbit || recording) {
       orbit.current += dt * controls.orbitSpeed
-      push.current = Math.min(1, push.current + dt * 0.04)
-      const baseR = data.extentM * (0.62 - push.current * 0.08)
-      const y = data.extentM * (0.2 + push.current * 0.04)
+      push.current = Math.min(1, push.current + dt * 0.035)
+      const baseR = data.extentM * (0.38 - push.current * 0.06)
+      const y = data.extentM * (0.11 + push.current * 0.03)
       cam.current.position.x = Math.sin(orbit.current) * baseR
       cam.current.position.z = Math.cos(orbit.current) * baseR
       cam.current.position.y = y
-      cam.current.lookAt(0, maxH * 0.12, 0)
+      cam.current.lookAt(0, maxH * 0.08, 0)
     }
   })
 
-  const terrainClip = controls.clipEnabled && !controls.buildingsOnlyClip
-
   return (
     <>
-      <color attach="background" args={['#f9f9f7']} />
-      <fog attach="fog" args={['#f9f9f7', data.extentM * 2, data.extentM * 3.2]} />
+      <color attach="background" args={['#f7f7f5']} />
+      <fog attach="fog" args={['#f4f4f2', fogNear, fogFar]} />
       <PerspectiveCamera
         ref={cam}
         makeDefault
-        position={[data.extentM * 0.55, data.extentM * 0.22, data.extentM * 0.55]}
-        fov={32}
+        position={[data.extentM * 0.32, data.extentM * 0.14, data.extentM * 0.32]}
+        fov={42}
         near={2}
-        far={data.extentM * 8}
+        far={data.extentM * 4}
       />
       {!recording && (
         <OrbitControls
           enablePan={false}
-          minDistance={data.extentM * 0.28}
-          maxDistance={data.extentM * 1.6}
-          maxPolarAngle={Math.PI / 2.15}
-          target={[0, maxH * 0.1, 0]}
+          minDistance={data.extentM * 0.15}
+          maxDistance={data.extentM * 1.2}
+          maxPolarAngle={Math.PI / 2.12}
+          target={[0, maxH * 0.06, 0]}
         />
       )}
-      <ambientLight intensity={0.42} />
-      <hemisphereLight args={['#ffffff', '#e8ebe8', 0.35]} />
+      <ambientLight intensity={0.45} />
+      <hemisphereLight args={['#ffffff', '#e6e8e6', 0.4]} />
       <directionalLight
-        position={[half * 0.8, data.extentM * 1.1, half * 0.5]}
-        intensity={1.65}
+        position={[half, data.extentM * 0.9, half * 0.6]}
+        intensity={1.7}
         castShadow
         shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-half}
-        shadow-camera-right={half}
-        shadow-camera-top={half}
-        shadow-camera-bottom={-half}
+        shadow-camera-left={-half * 1.4}
+        shadow-camera-right={half * 1.4}
+        shadow-camera-top={half * 1.4}
+        shadow-camera-bottom={-half * 1.4}
         shadow-camera-near={20}
-        shadow-camera-far={data.extentM * 2.5}
-        shadow-bias={-0.00015}
+        shadow-camera-far={data.extentM * 2}
+        shadow-bias={-0.00012}
         shadow-normalBias={0.02}
       />
-      <Environment preset="city" environmentIntensity={0.18} />
+      <Environment preset="city" environmentIntensity={0.16} />
 
-      <TerrainBlock
-        data={data}
-        clipPlane={terrainClip ? clipPlane : null}
-        clipEnabled={terrainClip}
-      />
+      <Ground data={data} />
       <Water data={data} />
       <Trees data={data} />
-      <Buildings
-        data={data}
-        clipPlane={clipPlane}
-        clipEnabled={controls.clipEnabled}
-      />
-
-      <ClipCaps
-        geometries={capGeometries}
-        plane={clipPlane}
-        enabled={controls.clipEnabled}
-        extentM={data.extentM}
-        maxHeight={maxH}
-        strataCap={!controls.buildingsOnlyClip}
-      />
+      <Buildings data={data} />
 
       <EffectComposer multisampling={4}>
-        <N8AO aoRadius={14} intensity={4.2} distanceFalloff={0.65} halfRes={false} />
+        <N8AO aoRadius={18} intensity={4.8} distanceFalloff={0.6} halfRes={false} />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     </>
   )
 }
 
+export type CitySceneControls = DioramaControls
+
 export function DioramaScene(props: Props) {
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      gl={{
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-        stencil: true,
-      }}
+      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       style={{ width: '100%', height: '100%' }}
     >
       <SceneContent {...props} />
     </Canvas>
   )
 }
+
+export { DioramaScene as CityScene }

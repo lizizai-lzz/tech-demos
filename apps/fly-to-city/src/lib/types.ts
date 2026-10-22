@@ -44,5 +44,4 @@ export type RecordingStage =
   | 'fly-in'
   | 'transition'
   | 'orbit'
-  | 'section'
   | 'hold'

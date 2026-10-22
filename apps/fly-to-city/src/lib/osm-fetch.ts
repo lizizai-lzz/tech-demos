@@ -76,7 +76,7 @@ function extractBuildings(
       levels,
     })
   }
-  return out.sort((a, b) => b.height - a.height).slice(0, 1200)
+  return out.sort((a, b) => b.height - a.height).slice(0, 2800)
 }
 
 function extractWater(
@@ -156,7 +156,7 @@ function extractTrees(
     const ring = wayToRing(el.geometry, centerLng, centerLat)
     trees.push(...scatterTreesInRing(ring, 40, rng))
   }
-  return trees.slice(0, 2500)
+  return trees.slice(0, 5500)
 }
 
 export async function fetchOverpass(

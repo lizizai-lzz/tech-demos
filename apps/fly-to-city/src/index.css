@@ -60,6 +60,13 @@
   body {
     @apply bg-background text-foreground antialiased;
     margin: 0;
+    overflow: hidden;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
   }
   html {
     @apply font-sans;

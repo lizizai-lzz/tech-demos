@@ -16,7 +16,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Lujiazui CBD - China',
     lng: 121.4998,
     lat: 31.2397,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'beijing-cbd',
@@ -25,7 +25,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Guomao CBD - China',
     lng: 116.459,
     lat: 39.909,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'hongkong-central',
@@ -34,7 +34,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Central & Victoria Harbour - China',
     lng: 114.158,
     lat: 22.281,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'tokyo-shinjuku',
@@ -43,7 +43,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Shinjuku Station - Japan',
     lng: 139.7006,
     lat: 35.6896,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'singapore-marina-bay',
@@ -52,7 +52,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Marina Bay Sands - Singapore',
     lng: 103.859,
     lat: 1.283,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'sydney-opera',
@@ -61,7 +61,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Opera House & The Rocks - Australia',
     lng: 151.2153,
     lat: -33.8568,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'nyc-midtown',
@@ -70,7 +70,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Midtown Manhattan - USA',
     lng: -73.981,
     lat: 40.754,
-    extentM: 1200,
+    extentM: 7000,
   },
   {
     id: 'paris-eiffel',
@@ -79,7 +79,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     subtitle: 'Eiffel Tower & Champ de Mars - France',
     lng: 2.2945,
     lat: 48.8584,
-    extentM: 1200,
+    extentM: 7000,
   },
 ]
 

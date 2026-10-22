@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Film, MapPin, Scissors, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Film, MapPin, Search } from 'lucide-react'
 import { useState } from 'react'
 import { LANDMARKS } from '@/lib/landmarks'
 import type { AspectRatio } from '@/lib/types'
@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
-import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -18,16 +16,6 @@ type Props = {
   suggestions: { label: string; lng: number; lat: number }[]
   onPickSuggestion: (s: { label: string; lng: number; lat: number }) => void
   onPickLandmark: (id: string) => void
-  extentM: number
-  onExtentChange: (v: number) => void
-  clipEnabled: boolean
-  onClipEnabled: (v: boolean) => void
-  buildingsOnlyClip: boolean
-  onBuildingsOnlyClip: (v: boolean) => void
-  sectionPos: number
-  onSectionPos: (v: number) => void
-  sectionAxis: 'x' | 'z'
-  onSectionAxis: (v: 'x' | 'z') => void
   aspect: AspectRatio
   onAspect: (a: AspectRatio) => void
   onToggleRecording: () => void
@@ -38,7 +26,6 @@ type Props = {
 
 export function ControlPanel(props: Props) {
   const [open, setOpen] = useState(true)
-  const half = props.extentM / 2
 
   return (
     <>
@@ -46,15 +33,15 @@ export function ControlPanel(props: Props) {
         type="button"
         aria-label={open ? '收起面板' : '展开面板'}
         onClick={() => setOpen((o) => !o)}
-        className="pointer-events-auto absolute left-3 top-20 z-30 flex size-9 items-center justify-center rounded-lg border border-border bg-card/95 shadow-sm backdrop-blur"
+        className="pointer-events-auto fixed left-3 top-3 z-40 flex size-9 items-center justify-center rounded-lg border border-border/80 bg-card/90 shadow-sm backdrop-blur"
       >
         {open ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
       </button>
 
       <Card
         className={cn(
-          'pointer-events-auto absolute left-3 top-28 z-30 flex max-h-[calc(100vh-8rem)] w-[min(100%,22rem)] flex-col gap-3 overflow-y-auto p-3 shadow-lg transition-transform duration-300',
-          open ? 'translate-x-0' : '-translate-x-[110%]',
+          'pointer-events-auto fixed left-3 top-14 z-40 flex max-h-[min(70vh,520px)] w-[min(100%,20rem)] flex-col gap-2 overflow-y-auto p-3 shadow-lg transition-transform duration-300',
+          open ? 'translate-x-0' : '-translate-x-[120%]',
         )}
       >
         <div className="relative">
@@ -68,7 +55,7 @@ export function ControlPanel(props: Props) {
           />
         </div>
         {props.suggestions.length > 0 && (
-          <div className="max-h-28 overflow-y-auto rounded-md border bg-popover p-1">
+          <div className="max-h-24 overflow-y-auto rounded-md border bg-popover p-1">
             {props.suggestions.map((s) => (
               <button
                 key={s.label}
@@ -108,49 +95,7 @@ export function ControlPanel(props: Props) {
         </div>
 
         <div className="space-y-2 border-t border-border pt-2">
-          <Label className="text-xs">沙盘范围</Label>
-          <Slider
-            min={600}
-            max={2000}
-            step={100}
-            value={[props.extentM]}
-            onValueChange={(v) => props.onExtentChange(v[0])}
-          />
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <Scissors className="size-3" /> 剖切
-            </span>
-            <Switch checked={props.clipEnabled} onCheckedChange={props.onClipEnabled} />
-          </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>仅切建筑</span>
-            <Switch checked={props.buildingsOnlyClip} onCheckedChange={props.onBuildingsOnlyClip} />
-          </div>
-          <div className="flex gap-1">
-            <Button
-              size="sm"
-              className="h-7 flex-1 text-xs"
-              variant={props.sectionAxis === 'x' ? 'default' : 'outline'}
-              onClick={() => props.onSectionAxis('x')}
-            >
-              X
-            </Button>
-            <Button
-              size="sm"
-              className="h-7 flex-1 text-xs"
-              variant={props.sectionAxis === 'z' ? 'default' : 'outline'}
-              onClick={() => props.onSectionAxis('z')}
-            >
-              Z
-            </Button>
-          </div>
-          <Slider
-            min={-half}
-            max={half}
-            step={5}
-            value={[props.sectionPos]}
-            onValueChange={(v) => props.onSectionPos(v[0])}
-          />
+          <Label className="text-xs">录屏画幅</Label>
           <div className="flex gap-1">
             <Button
               size="sm"

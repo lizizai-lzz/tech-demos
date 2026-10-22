@@ -17,6 +17,12 @@ function logHeightSources(data: CityData) {
   console.info(`[高度来源] ${data.id} ${total} 栋  ${parts}`)
 }
 
+function applyLandmarkCopy(data: CityData): CityData {
+  const lm = LANDMARKS.find((item) => item.id === data.id)
+  if (!lm) return data
+  return { ...data, nameEn: lm.nameEn, nameZh: lm.nameZh, subtitle: lm.subtitle }
+}
+
 export async function loadCityForLandmark(
   landmarkId: string,
   onProgress?: (msg: string, p: number) => void,
@@ -25,7 +31,7 @@ export async function loadCityForLandmark(
   if (baked) {
     logHeightSources(baked)
     onProgress?.('已加载预烘焙沙盘数据', 1)
-    return baked
+    return applyLandmarkCopy(baked)
   }
   const lm = LANDMARKS.find((l) => l.id === landmarkId)
   if (!lm) throw new Error('未找到地标')
@@ -58,7 +64,7 @@ export async function loadCityForCoords(
   const baked = await loadBakedCity(meta.id)
   if (baked) {
     logHeightSources(baked)
-    return baked
+    return applyLandmarkCopy(baked)
   }
   return buildCityDataFromOsm(meta, onProgress)
 }

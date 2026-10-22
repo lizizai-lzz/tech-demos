@@ -76,11 +76,19 @@ try {
   await page.evaluateOnNewDocument((value: string) => {
     window.__CESIUM_ION_TOKEN = value
   }, token)
+  const attributionFlag = process.argv.includes('--attribution') ? '&attribution=1' : ''
   const url =
-    'http://127.0.0.1:5173/?render=1&photoreal=1&shoot=1&fps=24&duration=15&shadow=2048&timeline=shinjuku'
+    'http://127.0.0.1:5173/?render=1&photoreal=1&shoot=1&fps=24&duration=15&shadow=2048&timeline=shinjuku' +
+    attributionFlag
   console.log('打开实景拍摄页', swift ? '(SwiftShader)' : '(GPU)', '令牌已注入，不打印内容')
   await page.goto(url, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })
+  await page.evaluate(async () => {
+    await window.__preloadPhotoreal?.()
+  })
+  await page
+    .waitForFunction(() => window.__photorealReady === true, { timeout: 50000 })
+    .catch(() => console.log('下降段预加载超时，继续逐帧拍摄'))
   console.log('场景就绪。本次使用 1 个页面，开始', frames, '帧')
 
   for (let i = 0; i < frames; i++) {

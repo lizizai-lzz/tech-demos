@@ -72,11 +72,17 @@ bun run render:16x9 --attribution
 
 `?attribution=0` 会强制关掉，即使环境变量已经打开。
 
-程序化城市才走这个开关。Google 实景瓦片一旦出现在画面上，左下角的 Google 标志和瓦片自带的版权字符串就会一直显示，离线成片的每一帧也一样，不受上面的开关控制。
+程序化城市和 Google 实景用的是同一个开关。实景画面上的 Google 标志和瓦片版权字符串也默认不画。公开发布的视频，以及任何对外部署，必须打开，包括：
+
+```bash
+bun run shoot:photoreal --attribution
+```
 
 ## 实景模式
 
 有 Google 覆盖的城市可以改看 Cesium ion 上的 Google Photorealistic 3D Tiles（资产 `2275207`）。瓦片只在内存里流式加载，不落盘，也不导出模型。一次打开页面只创建一次瓦片集，换城市只改坐标。
+
+这些城市下降时不显示 MapLibre 的灰色挤出楼。瓦片在下降中段开始流入，并和地球交叉淡化；镜头从地球连续落到斜俯视环绕，位置、朝向和俯角都不跳。离线拍摄会在逐帧开始前先预加载这段下降。
 
 中国大陆（陆家嘴、国贸，以及搜索到的大陆地点）没有这套实景，会自动回到程序化城市。没有令牌、令牌无效，或根瓦片加载失败时也一样。面板上的「实景 / 程序化」可以手动切回去。
 
@@ -114,7 +120,7 @@ bun run shoot:photoreal
 - 呼啸声：WebAudio 实时合成，没有采样。画面上的速度线和云也是程序画的
 - [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/)（Terrarium）
 - Photon 地理编码（Komoot）
-- 实景模式：[Google Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles)（Cesium ion 资产 2275207），经 [3d-tiles-renderer](https://github.com/NASA-AMMOS/3DTilesRendererJS) 流式显示。画面上的版权字符串以瓦片自己报告的为准
+- 实景模式：[Google Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles)（Cesium ion 资产 2275207），经 [3d-tiles-renderer](https://github.com/NASA-AMMOS/3DTilesRendererJS) 流式显示。署名打开时，版权字符串以瓦片自己报告的为准
 
 ## 局限
 

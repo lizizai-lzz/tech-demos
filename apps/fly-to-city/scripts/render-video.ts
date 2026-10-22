@@ -178,6 +178,12 @@ const url =
 console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)', token ? '（已读取实景令牌）' : '（没有实景令牌，使用程序化城市）')
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })
+await page.evaluate(async () => {
+  await window.__preloadPhotoreal?.()
+})
+await page
+  .waitForFunction(() => window.__photorealReady === true, { timeout: 50000 })
+  .catch(() => console.log('下降段预加载超时，继续逐帧拍摄'))
 console.log('场景就绪，开始', frames, '帧', profile.width + 'x' + profile.height)
 
 const start = profile.start ?? 0

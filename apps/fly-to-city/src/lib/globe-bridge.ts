@@ -26,6 +26,7 @@ export function globeIsReady() {
 
 export function jumpGlobe(cam: GlobeCam) {
   map?.resize()
+  map?.setMaxPitch(85)
   map?.jumpTo({
     center: [cam.lng, cam.lat],
     zoom: cam.zoom,

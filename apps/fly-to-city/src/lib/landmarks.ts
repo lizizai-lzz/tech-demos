@@ -31,7 +31,7 @@ export const LANDMARKS: LandmarkPreset[] = [
     id: 'hongkong-central',
     nameEn: 'HONG KONG',
     nameZh: '香港',
-    subtitle: 'Central & Victoria Harbour - China',
+    subtitle: 'Central & Victoria Harbour · Hong Kong',
     lng: 114.158,
     lat: 22.281,
     extentM: 7000,

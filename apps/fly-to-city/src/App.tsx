@@ -10,7 +10,16 @@ import { PhotorealCredit } from '@/components/PhotorealCredit'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
+import { heroFocus } from '@/lib/heroes'
 import { arriveFromReveal, flightEase, globePose, landmarkById, shotAt, type Timeline } from '@/lib/render-timeline'
+import {
+  globeToLocal,
+  photorealBlend,
+  photorealFlightPose,
+  PHOTOREAL_STREAM_U,
+  stageHeight,
+  type LocalPose,
+} from '@/lib/view-pose'
 import { playWhoosh, primeWhoosh } from '@/lib/whoosh'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
@@ -66,6 +75,8 @@ export default function App() {
   const [facadeReveal, setFacadeReveal] = useState(facadeLock ?? 1)
   const [globeU, setGlobeU] = useState(0)
   const [arrive, setArrive] = useState(0)
+  const [flightBlend, setFlightBlend] = useState(0)
+  const [matchedPose, setMatchedPose] = useState<LocalPose | null>(null)
   const [muted, setMuted] = useState(false)
   const photorealParam = new URLSearchParams(window.location.search).get('photoreal')
   const [preferPhotoreal, setPreferPhotoreal] = useState(photorealParam !== '0')
@@ -88,6 +99,8 @@ export default function App() {
     timelineParam === 'lujiazui' || timelineParam === 'shinjuku' ? timelineParam : 'full'
   const shootMode = new URLSearchParams(window.location.search).get('shoot') === '1'
   const citiesRef = useRef<Record<string, CityData>>({})
+  const cityRef = useRef<CityData | null>(null)
+  cityRef.current = city
 
   const startJourney = useCallback(
     async (
@@ -107,6 +120,8 @@ export default function App() {
       setPhase('globe')
       setGlobeU(0)
       setArrive(0)
+      setFlightBlend(0)
+      setMatchedPose(null)
       setCenter({ lng: meta.lng, lat: meta.lat })
       setAutoOrbit(false)
       if (!keepRecordingStage) setRecStage('idle')
@@ -128,6 +143,11 @@ export default function App() {
   )
 
   const onFlyEnd = useCallback(() => {
+    setArrive(0)
+    setOrbit(0)
+    setPush(0)
+    setMatchedPose(null)
+    setFlightBlend(1)
     setPhase('transition')
     window.setTimeout(() => {
       setPhase('diorama')
@@ -200,6 +220,29 @@ export default function App() {
       if (!whooshSent.current && eased >= 0.18 && !mutedRef.current) {
         whooshSent.current = true
         playWhoosh()
+      }
+      const current = cityRef.current
+      const photo =
+        !!current &&
+        preferRef.current &&
+        cesiumIonToken() !== '' &&
+        hasPhotorealCoverage(current.id, current.center.lng, current.center.lat) &&
+        !failedRef.current
+      if (photo) {
+        const h = stageHeight()
+        const focus = heroFocus(current.id, current.center.lng, current.center.lat)
+        const globe = photorealFlightPose(
+          { id: current.id, lng: current.center.lng, lat: current.center.lat },
+          eased,
+          h,
+          focus,
+        )
+        jumpGlobe(globe)
+        setFlightBlend(photorealBlend(eased))
+        setMatchedPose(globeToLocal(current.center.lng, current.center.lat, globe, h))
+      } else {
+        setFlightBlend(0)
+        setMatchedPose(null)
       }
       setGlobeU(eased)
       if (u < 1) raf = requestAnimationFrame(tick)
@@ -352,6 +395,13 @@ export default function App() {
         if (globeIsReady() && window.__cityReady === firstId) break
         await new Promise((r) => setTimeout(r, 50))
       }
+      const applyFlight = (cityId: string, u: number) => {
+        const lm = landmarkById(cityId)
+        const h = stageHeight()
+        const focus = heroFocus(lm.id, lm.lng, lm.lat)
+        const globe = photorealFlightPose({ id: lm.id, lng: lm.lng, lat: lm.lat }, u, h, focus)
+        return { globe, local: globeToLocal(lm.lng, lm.lat, globe, h) }
+      }
       const showSettled = async (id: string) => {
         const data = citiesRef.current[id]
         if (!data) return
@@ -365,6 +415,8 @@ export default function App() {
           setPush(0.5)
           setFacadeReveal(facadeLock ?? 1)
           setDriven(true)
+          setFlightBlend(1)
+          setMatchedPose(null)
         })
         for (let i = 0; i < 80; i++) {
           if (window.__cityReady === id) break
@@ -375,26 +427,75 @@ export default function App() {
         })
       }
       window.__showCity = showSettled
+      // 下降段先把相机放到接近落地的位置，让同一套瓦片提前流出根节点。
+      window.__preloadPhotoreal = async () => {
+        const id = Object.keys(citiesRef.current).find((key) => wantTiles(key))
+        if (!id) {
+          window.__photorealReady = true
+          return
+        }
+        const data = citiesRef.current[id]
+        const { globe, local } = applyFlight(id, 0.92)
+        window.__photorealReady = false
+        flushSync(() => {
+          setCity(data)
+          setPhase('globe')
+          setGlobeU(0.92)
+          setArrive(0)
+          setOrbit(0)
+          setPush(0)
+          setFlightBlend(photorealBlend(0.92))
+          setMatchedPose(local)
+          setDriven(true)
+        })
+        jumpGlobe(globe)
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))
+        })
+      }
       window.__seek = async (frame: number) => {
         const shot = shotAt(frame / renderFps, renderDuration, renderTimeline)
         const data = citiesRef.current[shot.cityId]
-        window.__photorealReady = !(shot.kind === 'city' && wantTiles(shot.cityId))
-        flushSync(() => {
-          setCity(data)
-          if (shot.kind === 'globe') {
+        const tiles = wantTiles(shot.cityId)
+        if (shot.kind === 'globe' && tiles) {
+          const { globe, local } = applyFlight(shot.cityId, shot.u)
+          window.__photorealReady = shot.u < PHOTOREAL_STREAM_U
+          flushSync(() => {
+            setCity(data)
             setPhase('globe')
             setGlobeU(shot.u)
             setArrive(0)
-            jumpGlobe(globePose(landmarkById(shot.cityId), shot.u))
-          } else {
+            setOrbit(0)
+            setPush(0)
+            setFlightBlend(photorealBlend(shot.u))
+            setMatchedPose(local)
+          })
+          jumpGlobe(globe)
+        } else if (shot.kind === 'globe') {
+          window.__photorealReady = true
+          flushSync(() => {
+            setCity(data)
+            setPhase('globe')
+            setGlobeU(shot.u)
+            setArrive(0)
+            setFlightBlend(0)
+            setMatchedPose(null)
+          })
+          jumpGlobe(globePose(landmarkById(shot.cityId), shot.u))
+        } else {
+          window.__photorealReady = !tiles
+          flushSync(() => {
+            setCity(data)
             setPhase('diorama')
             setGlobeU(1)
             setArrive(arriveFromReveal(shot.reveal))
             setOrbit(shot.orbit)
             setPush(shot.push)
             setFacadeReveal(facadeLock ?? shot.reveal)
-          }
-        })
+            setFlightBlend(1)
+            setMatchedPose(null)
+          })
+        }
         if (shot.kind === 'globe') await waitGlobeIdle(800)
         else {
           for (let i = 0; i < 80; i++) {
@@ -425,7 +526,9 @@ export default function App() {
 
   const tokenReady = cesiumIonToken() !== ''
   const covered = city ? hasPhotorealCoverage(city.id, city.center.lng, city.center.lat) : false
-  const photoreal = phase === 'diorama' && preferPhotoreal && tokenReady && covered && !tileFailed
+  const wantPhotoreal = preferPhotoreal && tokenReady && covered && !tileFailed
+  const streaming = wantPhotoreal && globeU >= PHOTOREAL_STREAM_U
+  const photoreal = wantPhotoreal && (phase === 'diorama' || streaming)
   const modeNote = !preferPhotoreal
     ? '当前是程序化城市。'
     : !tokenReady
@@ -438,7 +541,7 @@ export default function App() {
             ? '正在加载实景瓦片…'
             : tileVisible
               ? '正在显示 Google 实景。'
-              : '实景会在进入城市后加载。'
+              : '实景会在下降途中淡入。'
 
   const aspectFrame =
     aspect === '9:16' && !recording
@@ -467,14 +570,17 @@ export default function App() {
           recording={recording}
           hideChrome={renderMode}
           rush={phase === 'diorama' ? 0 : Math.sin(Math.min(1, Math.max(0, globeU)) * Math.PI)}
+          poseLocked={wantPhotoreal && !renderMode}
+          hideExtrusions={wantPhotoreal}
+          opacity={phase === 'diorama' ? 0 : 1 - (wantPhotoreal ? flightBlend : 0)}
         />
         <div
           className="absolute inset-0"
           style={{
-            display: renderMode && phase !== 'diorama' ? 'none' : 'block',
-            opacity: phase === 'diorama' ? 1 : 0,
+            display: renderMode && phase !== 'diorama' && !streaming ? 'none' : 'block',
+            opacity: phase === 'diorama' ? 1 : wantPhotoreal ? flightBlend : 0,
             pointerEvents: phase === 'diorama' ? 'auto' : 'none',
-            transition: renderMode ? 'none' : 'opacity 1000ms',
+            transition: renderMode || wantPhotoreal ? 'none' : 'opacity 1000ms',
           }}
         >
           {city && (
@@ -493,7 +599,8 @@ export default function App() {
                 push,
                 driven: driven || renderMode,
                 facadeReveal,
-                arrive: renderMode ? arrive : phase === 'diorama' ? arrive : 1,
+                arrive: renderMode || wantPhotoreal || phase === 'diorama' ? arrive : 1,
+                matched: matchedPose,
               }}
             />
           )}

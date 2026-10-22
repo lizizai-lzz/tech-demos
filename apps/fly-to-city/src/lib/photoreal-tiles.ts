@@ -97,6 +97,15 @@ export function retryPhotorealTiles() {
   singleton?.resetFailedTiles()
 }
 
+const orientByTiles = new WeakMap<TilesRenderer, THREE.Matrix4>()
+const _world = new THREE.Matrix4()
+const _box = new THREE.Box3()
+const _tileBox = new THREE.Box3()
+const _size = new THREE.Vector3()
+const _center = new THREE.Vector3()
+const _proj = new THREE.Matrix4()
+const _frustum = new THREE.Frustum()
+
 /** 把地球坐标的瓦片摆到城市原点：X 向东，Y 向上，北是 -Z，和程序化城市同一套坐标。 */
 export function orientTilesToCity(tiles: TilesRenderer, lng: number, lat: number) {
   const enu = new THREE.Matrix4()
@@ -107,9 +116,95 @@ export function orientTilesToCity(tiles: TilesRenderer, lng: number, lat: number
     new THREE.Vector3(0, 0, -1),
     new THREE.Vector3(0, 1, 0),
   )
-  tiles.group.matrix.copy(toOurs.multiply(enu))
+  const matrix = toOurs.multiply(enu)
+  tiles.group.matrix.copy(matrix)
+  const saved = orientByTiles.get(tiles) ?? new THREE.Matrix4()
+  saved.copy(matrix)
+  orientByTiles.set(tiles, saved)
   tiles.group.matrixAutoUpdate = false
-  tiles.group.updateMatrixWorld(true)
+  tiles.group.matrixWorldAutoUpdate = false
+  refreshTileWorldMatrices(tiles.group)
+}
+
+/**
+ * 瓦片组在矩阵没变时不会刷新子节点。新网格会停在地心坐标里，列表里却算「可见」。
+ * 这里每帧把城市矩阵写回去，并强制重算正在显示的网格。
+ */
+export function keepTilesOriented(tiles: TilesRenderer) {
+  const group = tiles.group
+  const saved = orientByTiles.get(tiles)
+  if (saved && !group.matrix.equals(saved)) group.matrix.copy(saved)
+  group.visible = true
+  group.matrixAutoUpdate = false
+  group.matrixWorldAutoUpdate = false
+  refreshTileWorldMatrices(group)
+  tiles.forEachLoadedModel((scene, tile) => {
+    if (!tiles.visibleTiles.has(tile) && !tiles.activeTiles.has(tile)) return
+    scene.updateMatrixWorld(true)
+  })
+}
+
+/** 用组上的矩阵重写世界矩阵。不走 TilesGroup.updateMatrixWorld，那个会在矩阵没变时跳过子节点。 */
+export function refreshTileWorldMatrices(group: THREE.Object3D) {
+  group.matrixAutoUpdate = false
+  group.matrixWorldAutoUpdate = false
+  const parent = group.parent
+  if (parent) {
+    parent.updateWorldMatrix(true, false)
+    _world.multiplyMatrices(parent.matrixWorld, group.matrix)
+  } else {
+    _world.copy(group.matrix)
+  }
+  group.matrixWorld.copy(_world)
+  group.matrixWorldNeedsUpdate = false
+  const inverse = (group as THREE.Object3D & { matrixWorldInverse?: THREE.Matrix4 }).matrixWorldInverse
+  if (inverse) inverse.copy(_world).invert()
+  for (const child of group.children) child.updateMatrixWorld(true)
+}
+
+/**
+ * 网格的世界包围盒是不是落在城市附近，并且切进了当前镜头。
+ * 地心坐标下的盒子中心在几十万米外，直接算没画上。
+ */
+export function localBoxOnScreen(box: THREE.Box3, camera: THREE.Camera) {
+  if (box.isEmpty()) return false
+  box.getSize(_size)
+  box.getCenter(_center)
+  const span = Math.max(_size.x, _size.y, _size.z)
+  if (_center.length() > 100_000) return false
+  if (span < 0.5 || span > 800_000) return false
+  _proj.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
+  _frustum.setFromProjectionMatrix(_proj, camera.coordinateSystem)
+  return _frustum.intersectsBox(box)
+}
+
+/** 按网格自己的世界矩阵量包围盒，不再调用 setFromObject，避免测量时把错误矩阵悄悄改掉。 */
+function boxFromStoredWorld(scene: THREE.Object3D, target: THREE.Box3) {
+  target.makeEmpty()
+  scene.traverse((obj) => {
+    const mesh = obj as THREE.Mesh
+    if (!mesh.isMesh || !mesh.geometry) return
+    const geometry = mesh.geometry
+    if (!geometry.boundingBox) geometry.computeBoundingBox()
+    if (!geometry.boundingBox) return
+    _box.copy(geometry.boundingBox).applyMatrix4(mesh.matrixWorld)
+    target.union(_box)
+  })
+  return target
+}
+
+export function photorealTilesOnScreen(tiles: TilesRenderer, camera: THREE.Camera) {
+  let meshes = 0
+  let onScreen = false
+  tiles.forEachLoadedModel((scene, tile) => {
+    if (!tiles.visibleTiles.has(tile)) return
+    boxFromStoredWorld(scene, _tileBox)
+    if (_tileBox.isEmpty()) return
+    meshes += 1
+    if (localBoxOnScreen(_tileBox, camera)) onScreen = true
+  })
+  const groupLive = tiles.group.visible && tiles.group.parent !== null
+  return { onScreen: onScreen && groupLive, meshes }
 }
 
 export function tilesBusy(tiles: TilesRenderer) {

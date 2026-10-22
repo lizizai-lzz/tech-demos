@@ -120,7 +120,7 @@ bun run shoot:photoreal
 bun run shoot:photoreal -- --city=paris-eiffel --roam=tour
 ```
 
-`--roam` 可以是 `flyover`（默认）、`orbit`、`tour`、`rise`。不写 `--city` 时仍是新宿飞入，再定格新宿和香港。写了就只拍这一座。
+`--roam` 可以是 `flyover`（默认）、`orbit`、`tour`、`rise`。不写 `--city` 时仍是新宿飞入，再定格新宿和香港。写了就只拍这一座。拍摄会读城市画布中下部的像素：如果落地后是一片纯色，脚本会失败，不会再因为瓦片列表非空就报告实景已经看见。
 
 离线成片同样可以指定漫游，预览默认掠过：
 

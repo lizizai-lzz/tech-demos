@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { readEnvLocal } from './read-env-local.ts'
+import { frameColorSpread, frameIsFlat } from '../src/lib/frame-paint.ts'
 import { findLandmark } from '../src/lib/landmarks.ts'
 import { parseRoam } from '../src/lib/view-pose.ts'
 
@@ -92,6 +93,56 @@ async function rootLoads(page: import('puppeteer-core').Page) {
   return page.evaluate(() => window.__photorealRootLoads ?? 0)
 }
 
+/** 读城市画布中下部。WebGL 的 y 从下往上，这块区域应该是楼，不是天空，也不包括 HTML 标题。 */
+async function readCitySamples(page: import('puppeteer-core').Page) {
+  return page.evaluate(() => {
+    const canvases = [...document.querySelectorAll('#stage canvas')] as HTMLCanvasElement[]
+    const canvas = canvases
+      .filter((item) => item.width > 2 && item.height > 2 && !item.classList.contains('maplibregl-canvas'))
+      .sort((a, b) => b.width * b.height - a.width * a.height)[0]
+    if (!canvas) return null
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+    if (!gl) return null
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    const cols = 20
+    const rows = 12
+    const buf = new Uint8Array(4)
+    const rgb: number[] = []
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = Math.min(canvas.width - 1, Math.floor((0.15 + (0.7 * col) / (cols - 1)) * canvas.width))
+        const y = Math.min(canvas.height - 1, Math.floor((0.08 + (0.54 * row) / (rows - 1)) * canvas.height))
+        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+        rgb.push(buf[0] ?? 0, buf[1] ?? 0, buf[2] ?? 0)
+      }
+    }
+    return rgb
+  })
+}
+
+async function assertCityPainted(page: import('puppeteer-core').Page, label: string) {
+  const rgb = await readCitySamples(page)
+  const flags = await page.evaluate(() => ({
+    visible: window.__photorealVisible === true,
+    onScreen: window.__photorealOnScreen === true,
+  }))
+  if (!rgb) throw new Error(`${label}：没有读到城市画布，不能把这一帧当成实景。`)
+  const spread = frameColorSpread(rgb)
+  const flat = frameIsFlat(rgb)
+  console.log(
+    label,
+    flat ? `画面是纯色，跨度 ${spread}` : `画面有内容，跨度 ${spread}`,
+    flags.onScreen ? '网格在镜头里' : '网格不在镜头里',
+  )
+  if (flat || !flags.visible) {
+    throw new Error(
+      flat
+        ? `${label}：画面是一片纯色（通道跨度 ${spread}）。瓦片列表不能当成已经看见。`
+        : `${label}：实景网格没有进入镜头。`,
+    )
+  }
+}
+
 try {
   const pages = await browser.pages()
   const page = pages[0] ?? (await browser.newPage())
@@ -126,6 +177,9 @@ try {
     if (!stage) throw new Error('缺少 #stage')
     const file = path.join(frameDir, `f-${String(i).padStart(5, '0')}.jpg`)
     await stage.screenshot({ path: file, type: 'jpeg', quality: 86 })
+    if (i === frames - 1 || i === Math.round(frames * 0.8)) {
+      await assertCityPainted(page, `第 ${i} 帧`)
+    }
     if (i === Math.round(3 * fps)) {
       const mid = path.join(outRoot, 'globe-midflight.png')
       await stage.screenshot({ path: mid, type: 'png' })
@@ -164,11 +218,8 @@ try {
       .catch(() => console.log(name, '实景等待超时'))
     const png = path.join(outRoot, name)
     await stage.screenshot({ path: png, type: 'png' })
-    const visible = await page.evaluate(() => window.__photorealVisible === true)
-    console.log('截图', png, visible ? '实景可见' : '实景没有显示')
-    if (!visible) {
-      throw new Error('实景瓦片没有显示。请检查令牌是否有效，以及 ion 控制台里允许的 URL 是否包含 localhost。')
-    }
+    console.log('截图', png)
+    await assertCityPainted(page, name)
   }
 
   const loads = await rootLoads(page)

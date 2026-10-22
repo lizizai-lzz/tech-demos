@@ -12,6 +12,8 @@ declare global {
     /** true 表示这一帧可以截图：实景已稳定，或这一帧本来就不是实景 */
     __photorealReady?: boolean
     __photorealVisible?: boolean
+    /** 可见瓦片里至少有一块网格真正落在当前镜头里 */
+    __photorealOnScreen?: boolean
     __photorealRootLoads?: number
     /** 当前城市已经看到高细节建筑网格 */
     __photorealBuilding?: boolean

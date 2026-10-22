@@ -617,10 +617,11 @@ export default function App() {
           hideExtrusions={wantPhotoreal}
           opacity={phase === 'diorama' ? 0 : 1 - (wantPhotoreal ? flightBlend : 0)}
         />
+        {/* 隐藏时仍占满画面。display:none 会把画布收成 0×0，实景瓦片就按错误分辨率停止细分。 */}
         <div
           className="absolute inset-0"
           style={{
-            display: renderMode && phase !== 'diorama' && !streaming ? 'none' : 'block',
+            visibility: renderMode && phase !== 'diorama' && !streaming ? 'hidden' : 'visible',
             opacity: phase === 'diorama' ? 1 : wantPhotoreal ? flightBlend : 0,
             pointerEvents: phase === 'diorama' ? 'auto' : 'none',
             transition: renderMode || wantPhotoreal ? 'none' : 'opacity 1000ms',

@@ -32,11 +32,15 @@ function placeCamera(
   orbit: number,
   push: number,
 ) {
-  const ang = -2.2 + orbit * 0.5
-  const radius = 2300 - push * 200
-  const y = 250 - push * 40
-  cam.position.set(focus.x + Math.sin(ang) * radius, y, focus.z + Math.cos(ang) * radius)
-  cam.lookAt(focus.x, 70, focus.z)
+  // 与东京参考截图相同的斜俯视：水平距离约 3.2km、离地约 980m，俯角约 17°（画面观感为斜 3/4 向下）。
+  // 高度与距离一起收到 75%，俯角不变，建筑更大；推进时继续等比靠近。
+  const pitchTan = 940 / 3168
+  const scale = 0.75 - push * 0.1
+  const horiz = 3168 * scale
+  const lookY = 50
+  const ang = 0.7 + orbit * 1.15
+  cam.position.set(focus.x + Math.sin(ang) * horiz, lookY + horiz * pitchTan, focus.z + Math.cos(ang) * horiz)
+  cam.lookAt(focus.x, lookY, focus.z)
   cam.updateMatrixWorld()
 }
 
@@ -72,7 +76,7 @@ function SceneContent({ data, controls, interactive }: Props) {
     light.current.target.position.copy(look)
     light.current.target.updateMatrixWorld()
     const sh = light.current.shadow.camera
-    const span = 980
+    const span = 1600
     sh.left = -span
     sh.right = span
     sh.top = span
@@ -85,15 +89,15 @@ function SceneContent({ data, controls, interactive }: Props) {
   return (
     <>
       <color attach="background" args={['#efeae3']} />
-      <fog attach="fog" args={['#efeae3', 2600, 6200]} />
-      <PerspectiveCamera ref={cam} makeDefault fov={32} near={2} far={14000} position={[800, 240, 800]} />
+      <fog attach="fog" args={['#efeae3', 3800, 7800]} />
+      <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={14000} position={[1600, 780, 1600]} />
       {interactive && !controls.driven && (
         <OrbitControls
           enablePan={false}
-          target={[focus.x, 140, focus.z]}
-          minDistance={280}
-          maxDistance={2200}
-          maxPolarAngle={Math.PI / 2.05}
+          target={[focus.x, 50, focus.z]}
+          minDistance={900}
+          maxDistance={4000}
+          maxPolarAngle={Math.PI / 2.15}
         />
       )}
       <ambientLight intensity={0.38} />

@@ -6,6 +6,7 @@
  *   bun run render:preview  1280×720 24fps 15s，阴影 2048，只含地球→陆家嘴
  * 地球段是第一人称冲刺（速度线、云、视场），进城后按贴面进度收进定稿机位。
  * 无 GPU 时加 SWIFTSHADER=1。浏览器路径可用 CHROME_PATH。
+ * 署名默认不画。公开发布的成片加上 `--attribution`。
  */
 import { mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -30,6 +31,7 @@ type Profile = {
 }
 
 const arg = process.argv.find((a) => ['16:9', '9:16', 'preview', 'still-9x16', 'stills', 'reveal'].includes(a)) ?? '16:9'
+const showAttribution = process.argv.includes('--attribution')
 
 const profiles: Record<string, Profile> = {
   '16:9': {
@@ -159,9 +161,10 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage()
 page.setDefaultTimeout(240000)
 const facadeFlag = process.env.FACADE === '0' || process.env.FACADE === '1' ? `&facade=${process.env.FACADE}` : ''
+const attributionFlag = showAttribution ? '&attribution=1' : ''
 const url =
   `http://localhost:5173/?render=1&fps=${profile.fps}&duration=${profile.duration}` +
-  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}`
+  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}${attributionFlag}`
 console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)')
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })

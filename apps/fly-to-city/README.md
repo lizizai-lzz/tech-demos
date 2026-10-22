@@ -53,6 +53,25 @@ bun run render:reveal   # 只要陆家嘴贴面长出的 4 秒，12fps，用来�
 
 无独立 GPU 的环境可加 `SWIFTSHADER=1`，会慢非常多，不适合正式成片。浏览器路径用 `CHROME_PATH`，输出目录用 `RENDER_OUT`（默认 `/opt/cursor/artifacts`）。
 
+## 署名
+
+开发和预览默认**不**叠署名，方便先看干净画面。公开发布的视频，以及任何对外部署，必须打开署名：画面左下角会出现 Google 标志，以及 OpenStreetMap、OpenFreeMap、Overture、EOX Sentinel-2 的数据来源。
+
+三种开法，任一即可：
+
+```bash
+# 地址栏
+http://localhost:5173/?attribution=1
+
+# 本地或部署环境
+VITE_SHOW_ATTRIBUTION=1 bun run dev
+
+# 离线成片（render:16x9、render:9x16、render:preview 同样）
+bun run render:16x9 --attribution
+```
+
+`?attribution=0` 会强制关掉，即使环境变量已经打开。
+
 ## 数据致谢
 
 - [Overture Maps](https://overturemaps.org) 建筑轮廓与高度，release 2026-10-21.0（底层含 OpenStreetMap © 贡献者，[ODbL](https://www.openstreetmap.org/copyright)）

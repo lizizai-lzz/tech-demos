@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { ControlPanel } from '@/components/ControlPanel'
 import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
+import { Attribution } from '@/components/Attribution'
 import { FlightRush } from '@/components/FlightRush'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
@@ -418,11 +419,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
           <FlightRush globeU={globeU} arrive={phase === 'globe' ? 0 : arrive} />
         </div>
-        {!recording && !renderMode && (
-          <p className="pointer-events-none absolute bottom-2 right-3 z-30 max-w-[28rem] text-right text-[10px] leading-snug text-neutral-800/80">
-            地图 © OpenStreetMap / OpenFreeMap · 影像 Sentinel-2 cloudless © EOX CC BY 4.0（含 Copernicus Sentinel 数据）
-          </p>
-        )}
+        <Attribution />
         <TitleOverlay
           data={city}
           visible={(phase === 'diorama' || recording) && !!city}

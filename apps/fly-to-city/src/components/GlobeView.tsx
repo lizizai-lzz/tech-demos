@@ -30,7 +30,7 @@ export function GlobeView({ visible, center, onFlyEnd, flyTrigger, recording, hi
       zoom: 1.4,
       pitch: 0,
       bearing: 0,
-      attributionControl: { compact: true },
+      attributionControl: false,
       canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true },
       projection: 'globe',
     } as maplibregl.MapOptions)

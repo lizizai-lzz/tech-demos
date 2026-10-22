@@ -1,7 +1,7 @@
 import { showAttribution } from '@/lib/attribution'
 
 /** 彩色 Google 字标，放在白底署名条上。 */
-function GoogleLogo() {
+export function GoogleLogo() {
   return (
     <svg viewBox="0 0 86 24" width="72" height="20" role="img" aria-label="Google">
       <text fontFamily="Arial, Helvetica, sans-serif" fontSize="20" fontWeight="700" y="18">

@@ -20,21 +20,22 @@ export function arriveFromReveal(reveal: number) {
   return Math.min(1, Math.max(0, reveal) * 1.35)
 }
 
-export type Timeline = 'full' | 'lujiazui'
+export type Timeline = 'full' | 'lujiazui' | 'shinjuku'
 
 /** 16:9 默认 42s：地球 → 上海飞入 → 斜俯视环绕 → 硬切东京飞入 → 环绕定格。
- *  lujiazui：只保留地球飞入和陆家嘴环绕，给短预览用。
+ *  lujiazui / shinjuku：只保留地球飞入和一座城市的环绕，给短预览用。
  */
 export function shotAt(t: number, duration = 42, timeline: Timeline = 'full'): Shot {
-  if (timeline === 'lujiazui') {
+  if (timeline === 'lujiazui' || timeline === 'shinjuku') {
+    const cityId = timeline === 'shinjuku' ? 'tokyo-shinjuku' : 'shanghai-lujiazui'
     const fly = duration * 0.45
     if (t < fly) {
-      return { kind: 'globe', cityId: 'shanghai-lujiazui', u: flightEase(t / Math.max(0.001, fly)) }
+      return { kind: 'globe', cityId, u: flightEase(t / Math.max(0.001, fly)) }
     }
     const u = Math.min(1, (t - fly) / Math.max(0.001, duration - fly))
     return {
       kind: 'city',
-      cityId: 'shanghai-lujiazui',
+      cityId,
       orbit: u,
       push: u * 0.85,
       reveal: revealAt(t - fly),

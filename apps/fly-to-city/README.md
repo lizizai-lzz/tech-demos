@@ -32,7 +32,7 @@ bun run bake:heights
 
 ## 操作
 
-- 左侧面板：搜索 / 地标 / 画幅 / **白模 / 贴面** / **飞行音效** / 录制。
+- 左侧面板：搜索 / 地标 / 画幅 / **白模 / 贴面** / **实景 / 程序化** / **飞行音效** / 录制。
 - 输入城市或点地标后，镜头自己飞过去。呼啸声是 WebAudio 合成的，没有音频文件；「关」会静音。离线成片不播放声音。
 - **贴面**（默认）：程序化窗格（没有贴图文件）。超高塔是间距更大的蓝灰反射幕墙，住宅是砖色小窗加阳台，多层是混凝土，首层店铺会亮。屋顶是深色。地标单独编号（明珠和茧是玻璃，帝国大厦是石材开窗，铁塔是格构）。**白模**把同一套几何涂回浅色。
 - **录制模式**：隐藏全部 UI。进入城市后约 3.6 秒，贴面从下往上长出来，镜头沿同一俯角收进定稿机位。离线成片用同一条时间轴。
@@ -72,6 +72,35 @@ bun run render:16x9 --attribution
 
 `?attribution=0` 会强制关掉，即使环境变量已经打开。
 
+程序化城市才走这个开关。Google 实景瓦片一旦出现在画面上，左下角的 Google 标志和瓦片自带的版权字符串就会一直显示，离线成片的每一帧也一样，不受上面的开关控制。
+
+## 实景模式
+
+有 Google 覆盖的城市可以改看 Cesium ion 上的 Google Photorealistic 3D Tiles（资产 `2275207`）。瓦片只在内存里流式加载，不落盘，也不导出模型。一次打开页面只创建一次瓦片集，换城市只改坐标。
+
+中国大陆（陆家嘴、国贸，以及搜索到的大陆地点）没有这套实景，会自动回到程序化城市。没有令牌、令牌无效，或根瓦片加载失败时也一样。面板上的「实景 / 程序化」可以手动切回去。
+
+Cesium ion 的 Community 账号只给个人、非商业用途。根瓦片每个月大约 1000 次请求，所以不要反复刷新页面。
+
+```bash
+cd apps/fly-to-city
+cp .env.example .env.local
+# 编辑 .env.local，填上 VITE_CESIUM_ION_TOKEN，不要提交这个文件
+```
+
+在 [Cesium ion](https://ion.cesium.com/tokens) 里把这个令牌的允许 URL 限制为 `localhost`。改完 `.env.local` 后重启 `bun run dev`，交互页面才会读到令牌。
+
+用令牌拍新宿和香港（一个页面、大约 15 秒 720p 预览，外加两张定格）。先开着开发服务器：
+
+```bash
+bun run dev
+bun run shoot:photoreal
+```
+
+输出默认在 `apps/fly-to-city/photoreal-out/`（`shinjuku-preview.mp4`、`shinjuku.png`、`hongkong.png`、`globe-midflight.png`）。目录可用 `RENDER_OUT` 改。没有令牌时这条命令会直接退出，不会打开浏览器。
+
+`render:16x9`、`render:9x16`、`render:preview` 也会读 `.env.local`。有令牌时，有覆盖的城市会等瓦片加载完再截；没有令牌时地址栏带 `photoreal=0`，成片仍是程序化城市。令牌只注入页面，不出现在地址栏里。
+
 ## 数据致谢
 
 - [Overture Maps](https://overturemaps.org) 建筑轮廓与高度，release 2026-10-21.0（底层含 OpenStreetMap © 贡献者，[ODbL](https://www.openstreetmap.org/copyright)）
@@ -85,6 +114,7 @@ bun run render:16x9 --attribution
 - 呼啸声：WebAudio 实时合成，没有采样。画面上的速度线和云也是程序画的
 - [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/)（Terrarium）
 - Photon 地理编码（Komoot）
+- 实景模式：[Google Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles)（Cesium ion 资产 2275207），经 [3d-tiles-renderer](https://github.com/NASA-AMMOS/3DTilesRendererJS) 流式显示。画面上的版权字符串以瓦片自己报告的为准
 
 ## 局限
 
@@ -94,3 +124,5 @@ bun run render:16x9 --attribution
 - 卫星被矢量盖住的地方（路、公园、水面）以矢量颜色为准；没有盖住的地面能看到放大后的 14 级影像。
 - 车道线是主干道上的中心线，不是逐车道标线。
 - 速度线画在地球上面的透明层里，不会去模糊 MapLibre 那张画布。视场只在飞行途中拉开，进城后回到斜俯视。
+- 实景是流式网格，锚在城市中心的椭球面上。镜头高度相对这个锚点，不是相对屋顶。推荐误差保持插件给的 20，没有把瓦片缓存到磁盘。
+- 这台机器没有 ion 令牌，所以这里的预览只验证了没有令牌时的程序化回退，和飞行途中的云、速度线。真实实景要在你自己的机器上用 `bun run shoot:photoreal` 看。

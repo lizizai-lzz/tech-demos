@@ -6,6 +6,7 @@ import { GlobeView } from '@/components/GlobeView'
 import { TitleOverlay } from '@/components/TitleOverlay'
 import { Attribution } from '@/components/Attribution'
 import { FlightRush } from '@/components/FlightRush'
+import { PhotorealCredit } from '@/components/PhotorealCredit'
 import { CityScene } from '@/components/diorama/DioramaScene'
 import { bakeGroundCanvas } from '@/lib/bake-ground'
 import { globeIsReady, jumpGlobe, waitGlobeIdle } from '@/lib/globe-bridge'
@@ -14,6 +15,8 @@ import { playWhoosh, primeWhoosh } from '@/lib/whoosh'
 import { findLandmark } from '@/lib/landmarks'
 import { searchPlaces } from '@/lib/geocode'
 import { loadCityForCoords } from '@/lib/load-city'
+import { hasPhotorealCoverage } from '@/lib/photoreal-coverage'
+import { cesiumIonToken, retryPhotorealTiles } from '@/lib/photoreal-tiles'
 import type { AppPhase, AspectRatio, CityData, RecordingStage } from '@/lib/types'
 import { Toaster } from '@/components/ui/sonner'
 import './App.css'
@@ -64,6 +67,15 @@ export default function App() {
   const [globeU, setGlobeU] = useState(0)
   const [arrive, setArrive] = useState(0)
   const [muted, setMuted] = useState(false)
+  const photorealParam = new URLSearchParams(window.location.search).get('photoreal')
+  const [preferPhotoreal, setPreferPhotoreal] = useState(photorealParam !== '0')
+  const [tileVisible, setTileVisible] = useState(false)
+  const [tileCredits, setTileCredits] = useState<string[]>([])
+  const [tileFailed, setTileFailed] = useState(false)
+  const preferRef = useRef(preferPhotoreal)
+  const failedRef = useRef(tileFailed)
+  preferRef.current = preferPhotoreal
+  failedRef.current = tileFailed
   const mutedRef = useRef(false)
   const whooshSent = useRef(false)
   mutedRef.current = muted
@@ -71,8 +83,10 @@ export default function App() {
   const renderMode = new URLSearchParams(window.location.search).get('render') === '1'
   const renderFps = Number(new URLSearchParams(window.location.search).get('fps') ?? 30)
   const renderDuration = Number(new URLSearchParams(window.location.search).get('duration') ?? 42)
+  const timelineParam = new URLSearchParams(window.location.search).get('timeline')
   const renderTimeline: Timeline =
-    new URLSearchParams(window.location.search).get('timeline') === 'lujiazui' ? 'lujiazui' : 'full'
+    timelineParam === 'lujiazui' || timelineParam === 'shinjuku' ? timelineParam : 'full'
+  const shootMode = new URLSearchParams(window.location.search).get('shoot') === '1'
   const citiesRef = useRef<Record<string, CityData>>({})
 
   const startJourney = useCallback(
@@ -208,6 +222,13 @@ export default function App() {
   }, [phase, city?.id, renderMode])
 
   useEffect(() => {
+    setTileVisible(false)
+    setTileCredits([])
+    setTileFailed(false)
+    retryPhotorealTiles()
+  }, [city?.id])
+
+  useEffect(() => {
     if (!query.trim()) {
       setSuggestions([])
       return
@@ -289,11 +310,24 @@ export default function App() {
     if (!renderMode) return
     document.body.classList.add('render-mode')
     let dead = false
+    const wantTiles = (cityId: string) => {
+      const lm = landmarkById(cityId)
+      return (
+        preferRef.current &&
+        cesiumIonToken() !== '' &&
+        hasPhotorealCoverage(cityId, lm.lng, lm.lat) &&
+        !failedRef.current
+      )
+    }
     const boot = async () => {
       const ids =
         renderTimeline === 'lujiazui'
-          ? (['shanghai-lujiazui'] as const)
-          : (['shanghai-lujiazui', 'tokyo-shinjuku'] as const)
+          ? ['shanghai-lujiazui']
+          : renderTimeline === 'shinjuku'
+            ? shootMode
+              ? ['tokyo-shinjuku', 'hongkong-central']
+              : ['tokyo-shinjuku']
+            : ['shanghai-lujiazui', 'tokyo-shinjuku']
       for (const id of ids) {
         const lm = landmarkById(id)
         citiesRef.current[id] = await loadCityForCoords({
@@ -308,18 +342,43 @@ export default function App() {
         await bakeGroundCanvas(lm.lng, lm.lat)
       }
       if (dead) return
+      const firstId = ids[0]
       flushSync(() => {
         setPhase('globe')
-        setCity(citiesRef.current['shanghai-lujiazui'])
+        setCity(citiesRef.current[firstId])
         setDriven(true)
       })
       for (let i = 0; i < 400 && !dead; i++) {
-        if (globeIsReady() && window.__cityReady === 'shanghai-lujiazui') break
+        if (globeIsReady() && window.__cityReady === firstId) break
         await new Promise((r) => setTimeout(r, 50))
       }
+      const showSettled = async (id: string) => {
+        const data = citiesRef.current[id]
+        if (!data) return
+        window.__photorealReady = !wantTiles(id)
+        flushSync(() => {
+          setCity(data)
+          setPhase('diorama')
+          setGlobeU(1)
+          setArrive(1)
+          setOrbit(0.5)
+          setPush(0.5)
+          setFacadeReveal(facadeLock ?? 1)
+          setDriven(true)
+        })
+        for (let i = 0; i < 80; i++) {
+          if (window.__cityReady === id) break
+          await new Promise((r) => setTimeout(r, 40))
+        }
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))
+        })
+      }
+      window.__showCity = showSettled
       window.__seek = async (frame: number) => {
         const shot = shotAt(frame / renderFps, renderDuration, renderTimeline)
         const data = citiesRef.current[shot.cityId]
+        window.__photorealReady = !(shot.kind === 'city' && wantTiles(shot.cityId))
         flushSync(() => {
           setCity(data)
           if (shot.kind === 'globe') {
@@ -362,7 +421,24 @@ export default function App() {
       document.body.classList.remove('render-mode')
       window.__flyReady = false
     }
-  }, [renderMode, renderFps, renderDuration, renderTimeline, facadeLock])
+  }, [renderMode, renderFps, renderDuration, renderTimeline, facadeLock, shootMode])
+
+  const tokenReady = cesiumIonToken() !== ''
+  const covered = city ? hasPhotorealCoverage(city.id, city.center.lng, city.center.lat) : false
+  const photoreal = phase === 'diorama' && preferPhotoreal && tokenReady && covered && !tileFailed
+  const modeNote = !preferPhotoreal
+    ? '当前是程序化城市。'
+    : !tokenReady
+      ? '没有 Cesium ion 令牌，已改用程序化城市。'
+      : city && !covered
+        ? '这个城市没有 Google 实景覆盖，已改用程序化城市。'
+        : tileFailed
+          ? '实景瓦片没有加载成功，已改用程序化城市。'
+          : photoreal && !tileVisible
+            ? '正在加载实景瓦片…'
+            : tileVisible
+              ? '正在显示 Google 实景。'
+              : '实景会在进入城市后加载。'
 
   const aspectFrame =
     aspect === '9:16' && !recording
@@ -405,6 +481,12 @@ export default function App() {
             <CityScene
               data={city}
               interactive={!recording && !renderMode}
+              photoreal={photoreal}
+              onPhotorealStatus={(status) => {
+                setTileVisible(status.visible)
+                setTileCredits(status.credits)
+                if (status.failed) setTileFailed(true)
+              }}
               controls={{
                 autoOrbit: autoOrbit || recording,
                 orbit,
@@ -419,7 +501,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
           <FlightRush globeU={globeU} arrive={phase === 'globe' ? 0 : arrive} />
         </div>
-        <Attribution />
+        {tileVisible ? <PhotorealCredit visible lines={tileCredits} /> : <Attribution />}
         <TitleOverlay
           data={city}
           visible={(phase === 'diorama' || recording) && !!city}
@@ -448,6 +530,15 @@ export default function App() {
             if (!next) primeWhoosh()
             setMuted(next)
           }}
+          preferPhotoreal={preferPhotoreal}
+          onPhotoreal={(next) => {
+            if (next) {
+              retryPhotorealTiles()
+              setTileFailed(false)
+            }
+            setPreferPhotoreal(next)
+          }}
+          modeNote={modeNote}
           loading={loading}
           loadMessage={loadMessage}
           phaseLabel={phaseLabel(phase, recStage)}

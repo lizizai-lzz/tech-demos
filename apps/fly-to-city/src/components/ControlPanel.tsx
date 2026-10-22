@@ -23,6 +23,9 @@ type Props = {
   onFacade: (on: boolean) => void
   muted: boolean
   onMuted: (muted: boolean) => void
+  preferPhotoreal: boolean
+  onPhotoreal: (on: boolean) => void
+  modeNote: string
   loading: boolean
   loadMessage: string
   phaseLabel: string
@@ -137,6 +140,26 @@ export function ControlPanel(props: Props) {
               贴面
             </Button>
           </div>
+          <Label className="text-xs">城市画面</Label>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.preferPhotoreal ? 'default' : 'outline'}
+              onClick={() => props.onPhotoreal(true)}
+            >
+              实景
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              variant={props.preferPhotoreal ? 'outline' : 'default'}
+              onClick={() => props.onPhotoreal(false)}
+            >
+              程序化
+            </Button>
+          </div>
+          <p className="text-[10px] leading-snug text-muted-foreground">{props.modeNote}</p>
           <Label className="text-xs">飞行音效</Label>
           <div className="flex gap-1">
             <Button

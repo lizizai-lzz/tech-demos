@@ -16,9 +16,11 @@
     "render": "bun run scripts/render-video.ts",
     "render:16x9": "bun run scripts/render-video.ts 16:9",
     "render:9x16": "bun run scripts/render-video.ts 9:16",
-    "render:preview": "bun run scripts/render-video.ts preview"
+    "render:preview": "bun run scripts/render-video.ts preview",
+    "shoot:photoreal": "bun run scripts/shoot-photoreal.ts"
   },
   "dependencies": {
+    "3d-tiles-renderer": "^0.5.3",
     "@base-ui/react": "^1.9.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@react-three/drei": "^10.7.7",

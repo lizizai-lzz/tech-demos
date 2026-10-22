@@ -7,11 +7,14 @@
  * 地球段是第一人称冲刺（速度线、云、视场），进城后按贴面进度收进定稿机位。
  * 无 GPU 时加 SWIFTSHADER=1。浏览器路径可用 CHROME_PATH。
  * 署名默认不画。公开发布的成片加上 `--attribution`。
+ * 有 .env.local 里的 Cesium ion 令牌时，成片会等实景瓦片加载完再截。
+ * 令牌只注入页面，不出现在地址栏，也不会打印出来。
  */
 import { mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
+import { readEnvLocal } from './read-env-local.ts'
 
 type Profile = {
   id: string
@@ -20,7 +23,7 @@ type Profile = {
   fps: number
   duration: number
   shadow: number
-  timeline: 'full' | 'lujiazui'
+  timeline: 'full' | 'lujiazui' | 'shinjuku'
   frames?: number
   /** 从这一帧开始写序列，给短预览用 */
   start?: number
@@ -160,12 +163,19 @@ const browser = await puppeteer.launch({
 
 const page = await browser.newPage()
 page.setDefaultTimeout(240000)
+const token = readEnvLocal(path.join(import.meta.dir, '..')).VITE_CESIUM_ION_TOKEN?.trim() ?? ''
+if (token) {
+  await page.evaluateOnNewDocument((value: string) => {
+    window.__CESIUM_ION_TOKEN = value
+  }, token)
+}
 const facadeFlag = process.env.FACADE === '0' || process.env.FACADE === '1' ? `&facade=${process.env.FACADE}` : ''
 const attributionFlag = showAttribution ? '&attribution=1' : ''
+const photorealFlag = token ? '&photoreal=1' : '&photoreal=0'
 const url =
   `http://localhost:5173/?render=1&fps=${profile.fps}&duration=${profile.duration}` +
-  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}${attributionFlag}`
-console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)')
+  `&shadow=${profile.shadow}&timeline=${profile.timeline}${facadeFlag}${attributionFlag}${photorealFlag}`
+console.log('打开', url, swift ? '(SwiftShader)' : '(GPU)', token ? '（已读取实景令牌）' : '（没有实景令牌，使用程序化城市）')
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForFunction(() => window.__flyReady === true, { timeout: 360000 })
 console.log('场景就绪，开始', frames, '帧', profile.width + 'x' + profile.height)
@@ -178,6 +188,9 @@ for (const i of indexes) {
   await page.evaluate(async (frame) => {
     await window.__seek?.(frame)
   }, i)
+  await page
+    .waitForFunction(() => window.__photorealReady === true, { timeout: 50000 })
+    .catch(() => console.log('实景等待超时，按当前画面截图'))
   const stage = await page.$('#stage')
   if (!stage) throw new Error('缺少 #stage')
   if (!only) {

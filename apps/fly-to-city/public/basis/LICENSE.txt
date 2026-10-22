@@ -1,0 +1,5 @@
+Basis Universal 转码器（basis_transcoder.js / basis_transcoder.wasm）
+Apache License 2.0
+https://github.com/BinomialLLC/basis_universal/blob/master/LICENSE
+
+来自 three.js 自带的 examples/jsm/libs/basis，用来在本地解码 KTX2 贴图，不经过第三方 CDN。

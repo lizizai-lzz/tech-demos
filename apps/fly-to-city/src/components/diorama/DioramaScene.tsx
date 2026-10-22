@@ -7,9 +7,11 @@ import * as THREE from 'three'
 import { facadeUniform } from '@/lib/facade-material'
 import { heroFocus } from '@/lib/heroes'
 import type { CityData } from '@/lib/types'
+import { cesiumIonToken } from '@/lib/photoreal-tiles'
 import { Buildings } from './Buildings'
 import { Ground } from './Ground'
 import { Heroes } from './Heroes'
+import { PhotorealTiles } from './PhotorealTiles'
 import { Trees } from './Trees'
 
 export type CitySceneControls = {
@@ -24,10 +26,19 @@ export type CitySceneControls = {
   arrive: number
 }
 
+type TileStatus = {
+  visible: boolean
+  credits: string[]
+  failed: boolean
+}
+
 type Props = {
   data: CityData
   controls: CitySceneControls
   interactive: boolean
+  /** 为真时隐藏程序化建筑、树和地面，改看流式实景。 */
+  photoreal?: boolean
+  onPhotorealStatus?: (status: TileStatus) => void
 }
 
 function shadowMapSize() {
@@ -108,20 +119,25 @@ function placeCamera(
   cam.updateMatrixWorld()
 }
 
-function SceneContent({ data, controls, interactive }: Props) {
+function SceneContent({ data, controls, interactive, photoreal = false, onPhotorealStatus }: Props) {
   const cam = useRef<THREE.PerspectiveCamera>(null)
   const light = useRef<THREE.DirectionalLight>(null)
   const orbitLive = useRef(0.15)
   const pushLive = useRef(0)
   const { gl } = useThree()
   const focus = heroFocus(data.id, data.center.lng, data.center.lat)
+  const token = photoreal ? cesiumIonToken() : ''
+
+  useEffect(() => {
+    window.__cityReady = data.id
+  }, [data.id])
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping
-    gl.toneMappingExposure = 1.16
-    gl.shadowMap.enabled = true
+    gl.toneMappingExposure = photoreal ? 1 : 1.16
+    gl.shadowMap.enabled = !photoreal
     gl.shadowMap.type = THREE.PCFSoftShadowMap
-  }, [gl])
+  }, [gl, photoreal])
 
   useFrame((_, dt) => {
     if (!cam.current || !light.current) return
@@ -134,6 +150,11 @@ function SceneContent({ data, controls, interactive }: Props) {
       push = pushLive.current
     }
     facadeUniform.value = controls.facadeReveal
+    const far = photoreal ? 80000 : 14000
+    if (cam.current.far !== far) {
+      cam.current.far = far
+      cam.current.updateProjectionMatrix()
+    }
     placeCamera(cam.current, focus, orbit, push, data.id, controls.arrive)
     const look = new THREE.Vector3(focus.x, 80, focus.z)
     const sun = new THREE.Vector3(0.72, 1.35, 0.28).normalize()
@@ -155,8 +176,8 @@ function SceneContent({ data, controls, interactive }: Props) {
     <>
       <SkyDome />
       <color attach="background" args={['#d5e0ea']} />
-      <fog attach="fog" args={['#d5e0ea', 3800, 9200]} />
-      <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={14000} position={[1600, 780, 1600]} />
+      {!photoreal && <fog attach="fog" args={['#d5e0ea', 3800, 9200]} />}
+      <PerspectiveCamera ref={cam} makeDefault fov={42} near={2} far={photoreal ? 80000 : 14000} position={[1600, 780, 1600]} />
       {interactive && !controls.driven && (
         <OrbitControls
           enablePan={false}
@@ -172,21 +193,34 @@ function SceneContent({ data, controls, interactive }: Props) {
         ref={light}
         color="#ffe2b0"
         intensity={2.7}
-        castShadow
+        castShadow={!photoreal}
         shadow-mapSize={[shadowMapSize(), shadowMapSize()]}
         shadow-bias={-0.00025}
         shadow-normalBias={0.04}
       />
       <directionalLight position={[-800, 300, -400]} intensity={0.16} color="#d7e4f2" />
-      <Ground data={data} />
-      <Trees data={data} />
-      <Buildings data={data} />
-      <Heroes data={data} />
-      <EffectComposer multisampling={0} enableNormalPass={false}>
-        <N8AO aoRadius={12} intensity={1.15} distanceFalloff={0.6} halfRes />
-        <Bloom luminanceThreshold={0.86} luminanceSmoothing={0.28} intensity={0.32} mipmapBlur radius={0.45} />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
+      {photoreal && token ? (
+        <PhotorealTiles
+          token={token}
+          lng={data.center.lng}
+          lat={data.center.lat}
+          onStatus={onPhotorealStatus ?? (() => {})}
+        />
+      ) : (
+        <>
+          <Ground data={data} />
+          <Trees data={data} />
+          <Buildings data={data} />
+          <Heroes data={data} />
+        </>
+      )}
+      {!photoreal && (
+        <EffectComposer multisampling={0} enableNormalPass={false}>
+          <N8AO aoRadius={12} intensity={1.15} distanceFalloff={0.6} halfRes />
+          <Bloom luminanceThreshold={0.86} luminanceSmoothing={0.28} intensity={0.32} mipmapBlur radius={0.45} />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        </EffectComposer>
+      )}
     </>
   )
 }

@@ -1,40 +1,54 @@
-# toonflow — AI 短剧无限画布（空跑版）
+# toonflow — 双引擎创作工作室（小说 / 短剧 · 空跑版）
 
-Source: X bookmark 「两个钟头鼓捣出一部AI短剧，成本才120块…开源工具 Toonflow」 by @bkdgiffug — https://x.com/bkdgiffug/status/2112051365606502882
-Upstream project (inspiration only, MIT): https://github.com/HBAI-Ltd/Toonflow-app — 无限画布 + Agent + 剧本/分镜/角色/图视频节点，可本地部署与自选模型. This demo re-implements a **browser dry-run** of the happy-path pipeline (novel snippet → outline → script beats → storyboard cards on a canvas), with mocked generation; no code copied, no paid model calls.
+灵感参考（仅形态与流水线，**未复制任何上游 UI 或代码**）：
+
+- [Creation Studio](https://github.com/eropendown/creation-studio) — 小说工作台 + 漫剧/短剧工作台双引擎
+- Novelix / ProseForge 类流程 — 设定/世界观 → 章纲 → 章节正文
+- [Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)、Dralo、ArcReel 类流程 — 大纲 → 角色 → 剧本 → 分镜
+
+本 demo 在浏览器内用 **纯 TypeScript 模板 + 假延迟** 模拟两条流水线，共享种子原文与角色卡数据结构，**无需付费 API**。
 
 ## Goal
-A single-page "dry-run" Toonflow-style studio where the user pastes a short Chinese novel excerpt, watches a staged pipeline fill an infinite canvas with outline / character / script / storyboard nodes, and can nudge one node at a time without any API key.
+
+单页双模式工作室：用户选择 **写小说** 或 **写短剧**，粘贴 ≤800 字中文种子（或切换示例），在无限画布上按阶段生成节点，可暂停/单步/单节点重生成，模式选择持久化到 `localStorage`。
 
 ## MVP
-In:
-- Canvas workspace (pan + zoom): nodes for 原文、大纲、角色卡、剧本场次、分镜卡, connected by simple edges; click a node to open a detail sheet.
-- Pipeline simulator (pure TS): given a built-in sample excerpt (plus a textarea for the user's own short paste ≤ ~800 chars), run stages with fake latency:
-  1. 章节事件提取 → outline bullets
-  2. 角色识别 → 2–4 character cards (name, role, look tags)
-  3. 剧本改编 → 3–5 scene beats with dialogue lines
-  4. 分镜 → one storyboard card per beat (shot type, prompt text, placeholder frame color)
-- Workbench: Start / Pause / Step-one-stage, stage progress chips, regenerate-this-node (re-roll from local templates), sample-project switcher (2–3 baked samples).
-- UI in Chinese, single user, state in memory (+ optional localStorage for last paste and canvas pan/zoom).
 
-Outs: real LLM / image / video APIs, Docker/desktop client, MCP/plugins, auth, multi-user, persistence beyond localStorage, real asset upload, export to MP4, TF-Router or any paid gateway, cloning upstream UI/code.
+### In
 
-## Tasks (vertical slices)
-1. Scaffold (bunfig.toml first, `bunx create-vite` react-ts, Tailwind + shadcn/ui). Hard-coded 3 nodes on a pan/zoom canvas + one "开始空跑" button that appends a fourth node after a fake delay. End-to-end visible.
-2. Pipeline module `src/pipeline/` (extract → characters → script → storyboard) with unit tests for stage ordering, character count bounds, and storyboard↔beat alignment.
-3. Wire pipeline to canvas: nodes appear stage-by-stage with edges; progress chips; Pause / Step.
-4. Node detail Sheet (edit title/body locally); regenerate-this-node from templates; sample switcher + user paste textarea (cap length).
-5. README (run steps, what's mocked vs. upstream Toonflow), polish; record screenshot + video of a ~60 s dry-run for the PR.
+| 能力 | 小说模式 | 短剧模式 |
+|------|----------|----------|
+| 阶段 | 设定/世界观 → 章纲(3–5) → 角色 → 正文样章(1章多节) | 大纲 → 角色 → 剧本(3–5场) → 分镜 |
+| 画布 | `@xyflow/react` 节点 + 连线 | 同左（沿用） |
+| 工作台 | 模式切换、示例、粘贴、进度徽章、开始/暂停/单步 | 同左 |
+| 详情 Sheet | 本地编辑 + 按阶段重生成 | 同左 |
+| 测试 | 阶段顺序、章纲数量、样章与章纲对齐 | 阶段顺序、角色数量、分镜与场次对齐 |
+| 可选 | 导出当前产物 JSON（小说形或短剧形） | 同左 |
+
+- 中文 UI；Bun + Vite + React + TS；shadcn/ui；`bunfig.toml` 保留 `minimumReleaseAge = 259200`。
+- 至少 2 个小说专用示例种子（其一为校园黑道题材）；短剧保留原有 3 个示例。
+
+### Outs
+
+真实 LLM / 图像 / 视频 API、Docker、鉴权、多用户、克隆 Toonflow 或 Creation Studio 代码、MP4 导出、后端持久化。
+
+## Tasks（垂直切片）
+
+1. **规划与模式壳** — 重写本 `PLAN.md`；`StudioMode` + localStorage；工作台顶部 **小说 / 短剧** 切换。
+2. **短剧流水线** — 保持现有 `src/pipeline/`（extract → characters → script → storyboard）行为不变，接入模式感知 runner。
+3. **小说流水线** — 新增 `src/pipeline/novel/`（world → chapterOutline → characters → chapterProse）+ 画布布局 + 小说示例种子。
+4. **共享与导出** — 角色卡结构复用；`exportArtifacts(mode, state)` 下载 JSON。
+5. **测试与文档** — `bun test src` 覆盖双流水线；README 说明模式切换与 mock 范围；PR 截图 + 视频（切换模式、小说跑通、短剧仍可用）。
 
 ## Stack rationale
-- Bun + Vite + React + TS (`bunx create-vite`): zero-backend SPA; `bun install && bun run dev` per AGENTS.md.
-- Lightweight canvas: `@xyflow/react` (or plain SVG/div pan-zoom if lighter) for infinite-canvas feel without shipping a full editor.
-- shadcn/ui (Card, Badge, Button, Textarea, Sheet, Tabs, ScrollArea), minimalist workbench chrome.
-- `bunfig.toml` minimumReleaseAge = 259200: supply-chain guard.
-- Tests only for the pipeline (ordering / bounds / alignment) — the demo's critical logic.
+
+- **Bun + Vite + React + TS**：无后端 SPA，符合 AGENTS.md 自包含运行。
+- **@xyflow/react**：无限画布平移缩放，双模式共用节点组件。
+- **shadcn/ui**：模式切换、工作台、Sheet 一致视觉。
+- **双 pipeline 模块**：模式感知 runner 分发，避免整仓重写；仅对关键逻辑写单元测试。
 
 ## Deferred
-- Optional OpenAI-compatible endpoint behind an explicit local key for real outline/script.
-- Image placeholders → real image model.
-- Export storyboard JSON / Remotion pack for the 李自在AI 实战栏目.
-- Plugin/MCP node stubs matching upstream marketing surface.
+
+- 可选 OpenAI 兼容端点（用户自备 Key）。
+- 真实分镜图 / Remotion 导出。
+- 跨模式同步更多产物（如短剧角色一键带入小说章纲）。

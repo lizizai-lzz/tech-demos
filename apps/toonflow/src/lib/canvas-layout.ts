@@ -8,6 +8,9 @@ export type StudioNodeKind =
   | "character"
   | "script"
   | "storyboard"
+  | "world"
+  | "chapterOutline"
+  | "chapterProse"
 
 export interface StudioNodeData extends Record<string, unknown> {
   kind: StudioNodeKind

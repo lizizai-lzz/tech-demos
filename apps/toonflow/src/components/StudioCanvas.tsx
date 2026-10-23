@@ -12,26 +12,36 @@ import "@xyflow/react/dist/style.css"
 import { useCallback, useEffect, useMemo } from "react"
 import { StudioNode } from "@/components/StudioNode"
 import { buildGraph, type StudioNodeData } from "@/lib/canvas-layout"
+import { buildNovelGraph } from "@/lib/canvas-layout-novel"
 import { loadViewport, saveViewport } from "@/lib/storage"
+import type { StudioMode } from "@/pipeline/mode"
+import type { NovelPipelineState } from "@/pipeline/novel/types"
 import type { PipelineState } from "@/pipeline/types"
 import type { NodeOverrides } from "@/types/studio"
 
 const nodeTypes = { studio: StudioNode }
 
 interface StudioCanvasProps {
-  pipeline: PipelineState
+  mode: StudioMode
+  dramaPipeline: PipelineState
+  novelPipeline: NovelPipelineState
   overrides: NodeOverrides
   onNodeSelect: (node: Node<StudioNodeData> | null) => void
 }
 
 export function StudioCanvas({
-  pipeline,
+  mode,
+  dramaPipeline,
+  novelPipeline,
   overrides,
   onNodeSelect,
 }: StudioCanvasProps) {
   const graph = useMemo(
-    () => buildGraph(pipeline, overrides),
-    [pipeline, overrides]
+    () =>
+      mode === "drama"
+        ? buildGraph(dramaPipeline, overrides)
+        : buildNovelGraph(novelPipeline, overrides),
+    [mode, dramaPipeline, novelPipeline, overrides]
   )
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graph.nodes)

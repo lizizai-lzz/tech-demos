@@ -1,11 +1,15 @@
 import type { StudioMode } from "@/pipeline/mode"
 import { DEFAULT_STUDIO_MODE } from "@/pipeline/mode"
+import type { NovelPipelineState } from "@/pipeline/novel/types"
+import type { PipelineState } from "@/pipeline/types"
+import type { RunnerStatus } from "@/types/studio"
 
 const PASTE_KEY = "toonflow:last-paste"
 const VIEWPORT_KEY = "toonflow:viewport"
 const SAMPLE_KEY = "toonflow:sample-id"
 const MODE_KEY = "toonflow:studio-mode"
 const NOVEL_SAMPLE_KEY = "toonflow:novel-sample-id"
+const RUNNER_SNAPSHOT_KEY = "toonflow:runner-snapshot"
 
 export function loadLastPaste(): string | null {
   try {
@@ -92,6 +96,44 @@ export function loadViewport(): StoredViewport | null {
 export function saveViewport(viewport: StoredViewport) {
   try {
     localStorage.setItem(VIEWPORT_KEY, JSON.stringify(viewport))
+  } catch {
+    /* ignore */
+  }
+}
+
+export interface RunnerSnapshot {
+  dramaPipeline: PipelineState
+  novelPipeline: NovelPipelineState
+  status: RunnerStatus
+  seed: number
+}
+
+export function loadRunnerSnapshot(): RunnerSnapshot | null {
+  try {
+    const raw = localStorage.getItem(RUNNER_SNAPSHOT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as RunnerSnapshot
+    if (!parsed.dramaPipeline || !parsed.novelPipeline) return null
+    if (parsed.status === "running") {
+      parsed.status = "paused"
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+export function saveRunnerSnapshot(snapshot: RunnerSnapshot) {
+  try {
+    localStorage.setItem(RUNNER_SNAPSHOT_KEY, JSON.stringify(snapshot))
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearRunnerSnapshot() {
+  try {
+    localStorage.removeItem(RUNNER_SNAPSHOT_KEY)
   } catch {
     /* ignore */
   }

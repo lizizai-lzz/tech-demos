@@ -86,7 +86,7 @@ export function runFullPipeline(sourceText: string, seed = 0): PipelineArtifacts
   }
 }
 
-function clearFromStage(state: PipelineState, stage: PipelineStage): PipelineState {
+export function clearFromStage(state: PipelineState, stage: PipelineStage): PipelineState {
   const idx = STAGE_ORDER.indexOf(stage)
   const completedStages = state.completedStages.filter(
     (s) => STAGE_ORDER.indexOf(s) < idx
@@ -99,20 +99,12 @@ function clearFromStage(state: PipelineState, stage: PipelineStage): PipelineSta
   return next
 }
 
+/** 重生成当前阶段，并清空下游产物（不自动重跑下游，避免旧裁定叠在新章纲上） */
 export function regenerateNode(
   state: PipelineState,
   stage: PipelineStage,
   seed: number
 ): PipelineState {
-  let next = clearFromStage(state, stage)
-  next = runStage(next, stage, seed)
-  for (const s of STAGE_ORDER) {
-    if (
-      STAGE_ORDER.indexOf(s) > STAGE_ORDER.indexOf(stage) &&
-      state.completedStages.includes(s)
-    ) {
-      next = runStage(next, s, seed)
-    }
-  }
-  return next
+  const next = clearFromStage(state, stage)
+  return runStage(next, stage, seed)
 }

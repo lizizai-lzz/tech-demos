@@ -9,7 +9,7 @@ import {
   type Node,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { StudioNode } from "@/components/StudioNode"
 import { buildGraph, type StudioNodeData } from "@/lib/canvas-layout"
 import { buildNovelGraph } from "@/lib/canvas-layout-novel"
@@ -17,7 +17,7 @@ import { loadViewport, saveViewport } from "@/lib/storage"
 import type { StudioMode } from "@/pipeline/mode"
 import type { NovelPipelineState } from "@/pipeline/novel/types"
 import type { PipelineState } from "@/pipeline/types"
-import type { NodeOverrides } from "@/types/studio"
+import type { NodeOverrides, RunnerStatus } from "@/types/studio"
 
 const nodeTypes = { studio: StudioNode }
 
@@ -26,6 +26,9 @@ interface StudioCanvasProps {
   dramaPipeline: PipelineState
   novelPipeline: NovelPipelineState
   overrides: NodeOverrides
+  status: RunnerStatus
+  currentStageId: string | null
+  fitViewKey: string
   onNodeSelect: (node: Node<StudioNodeData> | null) => void
 }
 
@@ -34,14 +37,22 @@ export function StudioCanvas({
   dramaPipeline,
   novelPipeline,
   overrides,
+  status,
+  currentStageId,
+  fitViewKey,
   onNodeSelect,
 }: StudioCanvasProps) {
+  const graphCtx = useMemo(
+    () => ({ status, currentStageId }),
+    [status, currentStageId]
+  )
+
   const graph = useMemo(
     () =>
       mode === "drama"
-        ? buildGraph(dramaPipeline, overrides)
-        : buildNovelGraph(novelPipeline, overrides),
-    [mode, dramaPipeline, novelPipeline, overrides]
+        ? buildGraph(dramaPipeline, overrides, graphCtx)
+        : buildNovelGraph(novelPipeline, overrides, graphCtx),
+    [mode, dramaPipeline, novelPipeline, overrides, graphCtx]
   )
 
   const [nodes, setNodes, onNodesChange] = useNodesState(graph.nodes)
@@ -58,16 +69,54 @@ export function StudioCanvas({
     saveViewport(viewport)
   }, [])
 
+  const flowRef = useRef<{ fitView: (opts?: { padding?: number; duration?: number }) => void } | null>(null)
+  const lastFitKey = useRef<string | null>(null)
+
+  const onInit = useCallback(
+    (instance: { fitView: (opts?: { padding?: number; duration?: number }) => void }) => {
+      flowRef.current = instance
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (!flowRef.current) return
+    if (lastFitKey.current === fitViewKey) return
+    lastFitKey.current = fitViewKey
+    flowRef.current.fitView({ padding: 0.18, duration: 200 })
+  }, [fitViewKey, graph.nodes.length])
+
+  const completedCount =
+    mode === "drama"
+      ? dramaPipeline.completedStages.length
+      : novelPipeline.completedStages.length
+
+  const showEmptyOverlay =
+    completedCount === 0 && status !== "running"
+
   return (
-    <div className="h-full w-full canvas-dots">
+    <div className="relative h-full w-full canvas-dots">
+      {showEmptyOverlay && (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+          aria-hidden
+        >
+          <div className="rounded-xl border border-dashed border-border bg-card/80 px-6 py-4 text-center shadow-sm backdrop-blur-sm max-w-sm">
+            <p className="text-sm font-medium">画布还是空的</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              先选左侧示例或粘贴种子，再点「开始空跑」
+            </p>
+          </div>
+        </div>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        fitView
         defaultViewport={defaultViewport}
+        onInit={onInit}
         onMoveEnd={onMoveEnd}
         onNodeClick={(_, node) => onNodeSelect(node as Node<StudioNodeData>)}
         onPaneClick={() => onNodeSelect(null)}

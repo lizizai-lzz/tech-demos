@@ -1,8 +1,17 @@
+import { ModelSettingsSheet } from "@/components/ModelSettingsSheet"
 import { StudioCanvas } from "@/components/StudioCanvas"
 import { NodeDetailSheet } from "@/components/NodeDetailSheet"
+import { Toast } from "@/components/Toast"
 import { Workbench } from "@/components/Workbench"
 import { usePipelineRunner } from "@/hooks/usePipelineRunner"
 import type { StudioNodeData } from "@/lib/canvas-layout"
+import {
+  clearModelSettings,
+  liveConfigError,
+  loadModelSettings,
+  saveModelSettings,
+  type ModelSettings,
+} from "@/lib/model-settings"
 import {
   loadLastPaste,
   loadNovelSampleId,
@@ -23,7 +32,7 @@ import {
 import { MAX_SOURCE_CHARS } from "@/pipeline/types"
 import type { NodeOverrides, SelectedNode } from "@/types/studio"
 import type { Node } from "@xyflow/react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 function initialMode(): StudioMode {
   return loadStudioMode()
@@ -55,25 +64,63 @@ export default function App() {
   const [overrides, setOverrides] = useState<NodeOverrides>({})
   const [selected, setSelected] = useState<SelectedNode | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const [fitViewKey, setFitViewKey] = useState(() => `init-${initialMode()}`)
+  const [modelSettings, setModelSettings] = useState<ModelSettings>(() =>
+    loadModelSettings()
+  )
+  const [modelSheetOpen, setModelSheetOpen] = useState(false)
+  const modelSettingsRef = useRef(modelSettings)
+  modelSettingsRef.current = modelSettings
 
-  const runner = usePipelineRunner(mode, initialText(mode))
+  const runner = usePipelineRunner(mode, initialText(mode), {
+    getModelSettings: () => modelSettingsRef.current,
+    onStageError: (message) => setToast(message),
+  })
+
+  const ensureCanStart = useCallback(() => {
+    const err = liveConfigError(modelSettingsRef.current)
+    if (err) {
+      setToast(err)
+      setModelSheetOpen(true)
+      return false
+    }
+    return true
+  }, [])
+
+  const bumpFitView = useCallback(
+    (reason: string) => {
+      setFitViewKey(`${mode}-${reason}-${Date.now()}`)
+    },
+    [mode]
+  )
 
   const handleModeChange = useCallback(
     (next: StudioMode) => {
       if (next === mode) return
-      const shared = runner.pipeline.sourceText.slice(0, MAX_SOURCE_CHARS)
+      const inFlight =
+        runner.status === "running" || runner.status === "paused"
+      if (inFlight && runner.hasProgress) {
+        const ok = window.confirm(
+          "当前模式流水线尚未跑完，切换将暂停进度并离开本模式画布。确定切换？"
+        )
+        if (!ok) return
+        if (runner.status === "running") {
+          runner.pause()
+        }
+      }
       const sid = samplesForMode(next).some((s) => s.id === sampleId)
         ? sampleId
         : defaultSampleIdForMode(next)
       setSampleId(sid)
       setMode(next)
       saveStudioMode(next)
-      runner.resetPipeline(shared, next)
       setOverrides({})
       setSelected(null)
       setSheetOpen(false)
+      bumpFitView("mode")
     },
-    [mode, runner]
+    [mode, runner, sampleId, bumpFitView]
   )
 
   const handleSourceChange = useCallback(
@@ -99,8 +146,9 @@ export default function App() {
       saveLastPaste(sample.excerpt)
       setOverrides({})
       setSelected(null)
+      bumpFitView("sample")
     },
-    [mode, runner]
+    [mode, runner, bumpFitView]
   )
 
   const onNodeSelect = useCallback((node: Node<StudioNodeData> | null) => {
@@ -118,14 +166,62 @@ export default function App() {
       stageId: d.stageId as SelectedNode["stageId"],
       draftBody: d.draftBody,
       revisedBody: d.revisedBody,
+      sheetExtras: d.sheetExtras,
     })
     setSheetOpen(true)
   }, [])
 
-  const onSaveNode = useCallback((id: string, title: string, body: string) => {
-    setOverrides((prev) => ({ ...prev, [id]: { title, body } }))
-    setSelected((s) => (s && s.id === id ? { ...s, title, body } : s))
-  }, [])
+  const onSaveNode = useCallback(
+    (id: string, title: string, body: string, revisedBody?: string) => {
+      if (revisedBody !== undefined) {
+        setOverrides((prev) => ({
+          ...prev,
+          [id]: { title, body: revisedBody },
+        }))
+        setSelected((s) =>
+          s && s.id === id ? { ...s, title, body, revisedBody } : s
+        )
+      } else {
+        setOverrides((prev) => ({ ...prev, [id]: { title, body } }))
+        setSelected((s) => (s && s.id === id ? { ...s, title, body } : s))
+      }
+      setToast("已保存到画布")
+    },
+    []
+  )
+
+  const onRegenerate = useCallback(
+    (stage: SelectedNode["stageId"]) => {
+      if (!stage) return
+      runner.regenStage(stage)
+      setOverrides({})
+      setToast("已重生成该阶段，下游产物已清空")
+    },
+    [runner]
+  )
+
+  const handleStartFresh = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.startFresh()
+    bumpFitView("start")
+  }, [runner, bumpFitView, ensureCanStart])
+
+  const handleRestart = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.restart()
+    setOverrides({})
+    bumpFitView("restart")
+  }, [runner, bumpFitView, ensureCanStart])
+
+  const handleContinue = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.continueRun()
+  }, [runner, ensureCanStart])
+
+  const handleStep = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.step()
+  }, [runner, ensureCanStart])
 
   const sourceText = useMemo(
     () => runner.pipeline.sourceText.slice(0, MAX_SOURCE_CHARS),
@@ -140,15 +236,21 @@ export default function App() {
         sampleId={sampleId}
         status={runner.status}
         stageLabel={runner.stageLabel}
+        currentStageId={runner.currentStage}
         completedStages={runner.completedStages}
         dramaPipeline={runner.dramaPipeline}
         novelPipeline={runner.novelPipeline}
         onModeChange={handleModeChange}
         onSourceChange={handleSourceChange}
         onSampleChange={handleSampleChange}
-        onStart={runner.start}
+        runMode={modelSettings.runMode}
+        onOpenModelSettings={() => setModelSheetOpen(true)}
+        onStartFresh={handleStartFresh}
+        onContinue={handleContinue}
+        onRestart={handleRestart}
         onPause={runner.pause}
-        onStep={runner.step}
+        onStep={handleStep}
+        onExportDone={() => setToast("JSON 已下载")}
       />
       <main className="relative flex-1 min-w-0">
         <StudioCanvas
@@ -156,6 +258,9 @@ export default function App() {
           dramaPipeline={{ ...runner.dramaPipeline, sourceText }}
           novelPipeline={{ ...runner.novelPipeline, sourceText }}
           overrides={overrides}
+          status={runner.status}
+          currentStageId={runner.currentStage}
+          fitViewKey={fitViewKey}
           onNodeSelect={onNodeSelect}
         />
       </main>
@@ -164,8 +269,24 @@ export default function App() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onSave={onSaveNode}
-        onRegenerate={runner.regenStage}
+        onRegenerate={onRegenerate}
       />
+      <ModelSettingsSheet
+        open={modelSheetOpen}
+        onOpenChange={setModelSheetOpen}
+        settings={modelSettings}
+        onSave={(next) => {
+          saveModelSettings(next)
+          setModelSettings(next)
+          setToast("模型设置已保存")
+        }}
+        onClear={() => {
+          clearModelSettings()
+          setModelSettings(loadModelSettings())
+          setToast("已清除模型配置")
+        }}
+      />
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

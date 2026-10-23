@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { PipelineStepper } from "@/components/PipelineStepper"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,8 +18,18 @@ import {
   type PipelineStage,
   type PipelineState,
 } from "@/pipeline/types"
+import type { RunMode } from "@/lib/model-settings"
 import type { RunnerStatus } from "@/types/studio"
-import { BookOpen, Clapperboard, Download, Pause, Play, StepForward } from "lucide-react"
+import {
+  BookOpen,
+  Clapperboard,
+  Download,
+  Pause,
+  Play,
+  RotateCcw,
+  Settings2,
+  StepForward,
+} from "lucide-react"
 
 interface WorkbenchProps {
   mode: StudioMode
@@ -27,15 +37,21 @@ interface WorkbenchProps {
   sampleId: string
   status: RunnerStatus
   stageLabel: string
+  currentStageId: string | null
   completedStages: (PipelineStage | NovelPipelineStage)[]
   dramaPipeline: PipelineState
   novelPipeline: NovelPipelineState
   onModeChange: (mode: StudioMode) => void
   onSourceChange: (text: string) => void
   onSampleChange: (id: string) => void
-  onStart: () => void
+  onStartFresh: () => void
+  onContinue: () => void
+  onRestart: () => void
   onPause: () => void
   onStep: () => void
+  onExportDone: () => void
+  runMode: RunMode
+  onOpenModelSettings: () => void
 }
 
 const DRAMA_STAGES: PipelineStage[] = [
@@ -51,15 +67,21 @@ export function Workbench({
   sampleId,
   status,
   stageLabel,
+  currentStageId,
   completedStages,
   dramaPipeline,
   novelPipeline,
   onModeChange,
   onSourceChange,
   onSampleChange,
-  onStart,
+  onStartFresh,
+  onContinue,
+  onRestart,
   onPause,
   onStep,
+  onExportDone,
+  runMode,
+  onOpenModelSettings,
 }: WorkbenchProps) {
   const samples = samplesForMode(mode)
   const stageList =
@@ -72,13 +94,58 @@ export function Workbench({
       ? "种子 → 大纲 → 角色 → 剧本 → 分镜（本地模拟）"
       : "种子 → 世界观 → 章纲 → 角色 → 样章 → 质检 → 改写（本地模拟）"
 
+  const handleRestart = () => {
+    if (
+      !window.confirm(
+        "将清空当前模式的流水线进度并从头空跑，确定重新开始？"
+      )
+    ) {
+      return
+    }
+    onRestart()
+  }
+
+  const handleExport = () => {
+    downloadArtifactsJson(
+      mode,
+      mode === "drama" ? dramaPipeline : novelPipeline
+    )
+    onExportDone()
+  }
+
+  const showContinuePrimary = status === "paused" && completedStages.length > 0
+
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-r border-border bg-card/80 backdrop-blur-sm">
       <div className="border-b border-border px-4 py-3 space-y-3">
-        <div>
-          <h1 className="text-base font-semibold tracking-tight">Toonflow 双引擎工作室</h1>
-          <p className="text-xs text-muted-foreground mt-1">{modeSubtitle}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold tracking-tight">Toonflow 双引擎工作室</h1>
+            <p className="text-xs text-muted-foreground mt-1">{modeSubtitle}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              运行：{runMode === "live" ? "真实模型" : "本地空跑"}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="outline"
+            title="模型设置"
+            onClick={onOpenModelSettings}
+          >
+            <Settings2 className="size-4" />
+          </Button>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground -mt-1"
+          onClick={onOpenModelSettings}
+        >
+          <Settings2 className="size-4" />
+          模型设置
+        </Button>
         <div className="grid grid-cols-2 gap-2">
           <Button
             type="button"
@@ -139,20 +206,12 @@ export function Workbench({
 
         <div className="space-y-2">
           <Label>流水线进度</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {stageList.map((stage) => {
-              const done = completedStages.includes(stage.id)
-              return (
-                <Badge
-                  key={stage.id}
-                  variant={done ? "default" : "outline"}
-                  className="text-[10px] font-normal"
-                >
-                  {stage.label}
-                </Badge>
-              )
-            })}
-          </div>
+          <PipelineStepper
+            stages={stageList}
+            completedIds={completedStages as string[]}
+            currentStageId={currentStageId}
+            status={status}
+          />
           <p className="text-xs text-muted-foreground">
             当前：{status === "running" ? `生成中 · ${stageLabel}` : stageLabel}
           </p>
@@ -160,15 +219,37 @@ export function Workbench({
       </div>
 
       <div className="border-t border-border p-4 flex flex-col gap-2">
-        <Button
-          type="button"
-          onClick={onStart}
-          disabled={status === "running"}
-          className="w-full"
-        >
-          <Play className="size-4" />
-          开始空跑
-        </Button>
+        {showContinuePrimary ? (
+          <>
+            <Button
+              type="button"
+              onClick={onContinue}
+              className="w-full"
+            >
+              <Play className="size-4" />
+              继续
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleRestart}
+              className="w-full"
+            >
+              <RotateCcw className="size-4" />
+              重新开始
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            onClick={onStartFresh}
+            disabled={status === "running"}
+            className="w-full"
+          >
+            <Play className="size-4" />
+            开始空跑
+          </Button>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <Button
             type="button"
@@ -193,12 +274,7 @@ export function Workbench({
           type="button"
           variant="ghost"
           className="w-full text-muted-foreground"
-          onClick={() =>
-            downloadArtifactsJson(
-              mode,
-              mode === "drama" ? dramaPipeline : novelPipeline
-            )
-          }
+          onClick={handleExport}
         >
           <Download className="size-4" />
           导出 JSON

@@ -15,7 +15,9 @@ export interface SelectedNode {
   title: string
   body: string
   stageId?: PipelineStageId
+  entityId?: string
   draftBody?: string
   revisedBody?: string
   sheetExtras?: string[]
+  frameColor?: string
 }

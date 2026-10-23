@@ -18,6 +18,7 @@ import {
   type PipelineStage,
   type PipelineState,
 } from "@/pipeline/types"
+import { mediaProviderLabel, type MediaSettings } from "@/lib/media/media-settings"
 import type { RunMode } from "@/lib/model-settings"
 import type { RunnerStatus } from "@/types/studio"
 import {
@@ -51,6 +52,7 @@ interface WorkbenchProps {
   onStep: () => void
   onExportDone: () => void
   runMode: RunMode
+  mediaSettings: MediaSettings
   onOpenModelSettings: () => void
 }
 
@@ -81,6 +83,7 @@ export function Workbench({
   onStep,
   onExportDone,
   runMode,
+  mediaSettings,
   onOpenModelSettings,
 }: WorkbenchProps) {
   const samples = samplesForMode(mode)
@@ -123,7 +126,9 @@ export function Workbench({
             <h1 className="text-base font-semibold tracking-tight">Toonflow 双引擎工作室</h1>
             <p className="text-xs text-muted-foreground mt-1">{modeSubtitle}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              运行：{runMode === "live" ? "真实模型" : "本地空跑"}
+              文本：{runMode === "live" ? "真实模型" : "本地空跑"} · 生图：
+              {mediaProviderLabel(mediaSettings.imageProvider)} · 生视频：
+              {mediaProviderLabel(mediaSettings.videoProvider)}
             </p>
           </div>
           <Button

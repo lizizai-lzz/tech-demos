@@ -37,6 +37,12 @@ export interface StoryboardCard {
   shotType: string
   promptText: string
   frameColor: string
+  /** 即梦或外链预览 */
+  imageUrl?: string
+  videoUrl?: string
+  skillJobExportedAt?: string
+  mediaError?: string
+  mediaMock?: boolean
 }
 
 export interface PipelineArtifacts {

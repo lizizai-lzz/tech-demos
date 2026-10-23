@@ -72,7 +72,14 @@ export function StudioNode({ data, selected }: NodeProps<Node<StudioNodeData>>) 
         )}
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0 space-y-2">
-        {data.kind === "storyboard" && data.frameColor && (
+        {data.kind === "storyboard" && data.imagePreviewUrl && (
+          <img
+            src={data.imagePreviewUrl}
+            alt=""
+            className="h-16 w-full rounded-md border border-border/60 object-cover"
+          />
+        )}
+        {data.kind === "storyboard" && !data.imagePreviewUrl && data.frameColor && (
           <div
             className="h-16 w-full rounded-md border border-border/60"
             style={{ backgroundColor: data.frameColor }}

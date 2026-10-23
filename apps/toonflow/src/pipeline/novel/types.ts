@@ -40,8 +40,8 @@ export interface WorldResult {
   setting: string
   tone: string
   rules: string[]
-  /** 修炼体系名或简述（校园黑道题材） */
-  cultivationSystem?: string
+  /** 凡人武学层级（人体极限，非玄幻灵气） */
+  martialSystem?: string
   /** 帮派 / 堂口名 */
   factions?: string[]
 }

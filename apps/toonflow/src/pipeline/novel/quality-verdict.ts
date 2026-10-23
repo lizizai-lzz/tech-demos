@@ -21,12 +21,12 @@ export function buildQualityVerdict(
   const punchLow = punch.score < 58
 
   if (punchFail || punchLow) {
-    rewriteBrief.push("标题与钩子加狠：堂口/逼炼/反杀意象，避免软萌或校规现实主义")
+    rewriteBrief.push("标题与钩子加狠：堂口/炼狱/反杀意象，避免软萌或校规现实主义")
   }
   if (consistencyFail) {
-    rewriteBrief.push("对齐章纲节拍、修炼体系与堂口势力")
+    rewriteBrief.push("对齐章纲节拍、凡人武学层级与堂口势力（无灵气修真）")
   } else if (consistencyWarn) {
-    rewriteBrief.push("补强境界差、帮派名号与章纲暗黑节拍")
+    rewriteBrief.push("补强段位差、帮派名号与章纲暗黑节拍")
   }
 
   if (blocked) {

@@ -6,7 +6,7 @@ import type {
 } from "./types"
 import { flattenChapterProse, firstMatchingQuote } from "./prose-utils"
 import {
-  isCultivationCampus,
+  isMartialCampusUnderworld,
   PUNCH_TITLE_MARKERS,
   WEAK_TITLE_MARKERS,
 } from "./genre"
@@ -15,17 +15,17 @@ const SOFT_PLOT_PATTERNS: { pattern: RegExp; issue: string; fix: string }[] = [
   {
     pattern: /学生会.{0,12}(演讲|倡议|公约)|保卫科|家长群|班主任.{0,8}谈话/g,
     issue: "剧情偏「校规现实主义」，网文狠劲不足",
-    fix: "改成堂口规矩、境界压制或黑市交易，用短句动作推进",
+    fix: "改成堂口规矩、段位压制或地下赌拳，用短句肉搏推进",
   },
   {
     pattern: /交给老师|制度介入|温馨提示|共建和谐校园/g,
     issue: "落点过软，像说教收尾",
-    fix: "用反杀、夺势或破境作钩，别收束成校园宣教",
+    fix: "用反杀、抢场或杀拳突破作钩",
   },
   {
     pattern: /这不是输赢的问题|我们要不要还相信/g,
     issue: "对白像学生会辩论，缺乏爽文冲击力",
-    fix: "改成威胁、要价或一刀见血的短对白",
+    fix: "改成威胁、要价或折骨见血的短对白",
   },
 ]
 
@@ -52,27 +52,36 @@ export function runPunchReview(
       severity: "fail",
       quote: chapter.title,
       issue: "章标题偏软或模板化，缺少狠味钩子",
-      fix: "换成带修炼/堂口/反杀意象的短标题，如「地下室逼炼」「断骨反杀」",
+      fix: "换成带杀拳/禁闭/反杀意象的短标题，如「地下室炼狱」「断骨反杀」",
     })
   }
 
-  if (isCultivationCampus(sourceText)) {
-    if (!/境界|灵力|炼体|丹|堂口|禁灵|逼炼/.test(text)) {
+  if (isMartialCampusUnderworld(sourceText)) {
+    if (!/入门|熟手|杀拳|半格|怪力|拳场|禁闭|堂口|青龙|白虎/.test(text)) {
       score -= 25
       findings.push({
         severity: "fail",
         quote: firstMatchingQuote(text, /./),
-        issue: "正文未扣住修炼体系或堂口势力",
-        fix: "点出境界差、逼炼手段或帮派地盘，别写成普通校园纠纷",
+        issue: "正文未扣住凡人武学层级或地下堂口",
+        fix: "点出段位差、炼狱集训或帮派地盘，别写成普通校园纠纷",
       })
     }
-    if (!/禁锢|逼炼|反杀|黑市|囚禁|锁|断骨/.test(`${text}${chapter.summary}`)) {
+    if (!/禁锢|炼狱|反杀|黑市|囚禁|锁|断骨|羞辱/.test(`${text}${chapter.summary}`)) {
       score -= 15
       findings.push({
         severity: "warn",
         quote: chapter.summary.slice(0, 40),
-        issue: "节拍偏温，缺少暗黑爽点（禁锢/逼炼/反杀）",
-        fix: "在冲突段加入逼炼、囚禁或反杀预告",
+        issue: "节拍偏温，缺少暗黑爽点（禁锢/炼狱/反杀）",
+        fix: "在冲突段加入禁闭、羞辱或反杀预告",
+      })
+    }
+    if (/灵力|丹药|开脉|修真/.test(text)) {
+      score -= 20
+      findings.push({
+        severity: "fail",
+        quote: firstMatchingQuote(text, /灵力|丹药/),
+        issue: "混入玄幻修真味，与刃牙式凡人设定冲突",
+        fix: "全部改为肉体极限与地下格斗语汇",
       })
     }
   }
@@ -97,7 +106,7 @@ export function runPunchReview(
       severity: "pass",
       quote: chapter.title,
       issue: "标题与节拍具备网文冲击力",
-      fix: "保持短句动作流，继续压境界差",
+      fix: "保持短句肉搏流，继续压段位差",
     })
   }
 

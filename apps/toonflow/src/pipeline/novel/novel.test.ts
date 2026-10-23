@@ -52,14 +52,15 @@ describe("novel prose alignment", () => {
 })
 
 describe("novel quality review loop", () => {
-  test("cultivation campus: punch/ai drive rewrite, violence not sensitivity-blocked", () => {
+  test("martial campus: punch/ai drive rewrite, violence not sensitivity-blocked", () => {
     const text = getNovelSampleById("campus-underworld").excerpt
     const art = runFullNovelPipeline(text)
     const first = art.chapterOutline.chapters[0]
 
-    expect(art.world.cultivationSystem).toBeTruthy()
+    expect(art.world.martialSystem).toMatch(/入门|杀拳|怪力/)
+    expect(art.world.martialSystem).not.toMatch(/灵力|丹药|开脉/)
     expect(art.world.factions?.length).toBeGreaterThanOrEqual(2)
-    expect(first.title).toMatch(/逼炼|禁灵|青龙|反杀|黑市/)
+    expect(first.title).toMatch(/炼狱|禁闭|青龙|反杀|黑市/)
 
     expect(
       art.sensitivityReview.findings.some((f) => f.severity === "block")
@@ -75,11 +76,12 @@ describe("novel quality review loop", () => {
     const finalText = flattenChapterProse(art.chapterProse)
     expect(finalText).not.toBe(draftText)
     expect(finalText.includes("目光深邃")).toBe(false)
-    expect(/反杀|堂口|禁灵|逼炼/.test(finalText)).toBe(true)
+    expect(/反杀|堂口|禁闭|杀拳|炼狱/.test(finalText)).toBe(true)
+    expect(finalText.includes("灵力")).toBe(false)
     expect(finalText.includes("交给老师")).toBe(false)
   })
 
-  test("sensitivity allows kidnapping and forced cultivation tropes", () => {
+  test("sensitivity allows kidnapping and training-hell tropes", () => {
     const text = getNovelSampleById("campus-underworld").excerpt
     const outline = buildChapterOutline(text)
     const chars = identifyCharacters(text)
@@ -107,11 +109,12 @@ describe("novel quality review loop", () => {
   })
 })
 
-describe("cultivation world consistency", () => {
-  test("world rules reference factions not school discipline", () => {
+describe("martial world consistency", () => {
+  test("world rules reference factions and human ranks not xianxia", () => {
     const text = getNovelSampleById("campus-underworld").excerpt
     const world = buildWorld(text)
     expect(world.rules.join("")).not.toMatch(/保卫科|家长群|校规/)
-    expect(world.rules.join("")).toMatch(/堂口|灵力|丹/)
+    expect(world.rules.join("")).toMatch(/堂口|拳场|杀拳|禁闭/)
+    expect(world.rules.join("")).not.toMatch(/灵力|丹药|元婴/)
   })
 })

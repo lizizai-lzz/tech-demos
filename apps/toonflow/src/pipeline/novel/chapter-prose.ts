@@ -1,7 +1,7 @@
 import type { ChapterOutlineItem } from "./types"
 import type { CharacterCard } from "../types"
 import type { ChapterProseResult, ProseSection } from "./types"
-import { isCultivationCampus } from "./genre"
+import { isMartialCampusUnderworld } from "./genre"
 
 export function buildChapterProse(
   chapter: ChapterOutlineItem,
@@ -13,16 +13,16 @@ export function buildChapterProse(
   const rival = characters[1]?.name ?? "对手"
   const snippet =
     sourceText.replace(/\s+/g, "").slice(0, 40) || "风雨将至的傍晚"
-  const cult = isCultivationCampus(sourceText)
+  const martial = isMartialCampusUnderworld(sourceText)
 
-  if (cult) {
+  if (martial) {
     const sections: ProseSection[] = [
       {
         id: "sec-opening",
         heading: "第一节 · 地下",
         paragraphs: [
           `${chapter.summary}`,
-          `铁门一落，${lead}被按在丹炉边。灵力像针，往经脉里扎。`,
+          `铁门一落，${lead}被按在沙袋上。腹肌抽搐，汗咸得像血。`,
           `他的目光深邃，仿佛能看穿人心。这一刻，他忽然明白，成长从来不是一蹴而就的童话。首先，你要学会忍耐；其次，你要学会放手；最后，你要学会与自己和解。`,
         ],
       },
@@ -30,7 +30,7 @@ export function buildChapterProse(
         id: "sec-conflict",
         heading: "第二节 · 堂口",
         paragraphs: [
-          `${rival}踩着堂口印进来：「青龙堂要的废丹，今晚得炼出来。」`,
+          `${rival}踩着会印进来：「青龙会要的杀拳架势，今晚得练出来。」`,
           `「这不是输赢的问题。」${lead}低声说，「是我们要不要还相信同一条规则。」`,
           `${chapter.keyBeats[1]}。${snippet}像烙在墙上，洗不掉。`,
         ],
@@ -39,16 +39,16 @@ export function buildChapterProse(
         id: "sec-hook",
         heading: "第三节 · 反杀",
         paragraphs: [
-          `禁灵牢外有人放风：白虎楼要抢丹。${lead}咬破舌尖，炼体九重强行破关。`,
-          `${chapter.keyBeats[2]}。他反手扣住${rival}手腕：「你想逼炼我？先算算断几根骨。」`,
+          `禁闭仓外有人放风：白虎馆要来抢场。${lead}咬破舌尖，熟手硬顶半格。`,
+          `${chapter.keyBeats[2]}。他反手扣住${rival}手腕：「你想关我炼狱？先算算断几根肋。」`,
         ],
       },
     ]
     if (seed % 3 === 1) {
       sections.push({
         id: "sec-coda",
-        heading: "第四节 · 血债",
-        paragraphs: [`黑市丹坊的灯晃了一下。${lead}知道，今晚的反杀只是开始。`],
+        heading: "第四节 · 血账",
+        paragraphs: [`地下拳场的灯晃了一下。${lead}知道，今晚的反杀只是开始。`],
       })
     }
     return {

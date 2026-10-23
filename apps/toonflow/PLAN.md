@@ -36,7 +36,7 @@
 
 1. **规划与模式壳** — 重写本 `PLAN.md`；`StudioMode` + localStorage；工作台顶部 **小说 / 短剧** 切换。
 2. **短剧流水线** — 保持现有 `src/pipeline/`（extract → characters → script → storyboard）行为不变，接入模式感知 runner。
-3. **小说流水线** — 质检五段；设定为 **成年灵力高校**；敏感仅拦犯罪教程与 &lt;18 framing；类型 pulp 容忍；样例「灵力高校·青龙堂」。
+3. **小说流水线** — 质检五段；**刃牙式凡人地下格斗高校**（非修真）；样例「地下高校·青龙会」。
 4. **共享与导出** — 角色卡结构复用；`exportArtifacts(mode, state)` 下载 JSON。
 5. **测试与文档** — `bun test src` 覆盖双流水线；README 说明模式切换与 mock 范围；PR 截图 + 视频（切换模式、小说跑通、短剧仍可用）。
 

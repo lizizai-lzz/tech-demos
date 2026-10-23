@@ -1,5 +1,5 @@
 import type { WorldResult } from "./types"
-import { isCultivationCampus } from "./genre"
+import { isMartialCampusUnderworld } from "./genre"
 
 const ERA_POOL = [
   "当代都市",
@@ -18,22 +18,22 @@ const TONE_POOL = [
 ]
 
 export function buildWorld(sourceText: string, seed = 0): WorldResult {
-  const cultCampus = isCultivationCampus(sourceText)
+  const martialCampus = isMartialCampusUnderworld(sourceText)
 
-  if (cultCampus) {
-    const factions = ["青龙堂", "白虎楼", "禁灵牢看守队"]
+  if (martialCampus) {
+    const factions = ["青龙会", "白虎馆", "禁闭仓看守组"]
     return {
-      era: "灵力复苏·寄宿制灵力高校",
+      era: "当代·地下格斗渗透的寄宿高校",
       setting:
-        "大学城灵力高校，教学楼地下三层连着黑市丹坊；青龙、白虎等堂口占楼划界，夜课后灵压飙升。",
-      tone: "狠辣升级流",
-      cultivationSystem: "炼体九重 · 灵力开窍 · 丹毒反噬",
+        "大学城地下二层是旧体育馆改造的拳场与禁闭仓；青龙会、白虎馆占层划界，夜课后只有熟手以上敢走主楼梯。",
+      tone: "极限肉体 · 地下黑道",
+      martialSystem: "入门 → 熟手 → 杀拳 → 半格 → 怪力（人体极限，无灵气）",
       factions,
       rules: [
-        "境界压制：高两重可当众废人灵脉，但会结丹毒债。",
-        "堂口规矩：抢地盘先亮堂口印，私斗禁动元婴级禁器。",
-        "黑市丹坊：逼炼废丹可换突破，失败则禁锢在禁灵牢。",
-        "代价法则：每次破境都要留下可追溯的血债或人情。",
+        "段位压制：高一段可当众折断指骨立威，但会欠地下拳场的血账。",
+        "堂口规矩：抢地盘先亮会印，私斗禁用热武器与场外狙击。",
+        "炼狱集训：失败者关禁闭仓加练，练不出杀拳架势就断肋骨。",
+        "人体上限：怪力只是极少数人的肌肉神经异常，不是法术。",
       ],
     }
   }

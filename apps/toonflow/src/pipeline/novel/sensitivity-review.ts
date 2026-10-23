@@ -2,8 +2,8 @@ import type { ChapterProseResult, SensitivityFinding, SensitivityReviewResult } 
 import { flattenChapterProse, firstMatchingQuote } from "./prose-utils"
 
 /**
- * 高校黑道修炼题材：角色为成年大学生（空跑假定）。
- * 允许类型桥段：绑架、禁锢、羞辱、黑市炼丹、逼炼、帮派暴力、暗黑暧昧威胁等。
+ * 成人高校地下格斗黑道：凡人肉体极限（刃牙式），非修真。
+ * 允许类型桥段：绑架、禁锢、羞辱、黑市赌拳/禁药暗示（无教程）、炼狱集训、帮派暴力等。
  * 仅阻断：真实可模仿犯罪教程（非虚构叙事）、以及明确将角色 framing 为未满 18 岁。
  */
 const HARD_BLOCK_RULES: {
@@ -33,7 +33,7 @@ const GENRE_NOTE_RULES: {
   issue: string
 }[] = [
   {
-    pattern: /禁锢|囚禁|绑架|逼炼|黑市|羞辱|断骨|堂口/g,
+    pattern: /禁锢|囚禁|绑架|炼狱|黑市|羞辱|断骨|堂口/g,
     issue: "成人向类型压迫/暴力桥段（空跑允许，按网文尺度处理）",
   },
   {
@@ -78,7 +78,7 @@ export function runSensitivityReview(
       severity: "note",
       quote: text.slice(0, 36),
       issue: "未命中红线（空跑：成年高校网文词表）",
-      fix: "绑架/逼炼/羞辱等类型桥段无需软化；避免真实犯罪教程与未成年 framing",
+      fix: "绑架/炼狱/羞辱等类型桥段无需软化；避免真实犯罪教程与未成年 framing",
     })
   }
 

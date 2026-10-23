@@ -1,5 +1,5 @@
 import type { ChapterOutlineItem, ChapterOutlineResult } from "./types"
-import { isCultivationCampus } from "./genre"
+import { isMartialCampusUnderworld } from "./genre"
 
 function splitSentences(text: string): string[] {
   return text
@@ -8,20 +8,20 @@ function splitSentences(text: string): string[] {
     .filter((s) => s.length > 3)
 }
 
-const CULT_CHAPTER_TITLES = [
-  "地下室逼炼",
-  "禁灵牢里断骨",
-  "青龙堂抢丹",
-  "反杀白虎楼",
-  "黑市血债",
+const MARTIAL_CHAPTER_TITLES = [
+  "地下室炼狱",
+  "禁闭仓断骨",
+  "青龙会抢场",
+  "反杀白虎馆",
+  "黑市血账",
 ]
 
-const CULT_BEATS = [
-  ["禁锢", "逼炼废丹", "灵脉反噬"],
-  ["禁灵牢", "断骨威胁", "堂口印亮出"],
-  ["青龙堂", "抢地盘", "黑市交易"],
-  ["白虎楼", "境界压制", "反杀伏笔"],
-  ["血债", "破境", "下一章钩"],
+const MARTIAL_BEATS = [
+  ["禁锢", "地狱集训", "肋骨作响"],
+  ["禁闭仓", "断指威胁", "会印亮出"],
+  ["青龙会", "抢地盘", "黑市赌拳"],
+  ["白虎馆", "段位压制", "反杀伏笔"],
+  ["血账", "杀拳突破", "下一章钩"],
 ]
 
 export function buildChapterOutline(
@@ -43,7 +43,7 @@ export function buildChapterOutline(
   ]
 
   const chapters: ChapterOutlineItem[] = []
-  const cult = isCultivationCampus(sourceText)
+  const martial = isMartialCampusUnderworld(sourceText)
 
   for (let i = 0; i < chapterCount; i++) {
     const sent =
@@ -51,14 +51,14 @@ export function buildChapterOutline(
         ? sentences[(i + seed) % sentences.length]
         : `第 ${i + 1} 章核心冲突`
 
-    const summary = cult
-      ? `青龙堂要在晚自习后把${sent.slice(0, 16) || "新人"}逼进禁灵牢炼废丹。`
+    const summary = martial
+      ? `青龙会要在夜课后把${sent.slice(0, 16) || "新人"}关进禁闭仓加练杀拳。`
       : sent.length > 48
         ? `围绕「${sent.slice(0, 44)}…」推进主线。`
         : `围绕「${sent}」推进主线。`
 
-    const keyBeats = cult
-      ? CULT_BEATS[i % CULT_BEATS.length].map(
+    const keyBeats = martial
+      ? MARTIAL_BEATS[i % MARTIAL_BEATS.length].map(
           (b, j) => `节拍 ${String.fromCharCode(65 + j)}：${b}`
         )
       : [
@@ -67,8 +67,8 @@ export function buildChapterOutline(
           `节拍 C：${i === chapterCount - 1 ? "阶段性收束并留钩" : "为下一章埋线索"}`,
         ]
 
-    const title = cult
-      ? `第${i + 1}章 · ${CULT_CHAPTER_TITLES[i % CULT_CHAPTER_TITLES.length]}`
+    const title = martial
+      ? `第${i + 1}章 · ${MARTIAL_CHAPTER_TITLES[i % MARTIAL_CHAPTER_TITLES.length]}`
       : `第${i + 1}章 · ${chapterTitles[i % chapterTitles.length]}`
 
     chapters.push({

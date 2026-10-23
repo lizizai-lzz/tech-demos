@@ -1,10 +1,15 @@
-/** 修炼体系 + 校园黑道题材（空跑启发式） */
-export function isCultivationCampus(sourceText: string): boolean {
-  const cult = /修炼|灵力|境界|炼体|丹|禁灵|逼炼|堂口|黑市/.test(sourceText)
-  const campus = /校园|大学|高校|分院|大学城|晚自习|寄宿|教学楼/.test(sourceText)
-  const under = /黑道|帮派|校霸|堂口|地盘/.test(sourceText)
-  return cult || (campus && under)
+/** 成人高校 + 地下格斗圈黑道（范马刃牙式凡人肉体极限，非修真） */
+export function isMartialCampusUnderworld(sourceText: string): boolean {
+  const martial = /杀拳|半格|怪力|熟手|入门|地下拳|炼狱|禁闭|青龙|白虎|堂口|黑市/.test(
+    sourceText
+  )
+  const campus = /校园|大学|高校|分院|大学城|夜课|寄宿|教学楼/.test(sourceText)
+  const under = /黑道|帮派|地下|校霸|堂口|地盘/.test(sourceText)
+  return martial || (campus && under)
 }
+
+/** @deprecated 使用 isMartialCampusUnderworld */
+export const isCultivationCampus = isMartialCampusUnderworld
 
 export const WEAK_TITLE_MARKERS = [
   "入局",
@@ -16,14 +21,14 @@ export const WEAK_TITLE_MARKERS = [
 ]
 
 export const PUNCH_TITLE_MARKERS = [
-  "逼炼",
+  "炼狱",
   "反杀",
   "禁锢",
   "断骨",
-  "夺丹",
+  "抢场",
   "血债",
   "地下",
   "堂口",
-  "破境",
-  "锁灵",
+  "杀拳",
+  "禁闭",
 ]

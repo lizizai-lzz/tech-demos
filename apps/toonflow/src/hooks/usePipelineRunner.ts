@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import type { ModelSettings } from "@/lib/model-settings"
+import { loadRunnerSnapshot, saveRunnerSnapshot } from "@/lib/storage"
 import type { StudioMode } from "@/pipeline/mode"
 import {
   emptyPipelineState,
   nextStage,
-  regenerateNode,
-  runStage,
   STAGE_LABELS,
   type PipelineStage,
   type PipelineState,
@@ -13,18 +13,27 @@ import {
   emptyNovelPipelineState,
   nextNovelStage,
   NOVEL_STAGE_LABELS,
-  regenerateNovelNode,
-  runNovelStage,
   type NovelPipelineStage,
   type NovelPipelineState,
 } from "@/pipeline/novel"
 import type { PipelineStageId } from "@/pipeline/stage-id"
-import { loadRunnerSnapshot, saveRunnerSnapshot } from "@/lib/storage"
+import {
+  executeDramaStage,
+  executeNovelStage,
+  regenerateDramaStage,
+  regenerateNovelStage,
+} from "@/pipeline/stage-executor"
 import type { RunnerStatus } from "@/types/studio"
 
 const STAGE_DELAY_MS = 900
+const STAGE_DELAY_LIVE_MS = 120
 
 export type { PipelineStageId } from "@/pipeline/stage-id"
+
+export interface PipelineRunnerOptions {
+  getModelSettings: () => ModelSettings
+  onStageError?: (message: string) => void
+}
 
 function initialDramaState(text: string): PipelineState {
   const snap = loadRunnerSnapshot()
@@ -48,7 +57,17 @@ function initialSeed(): number {
   return snap?.seed ?? 0
 }
 
-export function usePipelineRunner(mode: StudioMode, initialText: string) {
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  return "阶段执行失败"
+}
+
+export function usePipelineRunner(
+  mode: StudioMode,
+  initialText: string,
+  options: PipelineRunnerOptions
+) {
+  const { getModelSettings, onStageError } = options
   const [dramaPipeline, setDramaPipeline] = useState<PipelineState>(() =>
     initialDramaState(initialText)
   )
@@ -59,6 +78,7 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
   const [seed, setSeed] = useState(initialSeed)
   const pauseRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const runningRef = useRef(false)
 
   const pipeline = mode === "drama" ? dramaPipeline : novelPipeline
 
@@ -69,11 +89,17 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     }
   }
 
+  const stageDelay = useCallback(() => {
+    const settings = getModelSettings()
+    return settings.runMode === "live" ? STAGE_DELAY_LIVE_MS : STAGE_DELAY_MS
+  }, [getModelSettings])
+
   const resetPipeline = useCallback(
     (text: string, forMode?: StudioMode) => {
       const target = forMode ?? mode
       clearTimer()
       pauseRef.current = false
+      runningRef.current = false
       setStatus("idle")
       if (target === "drama") {
         setDramaPipeline(emptyPipelineState(text))
@@ -88,46 +114,68 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     (state: PipelineState) => {
       const stage = nextStage(state)
       if (!stage) {
+        runningRef.current = false
         setStatus("done")
         return
       }
       if (pauseRef.current) {
+        runningRef.current = false
         setStatus("paused")
         return
       }
+      const settings = getModelSettings()
       timerRef.current = setTimeout(() => {
-        const updated = runStage(state, stage, seed)
-        setDramaPipeline(updated)
-        finishOrContinueDrama(updated)
-      }, STAGE_DELAY_MS)
+        void executeDramaStage(state, stage, seed, settings)
+          .then((updated) => {
+            setDramaPipeline(updated)
+            finishOrContinueDrama(updated)
+          })
+          .catch((err) => {
+            pauseRef.current = true
+            runningRef.current = false
+            setStatus("paused")
+            onStageError?.(errorMessage(err))
+          })
+      }, stageDelay())
     },
-    [seed]
+    [seed, getModelSettings, onStageError, stageDelay]
   )
 
   const finishOrContinueNovel = useCallback(
     (state: NovelPipelineState) => {
       const stage = nextNovelStage(state)
       if (!stage) {
+        runningRef.current = false
         setStatus("done")
         return
       }
       if (pauseRef.current) {
+        runningRef.current = false
         setStatus("paused")
         return
       }
+      const settings = getModelSettings()
       timerRef.current = setTimeout(() => {
-        const updated = runNovelStage(state, stage, seed)
-        setNovelPipeline(updated)
-        finishOrContinueNovel(updated)
-      }, STAGE_DELAY_MS)
+        void executeNovelStage(state, stage, seed, settings)
+          .then((updated) => {
+            setNovelPipeline(updated)
+            finishOrContinueNovel(updated)
+          })
+          .catch((err) => {
+            pauseRef.current = true
+            runningRef.current = false
+            setStatus("paused")
+            onStageError?.(errorMessage(err))
+          })
+      }, stageDelay())
     },
-    [seed]
+    [seed, getModelSettings, onStageError, stageDelay]
   )
 
-  /** 从空流水线完整空跑（idle / done 主按钮） */
   const startFresh = useCallback(() => {
     clearTimer()
     pauseRef.current = false
+    runningRef.current = true
     if (mode === "drama") {
       const fresh = emptyPipelineState(dramaPipeline.sourceText)
       setDramaPipeline(fresh)
@@ -147,10 +195,10 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     finishOrContinueNovel,
   ])
 
-  /** 暂停后从下一待办阶段继续，不清空已完成节点 */
   const continueRun = useCallback(() => {
     clearTimer()
     pauseRef.current = false
+    runningRef.current = true
     if (mode === "drama") {
       if (!nextStage(dramaPipeline)) {
         setStatus("done")
@@ -174,7 +222,6 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     finishOrContinueNovel,
   ])
 
-  /** 确认后清空并从头空跑 */
   const restart = useCallback(() => {
     startFresh()
   }, [startFresh])
@@ -182,32 +229,46 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
   const pause = useCallback(() => {
     pauseRef.current = true
     clearTimer()
+    runningRef.current = false
     setStatus("paused")
   }, [])
 
   const step = useCallback(() => {
     clearTimer()
     pauseRef.current = true
+    const settings = getModelSettings()
     if (mode === "drama") {
       const stage = nextStage(dramaPipeline)
       if (!stage) {
         setStatus("done")
         return
       }
-      const updated = runStage(dramaPipeline, stage, seed)
-      setDramaPipeline(updated)
-      setStatus(nextStage(updated) ? "paused" : "done")
+      void executeDramaStage(dramaPipeline, stage, seed, settings)
+        .then((updated) => {
+          setDramaPipeline(updated)
+          setStatus(nextStage(updated) ? "paused" : "done")
+        })
+        .catch((err) => {
+          setStatus("paused")
+          onStageError?.(errorMessage(err))
+        })
     } else {
       const stage = nextNovelStage(novelPipeline)
       if (!stage) {
         setStatus("done")
         return
       }
-      const updated = runNovelStage(novelPipeline, stage, seed)
-      setNovelPipeline(updated)
-      setStatus(nextNovelStage(updated) ? "paused" : "done")
+      void executeNovelStage(novelPipeline, stage, seed, settings)
+        .then((updated) => {
+          setNovelPipeline(updated)
+          setStatus(nextNovelStage(updated) ? "paused" : "done")
+        })
+        .catch((err) => {
+          setStatus("paused")
+          onStageError?.(errorMessage(err))
+        })
     }
-  }, [mode, dramaPipeline, novelPipeline, seed])
+  }, [mode, dramaPipeline, novelPipeline, seed, getModelSettings, onStageError])
 
   const setSourceText = useCallback((text: string) => {
     setDramaPipeline((p) => ({ ...p, sourceText: text }))
@@ -220,16 +281,29 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
       setSeed(nextSeed)
       clearTimer()
       pauseRef.current = true
+      const settings = getModelSettings()
       if (mode === "drama") {
-        setDramaPipeline((p) => regenerateNode(p, stage as PipelineStage, nextSeed))
-      } else {
-        setNovelPipeline((p) =>
-          regenerateNovelNode(p, stage as NovelPipelineStage, nextSeed)
+        void regenerateDramaStage(
+          dramaPipeline,
+          stage as PipelineStage,
+          nextSeed,
+          settings
         )
+          .then((updated) => setDramaPipeline(updated))
+          .catch((err) => onStageError?.(errorMessage(err)))
+      } else {
+        void regenerateNovelStage(
+          novelPipeline,
+          stage as NovelPipelineStage,
+          nextSeed,
+          settings
+        )
+          .then((updated) => setNovelPipeline(updated))
+          .catch((err) => onStageError?.(errorMessage(err)))
       }
       setStatus("paused")
     },
-    [mode, seed]
+    [mode, seed, dramaPipeline, novelPipeline, getModelSettings, onStageError]
   )
 
   useEffect(() => {

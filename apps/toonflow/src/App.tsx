@@ -1,9 +1,17 @@
+import { ModelSettingsSheet } from "@/components/ModelSettingsSheet"
 import { StudioCanvas } from "@/components/StudioCanvas"
 import { NodeDetailSheet } from "@/components/NodeDetailSheet"
 import { Toast } from "@/components/Toast"
 import { Workbench } from "@/components/Workbench"
 import { usePipelineRunner } from "@/hooks/usePipelineRunner"
 import type { StudioNodeData } from "@/lib/canvas-layout"
+import {
+  clearModelSettings,
+  liveConfigError,
+  loadModelSettings,
+  saveModelSettings,
+  type ModelSettings,
+} from "@/lib/model-settings"
 import {
   loadLastPaste,
   loadNovelSampleId,
@@ -24,7 +32,7 @@ import {
 import { MAX_SOURCE_CHARS } from "@/pipeline/types"
 import type { NodeOverrides, SelectedNode } from "@/types/studio"
 import type { Node } from "@xyflow/react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 function initialMode(): StudioMode {
   return loadStudioMode()
@@ -58,8 +66,27 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [fitViewKey, setFitViewKey] = useState(() => `init-${initialMode()}`)
+  const [modelSettings, setModelSettings] = useState<ModelSettings>(() =>
+    loadModelSettings()
+  )
+  const [modelSheetOpen, setModelSheetOpen] = useState(false)
+  const modelSettingsRef = useRef(modelSettings)
+  modelSettingsRef.current = modelSettings
 
-  const runner = usePipelineRunner(mode, initialText(mode))
+  const runner = usePipelineRunner(mode, initialText(mode), {
+    getModelSettings: () => modelSettingsRef.current,
+    onStageError: (message) => setToast(message),
+  })
+
+  const ensureCanStart = useCallback(() => {
+    const err = liveConfigError(modelSettingsRef.current)
+    if (err) {
+      setToast(err)
+      setModelSheetOpen(true)
+      return false
+    }
+    return true
+  }, [])
 
   const bumpFitView = useCallback(
     (reason: string) => {
@@ -174,15 +201,27 @@ export default function App() {
   )
 
   const handleStartFresh = useCallback(() => {
+    if (!ensureCanStart()) return
     runner.startFresh()
     bumpFitView("start")
-  }, [runner, bumpFitView])
+  }, [runner, bumpFitView, ensureCanStart])
 
   const handleRestart = useCallback(() => {
+    if (!ensureCanStart()) return
     runner.restart()
     setOverrides({})
     bumpFitView("restart")
-  }, [runner, bumpFitView])
+  }, [runner, bumpFitView, ensureCanStart])
+
+  const handleContinue = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.continueRun()
+  }, [runner, ensureCanStart])
+
+  const handleStep = useCallback(() => {
+    if (!ensureCanStart()) return
+    runner.step()
+  }, [runner, ensureCanStart])
 
   const sourceText = useMemo(
     () => runner.pipeline.sourceText.slice(0, MAX_SOURCE_CHARS),
@@ -204,11 +243,13 @@ export default function App() {
         onModeChange={handleModeChange}
         onSourceChange={handleSourceChange}
         onSampleChange={handleSampleChange}
+        runMode={modelSettings.runMode}
+        onOpenModelSettings={() => setModelSheetOpen(true)}
         onStartFresh={handleStartFresh}
-        onContinue={runner.continueRun}
+        onContinue={handleContinue}
         onRestart={handleRestart}
         onPause={runner.pause}
-        onStep={runner.step}
+        onStep={handleStep}
         onExportDone={() => setToast("JSON 已下载")}
       />
       <main className="relative flex-1 min-w-0">
@@ -229,6 +270,21 @@ export default function App() {
         onOpenChange={setSheetOpen}
         onSave={onSaveNode}
         onRegenerate={onRegenerate}
+      />
+      <ModelSettingsSheet
+        open={modelSheetOpen}
+        onOpenChange={setModelSheetOpen}
+        settings={modelSettings}
+        onSave={(next) => {
+          saveModelSettings(next)
+          setModelSettings(next)
+          setToast("模型设置已保存")
+        }}
+        onClear={() => {
+          clearModelSettings()
+          setModelSettings(loadModelSettings())
+          setToast("已清除模型配置")
+        }}
       />
       <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>

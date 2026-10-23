@@ -1,7 +1,20 @@
 import { describe, expect, test } from "bun:test"
+import { DEFAULT_MODEL_SETTINGS } from "../lib/model-settings"
 import { getSampleById } from "./samples"
 import { emptyPipelineState, nextStage, runFullPipeline, runStage } from "./index"
 import { STAGE_ORDER } from "./types"
+
+describe("dry-run without API key", () => {
+  test("default model settings stay on template path", () => {
+    expect(DEFAULT_MODEL_SETTINGS.runMode).toBe("dry-run")
+    const state = runStage(
+      emptyPipelineState("雨巷里她回头看了一眼。"),
+      "outline",
+      0
+    )
+    expect(state.outline?.bullets.length).toBeGreaterThan(0)
+  })
+})
 
 describe("pipeline stage ordering", () => {
   test("stages complete in fixed order", () => {

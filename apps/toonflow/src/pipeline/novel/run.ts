@@ -199,7 +199,7 @@ export function runFullNovelPipeline(
   }
 }
 
-function clearFromNovelStage(
+export function clearFromNovelStage(
   state: NovelPipelineState,
   stage: NovelPipelineStage
 ): NovelPipelineState {

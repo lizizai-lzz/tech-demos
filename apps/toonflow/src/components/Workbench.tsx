@@ -18,6 +18,7 @@ import {
   type PipelineStage,
   type PipelineState,
 } from "@/pipeline/types"
+import type { RunMode } from "@/lib/model-settings"
 import type { RunnerStatus } from "@/types/studio"
 import {
   BookOpen,
@@ -26,6 +27,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Settings2,
   StepForward,
 } from "lucide-react"
 
@@ -48,6 +50,8 @@ interface WorkbenchProps {
   onPause: () => void
   onStep: () => void
   onExportDone: () => void
+  runMode: RunMode
+  onOpenModelSettings: () => void
 }
 
 const DRAMA_STAGES: PipelineStage[] = [
@@ -76,6 +80,8 @@ export function Workbench({
   onPause,
   onStep,
   onExportDone,
+  runMode,
+  onOpenModelSettings,
 }: WorkbenchProps) {
   const samples = samplesForMode(mode)
   const stageList =
@@ -112,10 +118,34 @@ export function Workbench({
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-r border-border bg-card/80 backdrop-blur-sm">
       <div className="border-b border-border px-4 py-3 space-y-3">
-        <div>
-          <h1 className="text-base font-semibold tracking-tight">Toonflow 双引擎工作室</h1>
-          <p className="text-xs text-muted-foreground mt-1">{modeSubtitle}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold tracking-tight">Toonflow 双引擎工作室</h1>
+            <p className="text-xs text-muted-foreground mt-1">{modeSubtitle}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              运行：{runMode === "live" ? "真实模型" : "本地空跑"}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="outline"
+            title="模型设置"
+            onClick={onOpenModelSettings}
+          >
+            <Settings2 className="size-4" />
+          </Button>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground -mt-1"
+          onClick={onOpenModelSettings}
+        >
+          <Settings2 className="size-4" />
+          模型设置
+        </Button>
         <div className="grid grid-cols-2 gap-2">
           <Button
             type="button"

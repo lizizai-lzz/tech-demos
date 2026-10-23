@@ -86,7 +86,7 @@ export function runFullPipeline(sourceText: string, seed = 0): PipelineArtifacts
   }
 }
 
-function clearFromStage(state: PipelineState, stage: PipelineStage): PipelineState {
+export function clearFromStage(state: PipelineState, stage: PipelineStage): PipelineState {
   const idx = STAGE_ORDER.indexOf(stage)
   const completedStages = state.completedStages.filter(
     (s) => STAGE_ORDER.indexOf(s) < idx

@@ -1,14 +1,61 @@
 import type { Edge, Node } from "@xyflow/react"
-import type { NovelPipelineState } from "@/pipeline/novel/types"
+import type {
+  ConsistencyFinding,
+  NovelPipelineState,
+  SensitivityFinding,
+} from "@/pipeline/novel/types"
 import type { NodeOverrides } from "@/types/studio"
-import type { StudioNodeData, StudioNodeKind } from "@/lib/canvas-layout"
+import type {
+  GraphBuildContext,
+  StatusChip,
+  StudioNodeData,
+  StudioNodeKind,
+} from "@/lib/canvas-layout"
+
+function visualForStage(
+  stageId: string | undefined,
+  ctx: GraphBuildContext
+): StudioNodeData["visualStatus"] {
+  if (!stageId) return "done"
+  if (ctx.status === "running" && ctx.currentStageId === stageId) {
+    return "generating"
+  }
+  return "done"
+}
+
+function consistencyChip(findings: ConsistencyFinding[]): StatusChip {
+  if (findings.some((f) => f.severity === "fail")) {
+    return { label: "未通过", tone: "destructive" }
+  }
+  if (findings.some((f) => f.severity === "warn")) {
+    return { label: "待修", tone: "warning" }
+  }
+  return { label: "通过", tone: "success" }
+}
+
+function sensitivityChip(findings: SensitivityFinding[]): StatusChip {
+  if (findings.some((f) => f.severity === "block")) {
+    return { label: "拦截", tone: "destructive" }
+  }
+  if (findings.some((f) => f.severity === "warn")) {
+    return { label: "警示", tone: "warning" }
+  }
+  return { label: "通过", tone: "success" }
+}
+
+function verdictChip(verdict: string): StatusChip {
+  if (verdict === "accept") return { label: "通过", tone: "success" }
+  if (verdict === "polish") return { label: "润色", tone: "warning" }
+  return { label: "改写", tone: "destructive" }
+}
 
 const X_GAP = 280
 const Y_GAP = 140
 
 export function buildNovelGraph(
   pipeline: NovelPipelineState,
-  overrides: NodeOverrides
+  overrides: NodeOverrides,
+  ctx: GraphBuildContext = { status: "idle", currentStageId: null }
 ): { nodes: Node<StudioNodeData>[]; edges: Edge[] } {
   const nodes: Node<StudioNodeData>[] = []
   const edges: Edge[] = []
@@ -25,6 +72,10 @@ export function buildNovelGraph(
       title: sourceOverride?.title ?? "种子原文",
       body: sourceOverride?.body ?? pipeline.sourceText,
       subtitle: `${pipeline.sourceText.length} 字`,
+      visualStatus:
+        ctx.status === "running" && !pipeline.completedStages.length
+          ? "generating"
+          : "done",
     },
   })
   let prevId = sourceId
@@ -53,6 +104,7 @@ export function buildNovelGraph(
         title: ov?.title ?? "设定 / 世界观",
         body,
         subtitle: pipeline.world.era,
+        visualStatus: visualForStage("world", ctx),
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -78,6 +130,7 @@ export function buildNovelGraph(
           title: ov?.title ?? ch.title,
           body,
           subtitle: "章纲",
+          visualStatus: visualForStage("chapterOutline", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -104,6 +157,7 @@ export function buildNovelGraph(
           title: ov?.title ?? char.name,
           body,
           subtitle: char.role,
+          visualStatus: visualForStage("characters", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -130,6 +184,7 @@ export function buildNovelGraph(
           title: ov?.title ?? `${prose.chapterTitle} · ${sec.heading}`,
           body,
           subtitle: sec.heading,
+          visualStatus: visualForStage("chapterProse", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -152,11 +207,11 @@ export function buildNovelGraph(
   if (pipeline.consistencyReview) {
     const id = "node-consistency-review"
     const ov = overrides[id]
+    const review = pipeline.consistencyReview
+    const chip = consistencyChip(review.findings)
     const body =
       ov?.body ??
-      `${pipeline.consistencyReview.summary}\n\n${formatFindings(
-        pipeline.consistencyReview.findings
-      )}`
+      `${review.summary}\n\n${formatFindings(review.findings)}`
     nodes.push({
       id,
       type: "studio",
@@ -166,7 +221,10 @@ export function buildNovelGraph(
         stageId: "consistencyReview",
         title: ov?.title ?? "一致性审核",
         body,
-        subtitle: pipeline.consistencyReview.summary,
+        subtitle: chip.label,
+        statusChip: chip,
+        visualStatus: visualForStage("consistencyReview", ctx),
+        sheetExtras: [review.summary],
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -177,11 +235,11 @@ export function buildNovelGraph(
   if (pipeline.sensitivityReview) {
     const id = "node-sensitivity-review"
     const ov = overrides[id]
+    const review = pipeline.sensitivityReview
+    const chip = sensitivityChip(review.findings)
     const body =
       ov?.body ??
-      `${pipeline.sensitivityReview.summary}\n\n${formatFindings(
-        pipeline.sensitivityReview.findings
-      )}`
+      `${review.summary}\n\n${formatFindings(review.findings)}`
     nodes.push({
       id,
       type: "studio",
@@ -191,7 +249,10 @@ export function buildNovelGraph(
         stageId: "sensitivityReview",
         title: ov?.title ?? "敏感话题",
         body,
-        subtitle: pipeline.sensitivityReview.summary,
+        subtitle: chip.label,
+        statusChip: chip,
+        visualStatus: visualForStage("sensitivityReview", ctx),
+        sheetExtras: [review.summary],
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -213,6 +274,11 @@ export function buildNovelGraph(
             `${i + 1}. ${f.pattern}：${f.issue}\n   摘录：${f.quote.slice(0, 48)}`
         ),
       ].join("\n")
+    const chip: StatusChip = {
+      label: `${ai.score} 分`,
+      tone:
+        ai.score >= 75 ? "success" : ai.score >= 55 ? "warning" : "destructive",
+    }
     nodes.push({
       id,
       type: "studio",
@@ -222,7 +288,10 @@ export function buildNovelGraph(
         stageId: "aiTasteGate",
         title: ov?.title ?? "去AI味",
         body,
-        subtitle: `${ai.score} 分`,
+        subtitle: chip.label,
+        statusChip: chip,
+        visualStatus: visualForStage("aiTasteGate", ctx),
+        sheetExtras: [`得分 ${ai.score}/100`, ai.summary],
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -246,6 +315,16 @@ export function buildNovelGraph(
           ? "改写要点：\n" + v.rewriteBrief.map((b, i) => `${i + 1}. ${b}`).join("\n")
           : "无需改写要点",
       ].join("\n")
+    const chip = verdictChip(v.verdict)
+    const punchChip: StatusChip = {
+      label: `狠劲 ${v.inputs.punchScore}`,
+      tone:
+        v.inputs.punchScore >= 70
+          ? "success"
+          : v.inputs.punchScore >= 50
+            ? "warning"
+            : "destructive",
+    }
     nodes.push({
       id,
       type: "studio",
@@ -255,7 +334,17 @@ export function buildNovelGraph(
         stageId: "qualityVerdict",
         title: ov?.title ?? "质检裁定",
         body,
-        subtitle: v.verdict,
+        subtitle: chip.label,
+        statusChip: chip,
+        visualStatus: visualForStage("qualityVerdict", ctx),
+        sheetExtras: [
+          `裁定：${v.verdict}`,
+          punchChip.label + "/100",
+          `去AI味：${v.inputs.aiScore}/100`,
+          ...(v.rewriteBrief.length
+            ? ["改写要点：", ...v.rewriteBrief.map((b, i) => `${i + 1}. ${b}`)]
+            : []),
+        ],
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -292,6 +381,7 @@ export function buildNovelGraph(
         subtitle: rewritten ? "已改写" : "直通",
         draftBody: draftText,
         revisedBody: revisedText,
+        visualStatus: visualForStage("rewrite", ctx),
       },
     })
     edges.push({ id: `e-${prevId}-${rewriteId}`, source: prevId, target: rewriteId })
@@ -314,6 +404,7 @@ export function buildNovelGraph(
             title: ov?.title ?? `${final.chapterTitle} · ${sec.heading}（终稿）`,
             body,
             subtitle: sec.heading,
+            visualStatus: visualForStage("rewrite", ctx),
           },
         })
         edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })

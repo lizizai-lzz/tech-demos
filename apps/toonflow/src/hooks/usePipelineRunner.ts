@@ -19,21 +19,44 @@ import {
   type NovelPipelineState,
 } from "@/pipeline/novel"
 import type { PipelineStageId } from "@/pipeline/stage-id"
+import { loadRunnerSnapshot, saveRunnerSnapshot } from "@/lib/storage"
 import type { RunnerStatus } from "@/types/studio"
 
 const STAGE_DELAY_MS = 900
 
 export type { PipelineStageId } from "@/pipeline/stage-id"
 
+function initialDramaState(text: string): PipelineState {
+  const snap = loadRunnerSnapshot()
+  if (snap?.dramaPipeline) return snap.dramaPipeline
+  return emptyPipelineState(text)
+}
+
+function initialNovelState(text: string): NovelPipelineState {
+  const snap = loadRunnerSnapshot()
+  if (snap?.novelPipeline) return snap.novelPipeline
+  return emptyNovelPipelineState(text)
+}
+
+function initialStatus(): RunnerStatus {
+  const snap = loadRunnerSnapshot()
+  return snap?.status ?? "idle"
+}
+
+function initialSeed(): number {
+  const snap = loadRunnerSnapshot()
+  return snap?.seed ?? 0
+}
+
 export function usePipelineRunner(mode: StudioMode, initialText: string) {
   const [dramaPipeline, setDramaPipeline] = useState<PipelineState>(() =>
-    emptyPipelineState(initialText)
+    initialDramaState(initialText)
   )
   const [novelPipeline, setNovelPipeline] = useState<NovelPipelineState>(() =>
-    emptyNovelPipelineState(initialText)
+    initialNovelState(initialText)
   )
-  const [status, setStatus] = useState<RunnerStatus>("idle")
-  const [seed, setSeed] = useState(0)
+  const [status, setStatus] = useState<RunnerStatus>(initialStatus)
+  const [seed, setSeed] = useState(initialSeed)
   const pauseRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -101,7 +124,8 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     [seed]
   )
 
-  const start = useCallback(() => {
+  /** 从空流水线完整空跑（idle / done 主按钮） */
+  const startFresh = useCallback(() => {
     clearTimer()
     pauseRef.current = false
     if (mode === "drama") {
@@ -122,6 +146,38 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     finishOrContinueDrama,
     finishOrContinueNovel,
   ])
+
+  /** 暂停后从下一待办阶段继续，不清空已完成节点 */
+  const continueRun = useCallback(() => {
+    clearTimer()
+    pauseRef.current = false
+    if (mode === "drama") {
+      if (!nextStage(dramaPipeline)) {
+        setStatus("done")
+        return
+      }
+      setStatus("running")
+      finishOrContinueDrama(dramaPipeline)
+    } else {
+      if (!nextNovelStage(novelPipeline)) {
+        setStatus("done")
+        return
+      }
+      setStatus("running")
+      finishOrContinueNovel(novelPipeline)
+    }
+  }, [
+    mode,
+    dramaPipeline,
+    novelPipeline,
+    finishOrContinueDrama,
+    finishOrContinueNovel,
+  ])
+
+  /** 确认后清空并从头空跑 */
+  const restart = useCallback(() => {
+    startFresh()
+  }, [startFresh])
 
   const pause = useCallback(() => {
     pauseRef.current = true
@@ -162,6 +218,8 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     (stage: PipelineStageId) => {
       const nextSeed = seed + 1
       setSeed(nextSeed)
+      clearTimer()
+      pauseRef.current = true
       if (mode === "drama") {
         setDramaPipeline((p) => regenerateNode(p, stage as PipelineStage, nextSeed))
       } else {
@@ -169,9 +227,19 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
           regenerateNovelNode(p, stage as NovelPipelineStage, nextSeed)
         )
       }
+      setStatus("paused")
     },
     [mode, seed]
   )
+
+  useEffect(() => {
+    saveRunnerSnapshot({
+      dramaPipeline,
+      novelPipeline,
+      status,
+      seed,
+    })
+  }, [dramaPipeline, novelPipeline, status, seed])
 
   useEffect(() => () => clearTimer(), [])
 
@@ -189,6 +257,8 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
       ? dramaPipeline.completedStages
       : novelPipeline.completedStages
 
+  const hasProgress = completedStages.length > 0
+
   return {
     mode,
     pipeline,
@@ -197,12 +267,15 @@ export function usePipelineRunner(mode: StudioMode, initialText: string) {
     status,
     stageLabel,
     currentStage,
-    start,
+    startFresh,
+    continueRun,
+    restart,
     pause,
     step,
     resetPipeline,
     setSourceText,
     regenStage,
     completedStages,
+    hasProgress,
   }
 }

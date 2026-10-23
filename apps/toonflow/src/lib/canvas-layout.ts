@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react"
 import type { PipelineState } from "@/pipeline/types"
-import type { NodeOverrides } from "@/types/studio"
+import type { NodeOverrides, RunnerStatus } from "@/types/studio"
 
 export type StudioNodeKind =
   | "source"
@@ -18,6 +18,20 @@ export type StudioNodeKind =
   | "rewrite"
   | "chapterProseRevised"
 
+export type NodeVisualStatus = "pending" | "generating" | "done"
+
+export type StatusChipTone = "success" | "warning" | "destructive" | "neutral"
+
+export interface StatusChip {
+  label: string
+  tone: StatusChipTone
+}
+
+export interface GraphBuildContext {
+  status: RunnerStatus
+  currentStageId: string | null
+}
+
 export interface StudioNodeData extends Record<string, unknown> {
   kind: StudioNodeKind
   title: string
@@ -26,10 +40,27 @@ export interface StudioNodeData extends Record<string, unknown> {
   stageId?: string
   entityId?: string
   frameColor?: string
+  visualStatus?: NodeVisualStatus
+  statusChip?: StatusChip
+  sheetExtras?: string[]
   /** 改写节点：初稿对照 */
   draftBody?: string
   /** 改写节点：终稿对照 */
   revisedBody?: string
+}
+
+function visualForStage(
+  stageId: string | undefined,
+  ctx: GraphBuildContext
+): NodeVisualStatus {
+  if (!stageId) return "done"
+  if (
+    ctx.status === "running" &&
+    ctx.currentStageId === stageId
+  ) {
+    return "generating"
+  }
+  return "done"
 }
 
 const X_GAP = 280
@@ -37,7 +68,8 @@ const Y_GAP = 140
 
 export function buildGraph(
   pipeline: PipelineState,
-  overrides: NodeOverrides
+  overrides: NodeOverrides,
+  ctx: GraphBuildContext = { status: "idle", currentStageId: null }
 ): { nodes: Node<StudioNodeData>[]; edges: Edge[] } {
   const nodes: Node<StudioNodeData>[] = []
   const edges: Edge[] = []
@@ -54,6 +86,10 @@ export function buildGraph(
       title: sourceOverride?.title ?? "原文片段",
       body: sourceOverride?.body ?? pipeline.sourceText,
       subtitle: `${pipeline.sourceText.length} 字`,
+      visualStatus:
+        ctx.status === "running" && !pipeline.completedStages.length
+          ? "generating"
+          : "done",
     },
   })
   let prevId = sourceId
@@ -75,6 +111,7 @@ export function buildGraph(
         title: ov?.title ?? "故事大纲",
         body,
         subtitle: `${pipeline.outline.bullets.length} 条事件`,
+        visualStatus: visualForStage("outline", ctx),
       },
     })
     edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -100,6 +137,7 @@ export function buildGraph(
           title: ov?.title ?? char.name,
           body,
           subtitle: char.role,
+          visualStatus: visualForStage("characters", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -124,6 +162,7 @@ export function buildGraph(
           title: ov?.title ?? beat.title,
           body,
           subtitle: beat.location,
+          visualStatus: visualForStage("script", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })
@@ -149,6 +188,7 @@ export function buildGraph(
           body,
           subtitle: card.shotType,
           frameColor: card.frameColor,
+          visualStatus: visualForStage("storyboard", ctx),
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })

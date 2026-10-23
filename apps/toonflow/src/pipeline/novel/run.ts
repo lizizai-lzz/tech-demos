@@ -229,20 +229,12 @@ function clearFromNovelStage(
   return next
 }
 
+/** 重生成当前阶段，并清空下游产物（不自动重跑下游） */
 export function regenerateNovelNode(
   state: NovelPipelineState,
   stage: NovelPipelineStage,
   seed: number
 ): NovelPipelineState {
-  let next = clearFromNovelStage(state, stage)
-  next = runNovelStage(next, stage, seed)
-  for (const s of NOVEL_STAGE_ORDER) {
-    if (
-      NOVEL_STAGE_ORDER.indexOf(s) > NOVEL_STAGE_ORDER.indexOf(stage) &&
-      state.completedStages.includes(s)
-    ) {
-      next = runNovelStage(next, s, seed)
-    }
-  }
-  return next
+  const next = clearFromNovelStage(state, stage)
+  return runNovelStage(next, stage, seed)
 }

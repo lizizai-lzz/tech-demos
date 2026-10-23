@@ -1,5 +1,7 @@
 import type { ModelSettings } from "@/lib/model-settings"
 import { isLiveModelReady } from "@/lib/model-settings"
+import type { MediaSettings } from "@/lib/media/media-settings"
+import { enrichStoryboardWithMedia } from "@/pipeline/media/storyboard-media"
 import {
   clearFromStage,
   regenerateNode,
@@ -22,12 +24,16 @@ export async function executeDramaStage(
   state: PipelineState,
   stage: PipelineStage,
   seed: number,
-  settings: ModelSettings
+  settings: ModelSettings,
+  media?: MediaSettings
 ): Promise<PipelineState> {
+  let next: PipelineState
   if (settings.runMode === "live" && isLiveModelReady(settings)) {
-    return runDramaStageLive(state, stage, settings)
+    next = await runDramaStageLive(state, stage, settings)
+  } else {
+    next = runStage(state, stage, seed)
   }
-  return runStage(state, stage, seed)
+  return maybeEnrichStoryboard(next, stage, media)
 }
 
 export async function executeNovelStage(
@@ -42,17 +48,33 @@ export async function executeNovelStage(
   return runNovelStage(state, stage, seed)
 }
 
+async function maybeEnrichStoryboard(
+  state: PipelineState,
+  stage: PipelineStage,
+  media?: MediaSettings
+): Promise<PipelineState> {
+  if (stage !== "storyboard" || !media) return state
+  const needsJimeng =
+    media.imageProvider === "jimeng" || media.videoProvider === "jimeng"
+  if (!needsJimeng) return state
+  return enrichStoryboardWithMedia(state, media)
+}
+
 export async function regenerateDramaStage(
   state: PipelineState,
   stage: PipelineStage,
   seed: number,
-  settings: ModelSettings
+  settings: ModelSettings,
+  media?: MediaSettings
 ): Promise<PipelineState> {
+  let next: PipelineState
   if (settings.runMode === "live" && isLiveModelReady(settings)) {
     const cleared = clearFromStage(state, stage)
-    return runDramaStageLive(cleared, stage, settings)
+    next = await runDramaStageLive(cleared, stage, settings)
+  } else {
+    next = regenerateNode(state, stage, seed)
   }
-  return regenerateNode(state, stage, seed)
+  return maybeEnrichStoryboard(next, stage, media)
 }
 
 export async function regenerateNovelStage(

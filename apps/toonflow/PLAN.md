@@ -56,6 +56,12 @@
 
 ## Deferred
 
-- 可选 OpenAI 兼容端点（用户自备 Key）。
-- 真实分镜图 / Remotion 导出。
+- Remotion / MP4 时间线导出。
 - 跨模式同步更多产物（如短剧角色一键带入小说章纲）。
+
+## 本 PR 扩展（媒资提供方）
+
+- **模型设置 Sheet**：文本模型 | 生图 | 生视频；各媒资段支持 `关闭 | Skill | 即梦 API`。
+- **Skill**：从分镜节点导出 `toonflow-skill-media-job` JSON，供本地 Agent Skill 消费（不调用 Seedance 付费 API）。
+- **即梦**：火山引擎 Visual `visual.volcengineapi.com` AK/SK 签名；`bun run dev` 内置 Vite 中间件代理 `/api/jimeng/*`；密钥仅存 localStorage / 可选环境变量。
+- 默认仍为关闭占位，不破坏空跑与既有 LLM dry-run/live。

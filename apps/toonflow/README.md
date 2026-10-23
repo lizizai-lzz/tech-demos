@@ -7,7 +7,7 @@
 | **写短剧** | 种子 → 大纲 → 角色 → 剧本 → 分镜 |
 | **写小说** | 种子 → 设定/世界观 → 章纲(3–5) → 角色 → 正文样章 → **一致性审核 / 敏感话题 / 去AI味 / 质检裁定 / 改写** |
 
-所有「生成」均为 **TypeScript 模板 + 假延迟**，不调用任何付费模型 API，无需 API Key。种子原文在两种模式间共享（≤800 字）。
+默认所有「生成」均为 **TypeScript 模板 + 假延迟**，不调用任何付费模型 API，无需 API Key。可选开启 **OpenAI 兼容文本模型** 与 **生图/生视频媒资提供方**（Skill 任务包 / 火山引擎即梦）。种子原文在两种模式间共享（≤800 字）。
 
 ## 运行
 
@@ -38,6 +38,7 @@ bun run dev
 9. 下列内容会写入 `localStorage`：
    - `toonflow:studio-mode`、`toonflow:last-paste`、各模式示例 id
    - `toonflow:runner-snapshot` — 短剧/小说双流水线进度（刷新可恢复）
+   - `toonflow:model-settings`、`toonflow:media-settings` — 文本与媒资配置（含密钥，勿提交）
    - `toonflow:viewport` — 画布视口（仅在首次进入、切换模式或重置流水线时自动 fit，不会每帧抢焦点）
 
 ### 示例种子
@@ -45,21 +46,42 @@ bun run dev
 - **短剧**：雨巷重逢、午夜食堂、天台信号
 - **小说**：地下高校·青龙会（成人高校 + 刃牙式凡人地下格斗）、墨山手记（另可用雨巷/食堂种子写小说流水线）
 
-## 模型设置（可选真实 API）
+## 模型与媒资设置（可选）
 
-工作台左上角 **齿轮 / 「模型设置」** 打开面板：
+工作台左上角 **齿轮 / 「模型设置」** 打开面板，分 **文本模型 | 生图 | 生视频** 三段。
+
+### 文本模型（`toonflow:model-settings`）
 
 | 字段 | 说明 |
 |------|------|
-| **运行方式** | `本地空跑`（默认，无需 Key）或 `真实模型` |
+| **运行方式** | `本地空跑`（默认）或 `真实模型` |
 | **Base URL** | OpenAI 兼容根路径，如 `https://api.deepseek.com/v1` |
-| **API Key** | 密码框；仅存入 `localStorage` 键 `toonflow:model-settings`，**不会**出现在导出 JSON 中 |
+| **API Key** | 仅 localStorage，**不会**出现在导出 JSON 中 |
 | **Model id** | 如 `deepseek-chat`、`gpt-4o-mini` |
 | **Temperature** | 可选，默认 0.7 |
 
-- **本地空跑**：沿用 TypeScript 模板 + 假延迟（与此前行为一致）。
-- **真实模型**：短剧四阶段与小说「世界观 / 章纲 / 角色 / 样章」走 `chat/completions`（JSON 输出）；小说质检环仍用本地规则引擎以保证凡人武学层级约束。缺 Key / URL / Model 时无法开始空跑，会 Toast 提示并打开设置面板。
-- 面板内 **清除密钥与配置** 可一键恢复默认空跑。
+- **真实模型**：短剧四阶段与小说「世界观 / 章纲 / 角色 / 样章」走 `chat/completions`；小说质检环仍用本地规则。缺 Key 时无法开始空跑，会 Toast 并打开设置。
+
+### 生图 / 生视频（`toonflow:media-settings`）
+
+每种媒资可独立选择：
+
+| 提供方 | 行为 |
+|--------|------|
+| **关闭** | 分镜色块占位（默认） |
+| **Skill** | 在分镜节点详情点击 **导出媒资任务**，下载 JSON 任务包；附带一行 Agent 指令（复制到剪贴板）。不发起网络付费 API。 |
+| **即梦 API** | 使用火山引擎 **官方 Visual API**（即梦 / Dreamina）：`https://visual.volcengineapi.com`，服务 `cv`，AK/SK HMAC 签名。文档入口：[火山引擎即梦相关文档](https://www.volcengine.com/docs/85621) |
+
+**即梦配置要点：**
+
+- 在火山引擎控制台创建 **AccessKeyId + SecretAccessKey**（与 TTS 等同属 Volcengine 账号体系）。
+- 默认 `imageReqKey`: `jimeng_t2i_v40`；`videoReqKey`: `jimeng_t2v_v30`（720p，可改为文档中的 1080p / 图生视频 key）。
+- 浏览器无法安全直连即梦（CORS + SK 暴露），需 **`bun run dev`** 启动本应用内置的 Vite 代理：`POST /api/jimeng/image`、`POST /api/jimeng/video`。客户端将 AK/SK 仅通过请求头 `X-Toonflow-Jimeng-Key`（base64 JSON）发给**本机同源**代理。
+- 也可在开发机设置环境变量 `JIMENG_ACCESS_KEY_ID`、`JIMENG_SECRET_ACCESS_KEY`（可选 `JIMENG_REGION`），供代理侧演示。
+- 无密钥时可在请求体传 `mock: true` 走模拟 URL（用于 UI 演示）；静态 `preview` 无代理时会 Toast 提示需 dev 服务。
+- 短剧流水线在 **分镜阶段** 若启用即梦，会尝试为各分镜卡填充关键帧/短片 URL；失败时该卡标记错误并暂停，不清空整条流水线。
+
+**清除密钥与配置** 会同时 wipe 文本 API Key 与即梦 AK/SK。
 
 ## 模拟范围（Mock）
 

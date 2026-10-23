@@ -40,6 +40,7 @@ export interface StudioNodeData extends Record<string, unknown> {
   stageId?: string
   entityId?: string
   frameColor?: string
+  imagePreviewUrl?: string
   visualStatus?: NodeVisualStatus
   statusChip?: StatusChip
   sheetExtras?: string[]
@@ -176,6 +177,27 @@ export function buildGraph(
       const id = `node-sb-${card.beatId}`
       const ov = overrides[id]
       const body = ov?.body ?? card.promptText
+      const extras: string[] = []
+      if (card.skillJobExportedAt) {
+        extras.push(`已就绪 Skill 任务（${card.skillJobExportedAt.slice(0, 19)}）`)
+      }
+      if (card.imageUrl) {
+        extras.push(
+          card.mediaMock
+            ? `即梦预览（模拟）：${card.imageUrl}`
+            : `关键帧：${card.imageUrl}`
+        )
+      }
+      if (card.videoUrl) {
+        extras.push(
+          card.mediaMock
+            ? `短片（模拟）：${card.videoUrl}`
+            : `短片：${card.videoUrl}`
+        )
+      }
+      if (card.mediaError) {
+        extras.push(`媒资错误：${card.mediaError}`)
+      }
       nodes.push({
         id,
         type: "studio",
@@ -188,7 +210,14 @@ export function buildGraph(
           body,
           subtitle: card.shotType,
           frameColor: card.frameColor,
+          imagePreviewUrl: card.imageUrl,
           visualStatus: visualForStage("storyboard", ctx),
+          statusChip: card.mediaError
+            ? { label: "媒资失败", tone: "destructive" }
+            : card.skillJobExportedAt
+              ? { label: "Skill 就绪", tone: "success" }
+              : undefined,
+          sheetExtras: extras.length ? extras : undefined,
         },
       })
       edges.push({ id: `e-${prevId}-${id}`, source: prevId, target: id })

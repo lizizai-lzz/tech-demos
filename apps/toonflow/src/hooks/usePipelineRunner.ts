@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { ModelSettings } from "@/lib/model-settings"
+import { DEFAULT_MEDIA_SETTINGS, type MediaSettings } from "@/lib/media/media-settings"
+import { markSkillExported as applySkillExported } from "@/pipeline/media/storyboard-media"
 import { loadRunnerSnapshot, saveRunnerSnapshot } from "@/lib/storage"
 import type { StudioMode } from "@/pipeline/mode"
 import {
@@ -32,6 +34,7 @@ export type { PipelineStageId } from "@/pipeline/stage-id"
 
 export interface PipelineRunnerOptions {
   getModelSettings: () => ModelSettings
+  getMediaSettings?: () => MediaSettings
   onStageError?: (message: string) => void
 }
 
@@ -67,7 +70,11 @@ export function usePipelineRunner(
   initialText: string,
   options: PipelineRunnerOptions
 ) {
-  const { getModelSettings, onStageError } = options
+  const { getModelSettings, getMediaSettings, onStageError } = options
+  const getMedia = useCallback(
+    () => getMediaSettings?.() ?? DEFAULT_MEDIA_SETTINGS,
+    [getMediaSettings]
+  )
   const [dramaPipeline, setDramaPipeline] = useState<PipelineState>(() =>
     initialDramaState(initialText)
   )
@@ -125,7 +132,7 @@ export function usePipelineRunner(
       }
       const settings = getModelSettings()
       timerRef.current = setTimeout(() => {
-        void executeDramaStage(state, stage, seed, settings)
+        void executeDramaStage(state, stage, seed, settings, getMedia())
           .then((updated) => {
             setDramaPipeline(updated)
             finishOrContinueDrama(updated)
@@ -138,7 +145,7 @@ export function usePipelineRunner(
           })
       }, stageDelay())
     },
-    [seed, getModelSettings, onStageError, stageDelay]
+    [seed, getModelSettings, getMedia, onStageError, stageDelay]
   )
 
   const finishOrContinueNovel = useCallback(
@@ -243,7 +250,7 @@ export function usePipelineRunner(
         setStatus("done")
         return
       }
-      void executeDramaStage(dramaPipeline, stage, seed, settings)
+      void executeDramaStage(dramaPipeline, stage, seed, settings, getMedia())
         .then((updated) => {
           setDramaPipeline(updated)
           setStatus(nextStage(updated) ? "paused" : "done")
@@ -268,7 +275,7 @@ export function usePipelineRunner(
           onStageError?.(errorMessage(err))
         })
     }
-  }, [mode, dramaPipeline, novelPipeline, seed, getModelSettings, onStageError])
+  }, [mode, dramaPipeline, novelPipeline, seed, getModelSettings, getMedia, onStageError])
 
   const setSourceText = useCallback((text: string) => {
     setDramaPipeline((p) => ({ ...p, sourceText: text }))
@@ -287,7 +294,8 @@ export function usePipelineRunner(
           dramaPipeline,
           stage as PipelineStage,
           nextSeed,
-          settings
+          settings,
+          getMedia()
         )
           .then((updated) => setDramaPipeline(updated))
           .catch((err) => onStageError?.(errorMessage(err)))
@@ -303,7 +311,7 @@ export function usePipelineRunner(
       }
       setStatus("paused")
     },
-    [mode, seed, dramaPipeline, novelPipeline, getModelSettings, onStageError]
+    [mode, seed, dramaPipeline, novelPipeline, getModelSettings, getMedia, onStageError]
   )
 
   useEffect(() => {
@@ -333,6 +341,10 @@ export function usePipelineRunner(
 
   const hasProgress = completedStages.length > 0
 
+  const markStoryboardSkillExported = useCallback((beatId: string) => {
+    setDramaPipeline((p) => applySkillExported(p, beatId))
+  }, [])
+
   return {
     mode,
     pipeline,
@@ -351,5 +363,6 @@ export function usePipelineRunner(
     regenStage,
     completedStages,
     hasProgress,
+    markStoryboardSkillExported,
   }
 }

@@ -9,8 +9,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import type { MediaSettings } from "@/lib/media/media-settings"
 import type { PipelineStageId } from "@/hooks/usePipelineRunner"
+import {
+  buildSkillMediaJobPackage,
+  downloadSkillJobPackage,
+  type SkillMediaMode,
+} from "@/pipeline/media/skill-package"
+import type { PipelineState } from "@/pipeline/types"
 import type { SelectedNode } from "@/types/studio"
+import { Download } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface NodeDetailSheetProps {
@@ -19,6 +27,9 @@ interface NodeDetailSheetProps {
   onOpenChange: (open: boolean) => void
   onSave: (id: string, title: string, body: string, revisedBody?: string) => void
   onRegenerate?: (stage: PipelineStageId) => void
+  dramaPipeline?: PipelineState
+  mediaSettings?: MediaSettings
+  onSkillExported?: (beatId: string) => void
 }
 
 export function NodeDetailSheet({
@@ -27,6 +38,9 @@ export function NodeDetailSheet({
   onOpenChange,
   onSave,
   onRegenerate,
+  dramaPipeline,
+  mediaSettings,
+  onSkillExported,
 }: NodeDetailSheetProps) {
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
@@ -56,13 +70,35 @@ export function NodeDetailSheet({
     onOpenChange(false)
   }
 
+  const exportSkill = (mode: SkillMediaMode) => {
+    if (!dramaPipeline || !mediaSettings || !node.entityId) return
+    const card = dramaPipeline.storyboard?.find((c) => c.beatId === node.entityId)
+    if (!card) return
+    const beat = dramaPipeline.script?.find((s) => s.id === node.entityId)
+    const pkg = buildSkillMediaJobPackage({
+      mode,
+      card,
+      beat,
+      characters: dramaPipeline.characters ?? [],
+      skill: mediaSettings.skill,
+      aspectRatio: mediaSettings.jimeng.aspectRatio ?? "9:16",
+    })
+    downloadSkillJobPackage(pkg)
+    onSkillExported?.(node.entityId)
+  }
+
+  const showSkillExport =
+    node.kind === "storyboard" &&
+    mediaSettings &&
+    (mediaSettings.imageProvider === "skill" || mediaSettings.videoProvider === "skill")
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-4xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>节点详情</SheetTitle>
           <SheetDescription>
-            本地编辑仅影响画布展示，不会调用任何模型 API。
+            本地编辑仅影响画布展示；媒资 Skill 导出为任务 JSON，不调用外部付费 API。
           </SheetDescription>
         </SheetHeader>
         {node.sheetExtras && node.sheetExtras.length > 0 && (
@@ -70,6 +106,32 @@ export function NodeDetailSheet({
             {node.sheetExtras.map((line, i) => (
               <p key={i} className="whitespace-pre-wrap">{line}</p>
             ))}
+          </div>
+        )}
+        {showSkillExport && (
+          <div className="mx-4 flex flex-wrap gap-2">
+            {mediaSettings!.imageProvider === "skill" && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => exportSkill("t2i")}
+              >
+                <Download className="size-4" />
+                导出媒资任务（生图）
+              </Button>
+            )}
+            {mediaSettings!.videoProvider === "skill" && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => exportSkill("t2v")}
+              >
+                <Download className="size-4" />
+                导出媒资任务（生视频）
+              </Button>
+            )}
           </div>
         )}
         <div className="flex flex-col gap-4 px-4">

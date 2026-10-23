@@ -5,8 +5,13 @@ import { Toast } from "@/components/Toast"
 import { Workbench } from "@/components/Workbench"
 import { usePipelineRunner } from "@/hooks/usePipelineRunner"
 import type { StudioNodeData } from "@/lib/canvas-layout"
+import { clearAllAppSecrets } from "@/lib/clear-secrets"
 import {
-  clearModelSettings,
+  loadMediaSettings,
+  saveMediaSettings,
+  type MediaSettings,
+} from "@/lib/media/media-settings"
+import {
   liveConfigError,
   loadModelSettings,
   saveModelSettings,
@@ -69,12 +74,18 @@ export default function App() {
   const [modelSettings, setModelSettings] = useState<ModelSettings>(() =>
     loadModelSettings()
   )
+  const [mediaSettings, setMediaSettings] = useState<MediaSettings>(() =>
+    loadMediaSettings()
+  )
   const [modelSheetOpen, setModelSheetOpen] = useState(false)
   const modelSettingsRef = useRef(modelSettings)
   modelSettingsRef.current = modelSettings
+  const mediaSettingsRef = useRef(mediaSettings)
+  mediaSettingsRef.current = mediaSettings
 
   const runner = usePipelineRunner(mode, initialText(mode), {
     getModelSettings: () => modelSettingsRef.current,
+    getMediaSettings: () => mediaSettingsRef.current,
     onStageError: (message) => setToast(message),
   })
 
@@ -167,6 +178,8 @@ export default function App() {
       draftBody: d.draftBody,
       revisedBody: d.revisedBody,
       sheetExtras: d.sheetExtras,
+      entityId: d.entityId as string | undefined,
+      frameColor: d.frameColor as string | undefined,
     })
     setSheetOpen(true)
   }, [])
@@ -244,6 +257,7 @@ export default function App() {
         onSourceChange={handleSourceChange}
         onSampleChange={handleSampleChange}
         runMode={modelSettings.runMode}
+        mediaSettings={mediaSettings}
         onOpenModelSettings={() => setModelSheetOpen(true)}
         onStartFresh={handleStartFresh}
         onContinue={handleContinue}
@@ -270,20 +284,34 @@ export default function App() {
         onOpenChange={setSheetOpen}
         onSave={onSaveNode}
         onRegenerate={onRegenerate}
+        dramaPipeline={runner.dramaPipeline}
+        mediaSettings={mediaSettings}
+        onSkillExported={(beatId) => {
+          runner.markStoryboardSkillExported(beatId)
+          const skillId = mediaSettings.skill.skillId
+          void navigator.clipboard?.writeText(
+            `用已安装的 ${skillId} 消费此任务包`
+          )
+          setToast(`Skill 任务包已下载 · ${skillId}`)
+        }}
       />
       <ModelSettingsSheet
         open={modelSheetOpen}
         onOpenChange={setModelSheetOpen}
         settings={modelSettings}
-        onSave={(next) => {
+        mediaSettings={mediaSettings}
+        onSave={(next, media) => {
           saveModelSettings(next)
+          saveMediaSettings(media)
           setModelSettings(next)
-          setToast("模型设置已保存")
+          setMediaSettings(media)
+          setToast("模型与媒资设置已保存")
         }}
         onClear={() => {
-          clearModelSettings()
+          clearAllAppSecrets()
           setModelSettings(loadModelSettings())
-          setToast("已清除模型配置")
+          setMediaSettings(loadMediaSettings())
+          setToast("已清除密钥与媒资配置")
         }}
       />
       <Toast message={toast} onDismiss={() => setToast(null)} />

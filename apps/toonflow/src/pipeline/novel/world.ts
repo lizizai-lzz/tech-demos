@@ -1,4 +1,5 @@
 import type { WorldResult } from "./types"
+import { isCultivationCampus } from "./genre"
 
 const ERA_POOL = [
   "当代都市",
@@ -17,6 +18,26 @@ const TONE_POOL = [
 ]
 
 export function buildWorld(sourceText: string, seed = 0): WorldResult {
+  const cultCampus = isCultivationCampus(sourceText)
+
+  if (cultCampus) {
+    const factions = ["青龙堂", "白虎楼", "禁灵牢看守队"]
+    return {
+      era: "灵力复苏·寄宿制重点高中",
+      setting:
+        "教学楼地下三层连着黑市丹坊，各堂口占楼划界；晚自习后灵压飙升，弱者只能走侧门。",
+      tone: "狠辣升级流",
+      cultivationSystem: "炼体九重 · 灵力开窍 · 丹毒反噬",
+      factions,
+      rules: [
+        "境界压制：高两重可当众废人灵脉，但会结丹毒债。",
+        "堂口规矩：抢地盘先亮堂口印，私斗禁动元婴级禁器。",
+        "黑市丹坊：逼炼废丹可换突破，失败则禁锢在禁灵牢。",
+        "代价法则：每次破境都要留下可追溯的血债或人情。",
+      ],
+    }
+  }
+
   const hasSchool =
     /校园|操场|教室|放学|学生会|社团/.test(sourceText) || seed % 2 === 0
   const hasGang = /黑道|帮派|地盘|械斗|老大|校霸/.test(sourceText)
@@ -26,7 +47,7 @@ export function buildWorld(sourceText: string, seed = 0): WorldResult {
     : ERA_POOL[seed % ERA_POOL.length]
 
   const setting = hasGang
-    ? "城郊重点高中与周边后街形成的灰色地带，校规与街头规则并行。"
+    ? "城郊重点高中与后街灰区叠在一起，帮派与社团互抢夜场。"
     : sourceText.length > 20
       ? `故事主要发生在「${sourceText.slice(0, 12).replace(/\s/g, "")}…」所暗示的场景圈层。`
       : "一座日常与秘密交织的城市切片，角色在有限空间里做重大选择。"
@@ -41,7 +62,7 @@ export function buildWorld(sourceText: string, seed = 0): WorldResult {
     "情感锚点：每章至少一处具体物象（雨、灯、旧物）承载情绪。",
   ]
   if (hasGang) {
-    rules.push("校园秩序与街头义气冲突时，主角必须做公开选择。")
+    rules.push("帮派冲突时，主角必须在公开场合站队。")
   }
 
   return { era, setting, tone, rules }

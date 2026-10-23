@@ -116,6 +116,8 @@ export default function App() {
       title: d.title,
       body: d.body,
       stageId: d.stageId as SelectedNode["stageId"],
+      draftBody: d.draftBody,
+      revisedBody: d.revisedBody,
     })
     setSheetOpen(true)
   }, [])

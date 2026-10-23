@@ -70,7 +70,7 @@ export function Workbench({
   const modeSubtitle =
     mode === "drama"
       ? "种子 → 大纲 → 角色 → 剧本 → 分镜（本地模拟）"
-      : "种子 → 世界观 → 章纲 → 角色 → 样章（本地模拟）"
+      : "种子 → 世界观 → 章纲 → 角色 → 样章 → 质检 → 改写（本地模拟）"
 
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-r border-border bg-card/80 backdrop-blur-sm">

@@ -13,6 +13,12 @@ const KIND_LABEL: Record<StudioNodeData["kind"], string> = {
   world: "世界观",
   chapterOutline: "章纲",
   chapterProse: "样章",
+  consistencyReview: "一致性",
+  sensitivityReview: "敏感",
+  aiTasteGate: "去AI味",
+  qualityVerdict: "裁定",
+  rewrite: "改写",
+  chapterProseRevised: "终稿",
 }
 
 export function StudioNode({ data, selected }: NodeProps<Node<StudioNodeData>>) {

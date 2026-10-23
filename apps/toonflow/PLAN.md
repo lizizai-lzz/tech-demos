@@ -18,7 +18,7 @@
 
 | 能力 | 小说模式 | 短剧模式 |
 |------|----------|----------|
-| 阶段 | 设定/世界观 → 章纲(3–5) → 角色 → 正文样章(1章多节) | 大纲 → 角色 → 剧本(3–5场) → 分镜 |
+| 阶段 | 设定/世界观 → 章纲(3–5) → 角色 → 正文样章 → **一致性审核 → 敏感话题 → 去AI味 → 质检裁定 → 改写** | 大纲 → 角色 → 剧本(3–5场) → 分镜 |
 | 画布 | `@xyflow/react` 节点 + 连线 | 同左（沿用） |
 | 工作台 | 模式切换、示例、粘贴、进度徽章、开始/暂停/单步 | 同左 |
 | 详情 Sheet | 本地编辑 + 按阶段重生成 | 同左 |
@@ -36,7 +36,7 @@
 
 1. **规划与模式壳** — 重写本 `PLAN.md`；`StudioMode` + localStorage；工作台顶部 **小说 / 短剧** 切换。
 2. **短剧流水线** — 保持现有 `src/pipeline/`（extract → characters → script → storyboard）行为不变，接入模式感知 runner。
-3. **小说流水线** — 新增 `src/pipeline/novel/`（world → chapterOutline → characters → chapterProse）+ 画布布局 + 小说示例种子。
+3. **小说流水线** — `src/pipeline/novel/`：world → chapterOutline → characters → chapterProse → **质检五段**；**狠劲分**在 qualityVerdict 汇总；一致性对修炼/堂口；敏感仅拦未成年人性内容；去 AI 味保留短打戏；样例「灵力高中·青龙堂」。
 4. **共享与导出** — 角色卡结构复用；`exportArtifacts(mode, state)` 下载 JSON。
 5. **测试与文档** — `bun test src` 覆盖双流水线；README 说明模式切换与 mock 范围；PR 截图 + 视频（切换模式、小说跑通、短剧仍可用）。
 

@@ -11,6 +11,12 @@ export type StudioNodeKind =
   | "world"
   | "chapterOutline"
   | "chapterProse"
+  | "consistencyReview"
+  | "sensitivityReview"
+  | "aiTasteGate"
+  | "qualityVerdict"
+  | "rewrite"
+  | "chapterProseRevised"
 
 export interface StudioNodeData extends Record<string, unknown> {
   kind: StudioNodeKind
@@ -20,6 +26,10 @@ export interface StudioNodeData extends Record<string, unknown> {
   stageId?: string
   entityId?: string
   frameColor?: string
+  /** 改写节点：初稿对照 */
+  draftBody?: string
+  /** 改写节点：终稿对照 */
+  revisedBody?: string
 }
 
 const X_GAP = 280

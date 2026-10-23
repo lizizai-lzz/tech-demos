@@ -59,15 +59,38 @@ export function NodeDetailSheet({
               className="min-h-[44px]"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="node-body">正文</Label>
-            <Textarea
-              id="node-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="min-h-[200px]"
-            />
-          </div>
+          {node.draftBody && node.revisedBody && node.draftBody !== node.revisedBody ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="node-draft">初稿（对照）</Label>
+                <Textarea
+                  id="node-draft"
+                  value={node.draftBody}
+                  readOnly
+                  className="min-h-[120px] bg-muted/40"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="node-revised">终稿</Label>
+                <Textarea
+                  id="node-revised"
+                  value={node.revisedBody}
+                  readOnly
+                  className="min-h-[120px] bg-muted/40"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="node-body">正文</Label>
+              <Textarea
+                id="node-body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                className="min-h-[200px]"
+              />
+            </div>
+          )}
         </div>
         <SheetFooter className="flex-row gap-2 justify-between">
           {node.stageId && onRegenerate && (

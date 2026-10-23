@@ -10,6 +10,9 @@ const KIND_LABEL: Record<StudioNodeData["kind"], string> = {
   character: "角色卡",
   script: "剧本场次",
   storyboard: "分镜卡",
+  world: "世界观",
+  chapterOutline: "章纲",
+  chapterProse: "样章",
 }
 
 export function StudioNode({ data, selected }: NodeProps<Node<StudioNodeData>>) {

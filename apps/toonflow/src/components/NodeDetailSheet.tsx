@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
-import type { PipelineStage } from "@/pipeline/types"
+import type { PipelineStageId } from "@/hooks/usePipelineRunner"
 import type { SelectedNode } from "@/types/studio"
 import { useEffect, useState } from "react"
 
@@ -18,7 +18,7 @@ interface NodeDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (id: string, title: string, body: string) => void
-  onRegenerate?: (stage: PipelineStage) => void
+  onRegenerate?: (stage: PipelineStageId) => void
 }
 
 export function NodeDetailSheet({

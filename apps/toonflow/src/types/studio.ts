@@ -1,4 +1,4 @@
-import type { PipelineStage } from "@/pipeline/types"
+import type { PipelineStageId } from "@/pipeline/stage-id"
 
 export interface NodeOverride {
   title?: string
@@ -14,5 +14,5 @@ export interface SelectedNode {
   kind: string
   title: string
   body: string
-  stageId?: PipelineStage
+  stageId?: PipelineStageId
 }

@@ -30,7 +30,7 @@ export function buildQualityVerdict(
   }
 
   if (blocked) {
-    rewriteBrief.push("删除涉及未成年人的性内容；压迫改用逼炼/禁锢等非性手段")
+    rewriteBrief.push("删除真实犯罪教程或未成年年龄 framing；类型压迫桥段可保留")
   }
 
   if (ai.score < 65) {

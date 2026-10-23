@@ -87,6 +87,24 @@ describe("novel quality review loop", () => {
     const sens = runSensitivityReview(prose, text)
     expect(sens.findings.some((f) => f.severity === "block")).toBe(false)
   })
+
+  test("sensitivity blocks under-18 framing and real crime how-to", () => {
+    const fake = {
+      chapterId: "ch-1",
+      chapterTitle: "测",
+      sections: [
+        {
+          id: "s",
+          heading: "h",
+          paragraphs: [
+            "十七岁的他按照第一步配比原料、第二步合成炸药，详细写下教程。",
+          ],
+        },
+      ],
+    }
+    const sens = runSensitivityReview(fake, "")
+    expect(sens.findings.some((f) => f.severity === "block")).toBe(true)
+  })
 })
 
 describe("cultivation world consistency", () => {

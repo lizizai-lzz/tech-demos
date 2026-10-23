@@ -1,7 +1,7 @@
 /** 修炼体系 + 校园黑道题材（空跑启发式） */
 export function isCultivationCampus(sourceText: string): boolean {
   const cult = /修炼|灵力|境界|炼体|丹|禁灵|逼炼|堂口|黑市/.test(sourceText)
-  const campus = /校园|高中|晚自习|寄宿|教学楼/.test(sourceText)
+  const campus = /校园|大学|高校|分院|大学城|晚自习|寄宿|教学楼/.test(sourceText)
   const under = /黑道|帮派|校霸|堂口|地盘/.test(sourceText)
   return cult || (campus && under)
 }

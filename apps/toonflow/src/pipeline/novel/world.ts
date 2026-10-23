@@ -23,9 +23,9 @@ export function buildWorld(sourceText: string, seed = 0): WorldResult {
   if (cultCampus) {
     const factions = ["青龙堂", "白虎楼", "禁灵牢看守队"]
     return {
-      era: "灵力复苏·寄宿制重点高中",
+      era: "灵力复苏·寄宿制灵力高校",
       setting:
-        "教学楼地下三层连着黑市丹坊，各堂口占楼划界；晚自习后灵压飙升，弱者只能走侧门。",
+        "大学城灵力高校，教学楼地下三层连着黑市丹坊；青龙、白虎等堂口占楼划界，夜课后灵压飙升。",
       tone: "狠辣升级流",
       cultivationSystem: "炼体九重 · 灵力开窍 · 丹毒反噬",
       factions,
@@ -47,7 +47,7 @@ export function buildWorld(sourceText: string, seed = 0): WorldResult {
     : ERA_POOL[seed % ERA_POOL.length]
 
   const setting = hasGang
-    ? "城郊重点高中与后街灰区叠在一起，帮派与社团互抢夜场。"
+    ? "城郊高校城与后街灰区叠在一起，帮派与社团互抢夜场。"
     : sourceText.length > 20
       ? `故事主要发生在「${sourceText.slice(0, 12).replace(/\s/g, "")}…」所暗示的场景圈层。`
       : "一座日常与秘密交织的城市切片，角色在有限空间里做重大选择。"

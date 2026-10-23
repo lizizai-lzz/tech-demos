@@ -2,8 +2,9 @@ import type { ChapterProseResult, SensitivityFinding, SensitivityReviewResult } 
 import { flattenChapterProse, firstMatchingQuote } from "./prose-utils"
 
 /**
- * 仅硬阻断：涉及未成年人的性内容 / 性羞辱 / 性剥削。
- * 绑架、禁锢、暴力、逼炼、黑市丹药等类型桥段在空跑中允许（note 级提示，不阻断）。
+ * 高校黑道修炼题材：角色为成年大学生（空跑假定）。
+ * 允许类型桥段：绑架、禁锢、羞辱、黑市炼丹、逼炼、帮派暴力、暗黑暧昧威胁等。
+ * 仅阻断：真实可模仿犯罪教程（非虚构叙事）、以及明确将角色 framing 为未满 18 岁。
  */
 const HARD_BLOCK_RULES: {
   pattern: RegExp
@@ -11,19 +12,19 @@ const HARD_BLOCK_RULES: {
   fix: string
 }[] = [
   {
-    pattern: /(未成年|高一|高二|高三|少年|少女|学弟|学妹).{0,20}(性侵|强奸|猥亵|裸照|卖淫|性奴)/g,
-    issue: "涉及未成年人的性暴力或性剥削",
-    fix: "删除一切未成年人性相关描写；冲突改用暴力/修炼压迫等非性手段",
+    pattern: /未满\s*18|未满十八|十七岁|十六岁|十五岁|初中生|高中生(?!院)|高三\(|高一\(|高二\(/g,
+    issue: "正文将角色明确 framing 为未成年人（与本设定成年高校冲突）",
+    fix: "改为大学/高校/分院年级或成年身份，勿写具体未成年年龄",
   },
   {
-    pattern: /(性侵|强奸|猥亵).{0,16}(学生|未成年|少年|少女)/g,
-    issue: "涉及未成年人的性暴力或性剥削",
-    fix: "删除一切未成年人性相关描写",
+    pattern: /(制作|配制|合成).{0,12}(炸药|雷管|枪械|毒品).{0,20}(原料|比例|步骤|教程)/g,
+    issue: "出现真实可模仿的犯罪制作教程（非虚构叙事）",
+    fix: "改为模糊后果描写或虚构灵材名称，不写现实配方与步骤",
   },
   {
-    pattern: /性羞辱|当众.{0,8}脱衣|强迫.{0,6}性服务/g,
-    issue: "性羞辱或性剥削情节",
-    fix: "改为非性相关的压迫（禁锢、逼炼、勒索灵石等）",
+    pattern: /第一步.{0,40}第二步.{0,40}(制毒|开锁|撬车|入侵)/g,
+    issue: "分步骤的现实犯罪操作指南",
+    fix: "删除教程式步骤，保留剧情结果与虚构手段",
   },
 ]
 
@@ -31,8 +32,14 @@ const GENRE_NOTE_RULES: {
   pattern: RegExp
   issue: string
 }[] = [
-  { pattern: /禁锢|囚禁|绑架|逼炼|黑市|断骨|械斗|鲜血/g, issue: "类型暴力/压迫桥段（空跑允许，非性相关）" },
-  { pattern: /校园|高中|晚自习/g, issue: "未成年背景 — 仅禁止性相关内容，其余按类型处理" },
+  {
+    pattern: /禁锢|囚禁|绑架|逼炼|黑市|羞辱|断骨|堂口/g,
+    issue: "成人向类型压迫/暴力桥段（空跑允许，按网文尺度处理）",
+  },
+  {
+    pattern: /大学|高校|分院|大学城/g,
+    issue: "成年高校背景（默认角色为大学生）",
+  },
 ]
 
 export function runSensitivityReview(
@@ -61,7 +68,7 @@ export function runSensitivityReview(
         severity: "note",
         quote: firstMatchingQuote(text, rule.pattern),
         issue: rule.issue,
-        fix: "保持类型张力即可，勿添加性描写",
+        fix: "保持成人高校 + 类型张力，勿写成现实校规宣教",
       })
     }
   }
@@ -70,15 +77,15 @@ export function runSensitivityReview(
     findings.push({
       severity: "note",
       quote: text.slice(0, 36),
-      issue: "未命中未成年性内容红线（空跑词表）",
-      fix: "暴力/逼炼等类型桥段无需软化成校规现实主义",
+      issue: "未命中红线（空跑：成年高校网文词表）",
+      fix: "绑架/逼炼/羞辱等类型桥段无需软化；避免真实犯罪教程与未成年 framing",
     })
   }
 
   const blocked = findings.some((f) => f.severity === "block")
   const summary = blocked
-    ? "命中性相关红线，必须改写"
-    : "未命中性红线，类型暴力按题材容忍"
+    ? "命中红线，必须改写"
+    : "成人向类型尺度通过（空跑）"
 
   return { findings, summary }
 }

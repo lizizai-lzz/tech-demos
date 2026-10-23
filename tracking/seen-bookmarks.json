@@ -14,6 +14,13 @@
       "url": "https://x.com/GaryAIytb/status/2112422551150620733",
       "date": "2026-10-22",
       "slug": "ai-live-room"
+    },
+    {
+      "id": "2112051365606502882",
+      "title": "开源 AI 短剧工具 Toonflow（小说→剧本→分镜→视频）",
+      "url": "https://x.com/bkdgiffug/status/2112051365606502882",
+      "date": "2026-10-23",
+      "slug": "toonflow"
     }
   ],
   "skipped": [
@@ -58,6 +65,12 @@
       "title": "Cloudflare 搭 VPN（翻墙类）",
       "url": "https://x.com/1YES_yes1/status/2071916119959703697",
       "date": "2026-10-22"
+    },
+    {
+      "id": "2112113095103639742",
+      "title": "百万级 FDE 项目交付长文（非可演示技术/产品）",
+      "url": "https://x.com/miles_mazy/status/2112113095103639742",
+      "date": "2026-10-23"
     }
   ]
 }

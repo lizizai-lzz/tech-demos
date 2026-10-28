@@ -9,7 +9,7 @@ function App() {
     <SimulationProvider>
       <div className="flex h-full flex-col bg-[var(--fui-bg)]">
         <TopBar />
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(220px,260px)_1fr_minmax(220px,280px)]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(232px,248px)_1fr_minmax(248px,272px)]">
           <div className="hidden min-h-0 lg:block">
             <LeftColumn />
           </div>

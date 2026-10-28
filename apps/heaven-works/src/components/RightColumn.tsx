@@ -2,43 +2,40 @@ import { useSimulation } from '@/context/SimulationContext'
 import { pipelineSteps, projectMeta } from '@/data/simulation'
 
 const heatColors = [
-  'bg-slate-900',
-  'bg-cyan-950',
-  'bg-cyan-900/80',
-  'bg-cyan-600/70',
-  'bg-cyan-400/90 shadow-[0_0_6px_#22d3ee]',
+  'bg-slate-950',
+  'bg-slate-800',
+  'bg-teal-950',
+  'bg-teal-800/90',
+  'bg-teal-500/85 shadow-[0_0_4px_rgba(45,212,191,0.35)]',
 ]
 
 export function RightColumn() {
-  const { tasks, completion, heatmap, deliveries, metrics } = useSimulation()
+  const { tasks, completion, heatmap, deliveries } = useSimulation()
 
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-2 overflow-hidden p-2">
-      <section className="fui-panel rounded p-2">
-        <p className="text-[9px] text-cyan-200/80">PANEL 02 · 项目预览</p>
-        <h2 className="text-sm font-semibold text-white">{projectMeta.title}</h2>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-2xl font-bold text-cyan-300">
+    <aside className="flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5">
+      <section className="fui-panel rounded-sm p-1.5">
+        <p className="text-[8px] text-slate-500">PANEL 02 · 项目预览 · PROJECT</p>
+        <h2 className="text-xs font-semibold text-white">{projectMeta.title}</h2>
+        <div className="mt-1 flex items-end gap-2">
+          <span className="text-3xl font-bold leading-none text-slate-100">
             {Math.round(completion)}%
           </span>
-          <div className="h-1.5 flex-1 overflow-hidden rounded bg-slate-800">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-700 to-emerald-400"
-              style={{ width: `${completion}%` }}
-            />
+          <div className="mb-1 h-1 flex-1 overflow-hidden bg-slate-800">
+            <div className="h-full bg-slate-400" style={{ width: `${completion}%` }} />
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-1 text-[8px] tracking-wider">
+        <div className="mt-2 flex flex-wrap items-center gap-0.5 text-[7px] tracking-wide text-slate-500">
           {pipelineSteps.map((step, i) => {
             const active = step === projectMeta.activeStep
             return (
-              <span key={step} className="flex items-center gap-1">
-                {i > 0 && <span className="text-slate-600">›</span>}
+              <span key={step} className="flex items-center">
+                {i > 0 && <span className="mx-0.5 text-slate-700">›</span>}
                 <span
                   className={
                     active
-                      ? 'rounded bg-fuchsia-900/50 px-1.5 py-0.5 text-fuchsia-200 ring-1 ring-fuchsia-400/50'
-                      : 'text-slate-500'
+                      ? 'rounded-sm border border-red-500/70 bg-red-950/50 px-1 py-0.5 text-red-200'
+                      : ''
                   }
                 >
                   {String(i + 1).padStart(2, '0')} {step}
@@ -47,61 +44,47 @@ export function RightColumn() {
             )
           })}
         </div>
-        <ul className="mt-3 space-y-1.5 text-[9px]">
+        <ul className="mt-2 space-y-1 text-[8px]">
           {tasks.map((t) => (
             <li key={t.id}>
               <div className="flex justify-between text-slate-400">
-                <span>
+                <span className="truncate">
                   {t.agent} · {t.title}
                 </span>
-                <span>{Math.round(t.progress)}%</span>
+                <span className="text-slate-500">{Math.round(t.progress)}%</span>
               </div>
-              <div className="h-1 overflow-hidden rounded bg-slate-800">
-                <div
-                  className="h-full bg-cyan-500/80"
-                  style={{ width: `${t.progress}%` }}
-                />
+              <div className="h-0.5 bg-slate-800">
+                <div className="h-full bg-slate-500" style={{ width: `${t.progress}%` }} />
               </div>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="fui-panel rounded p-2">
-        <header className="mb-2 text-[9px] text-cyan-200/80">
-          PANEL 03 · SILK ACTIVITY
-        </header>
+      <section className="fui-panel flex min-h-[140px] flex-1 flex-col rounded-sm p-1.5">
+        <header className="mb-1 text-[8px] text-slate-500">PANEL 03 · SILK ACTIVITY</header>
         <div
-          className="grid gap-0.5"
-          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+          className="grid flex-1 gap-px"
+          style={{ gridTemplateColumns: 'repeat(18, minmax(0, 1fr))' }}
         >
           {heatmap.flatMap((row, ri) =>
             row.map((level, ci) => (
               <div
                 key={`${ri}-${ci}`}
-                className={`aspect-square rounded-sm ${heatColors[level] ?? heatColors[0]}`}
-                title={`U0${ri + 1} · ${level}`}
+                className={`min-h-[7px] ${heatColors[level] ?? heatColors[0]}`}
               />
             )),
           )}
         </div>
       </section>
 
-      <section className="fui-panel flex min-h-0 flex-1 flex-col rounded p-2">
-        <header className="mb-1 flex items-center justify-between text-[9px] text-cyan-200/80">
-          <span>PANEL 04 · 交付记录</span>
-          <span className="text-slate-500">
-            FPS {metrics.fps} · HB {metrics.heartbeat}
-          </span>
-        </header>
-        <ul className="scroll-thin min-h-0 flex-1 space-y-1 overflow-y-auto text-[9px]">
+      <section className="fui-panel flex max-h-[38%] min-h-[120px] flex-col rounded-sm p-1.5">
+        <header className="mb-0.5 text-[8px] text-slate-500">PANEL 04 · 交付记录 · DELIVERED</header>
+        <ul className="scroll-thin min-h-0 flex-1 space-y-0.5 overflow-y-auto text-[8px] leading-tight">
           {deliveries.map((d) => (
-            <li
-              key={d.id}
-              className="border-b border-cyan-900/30 pb-1 text-slate-300 last:border-0"
-            >
-              <span className="text-cyan-600">{d.time}</span> {d.id}{' '}
-              <span className="text-slate-400">{d.text}</span>
+            <li key={d.id} className="border-b border-slate-800/80 pb-0.5 text-slate-400">
+              <span className="text-teal-700/90">{d.time}</span> {d.id}{' '}
+              <span className="text-slate-500">{d.text}</span>
             </li>
           ))}
         </ul>

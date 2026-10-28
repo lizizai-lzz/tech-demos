@@ -12,24 +12,16 @@ export function HologramParticles({ geometry }: Props) {
 
   useFrame(({ clock }) => {
     if (!ref.current) return
-    ref.current.rotation.y = Math.sin(clock.elapsedTime * 0.08) * 0.03
-    const attr = ref.current.geometry.getAttribute('position')
-    if (!attr) return
-    const t = clock.elapsedTime
-    for (let i = 0; i < attr.count; i += 7) {
-      const y = attr.getY(i)
-      attr.setY(i, y + Math.sin(t + i) * 0.0008)
-    }
-    attr.needsUpdate = true
+    ref.current.rotation.y = Math.sin(clock.elapsedTime * 0.05) * 0.02
   })
 
   return (
-    <points ref={ref} geometry={geometry} position={[0, 0.05, 0]}>
+    <points ref={ref} geometry={geometry} position={[0, 0, 0]}>
       <pointsMaterial
-        size={0.035}
+        size={0.028}
         vertexColors
         transparent
-        opacity={0.92}
+        opacity={0.88}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         sizeAttenuation

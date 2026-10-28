@@ -1,9 +1,9 @@
-import { useRef } from 'react'
-import { Html } from '@react-three/drei'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { StageCard } from '@/data/simulation'
 import type { Vector3 } from 'three'
+import { createStageCardTexture } from '@/lib/cardTexture'
 
 type Props = {
   cards: StageCard[]
@@ -12,15 +12,15 @@ type Props = {
 
 export function StageDeck({ cards, positions }: Props) {
   return (
-    <group>
-      <mesh position={[0, 1.85, -0.2]} rotation={[-0.15, 0, 0]}>
-        <boxGeometry args={[7.2, 0.08, 1.4]} />
+    <group rotation={[-0.08, 0, 0]}>
+      <mesh position={[0, 2.42, -0.12]}>
+        <boxGeometry args={[7.4, 0.05, 0.55]} />
         <meshStandardMaterial
-          color="#0a1520"
-          metalness={0.6}
-          roughness={0.35}
-          emissive="#0e7490"
-          emissiveIntensity={0.15}
+          color="#1e293b"
+          metalness={0.55}
+          roughness={0.45}
+          emissive="#0f172a"
+          emissiveIntensity={0.2}
         />
       </mesh>
       {cards.map((card, i) => (
@@ -42,45 +42,29 @@ function StageCardMesh({
   position: Vector3
 }) {
   const ref = useRef<THREE.Group>(null)
+  const map = useMemo(
+    () => createStageCardTexture(card.labelZh, card.labelEn, card.ok, card.progress),
+    [card.labelZh, card.labelEn, card.ok, card.progress],
+  )
+
   useFrame(({ clock }) => {
     if (!ref.current) return
-    ref.current.position.y = position.y + Math.sin(clock.elapsedTime + position.x) * 0.015
+    ref.current.position.y = position.y + Math.sin(clock.elapsedTime * 0.8 + position.x) * 0.012
   })
 
   return (
     <group ref={ref} position={[position.x, position.y, position.z]}>
-      <mesh rotation={[-0.12, 0, 0]}>
-        <boxGeometry args={[0.62, 0.38, 0.06]} />
+      <mesh>
+        <boxGeometry args={[0.72, 0.42, 0.04]} />
         <meshStandardMaterial
-          color="#111827"
-          emissive={card.ok ? '#065f46' : '#701a75'}
-          emissiveIntensity={0.55}
-          metalness={0.4}
-          roughness={0.5}
+          map={map}
+          color="#ffffff"
+          metalness={0.15}
+          roughness={0.85}
+          emissive="#ffffff"
+          emissiveIntensity={0.04}
         />
       </mesh>
-      <Html
-        center
-        distanceFactor={8}
-        transform
-        sprite
-        position={[0, 0, 0.06]}
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-          fontSize: '6px',
-          color: '#a5f3fc',
-          textAlign: 'center',
-          width: '70px',
-          lineHeight: 1.2,
-          textShadow: '0 0 6px #22d3ee',
-        }}
-      >
-        <div>{card.labelZh}</div>
-        <div style={{ color: card.ok ? '#4ade80' : '#facc15' }}>
-          {card.ok ? 'OK' : `${Math.round(card.progress)}%`}
-        </div>
-      </Html>
     </group>
   )
 }

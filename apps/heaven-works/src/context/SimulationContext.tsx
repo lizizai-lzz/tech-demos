@@ -58,8 +58,8 @@ type SimulationState = {
 
 const SimulationContext = createContext<SimulationState | null>(null)
 
-const HEAT_ROWS = 8
-const HEAT_COLS = 16
+const HEAT_ROWS = 12
+const HEAT_COLS = 18
 
 function padTime(d: Date) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
@@ -89,7 +89,6 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     knots: 96244,
   })
 
-  const frameTimes = useRef<number[]>([])
   const jobCounter = useRef(504)
 
   const cycleCameraPreset = useCallback(() => {
@@ -112,16 +111,15 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let raf = 0
+    let frames = 0
+    let last = performance.now()
     const loop = (t: number) => {
-      frameTimes.current.push(t)
-      if (frameTimes.current.length > 30) frameTimes.current.shift()
-      if (frameTimes.current.length >= 2) {
-        const first = frameTimes.current[0]!
-        const last = frameTimes.current[frameTimes.current.length - 1]!
-        const fps = Math.round(
-          ((frameTimes.current.length - 1) * 1000) / (last - first || 1),
-        )
-        setMetrics((m) => ({ ...m, fps: Math.min(60, Math.max(24, fps)) }))
+      frames++
+      if (t - last >= 450) {
+        const fps = Math.min(60, Math.round((frames * 1000) / (t - last)))
+        setMetrics((m) => ({ ...m, fps }))
+        frames = 0
+        last = t
       }
       raf = requestAnimationFrame(loop)
     }
@@ -158,15 +156,18 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         knots: m.knots + Math.floor(Math.random() * 40 - 10),
       }))
 
-      setHeatmap((grid) =>
-        grid.map((row) =>
-          row.map((cell) => {
-            if (Math.random() > 0.15) return cell
+      setHeatmap((grid) => {
+        if (Math.random() > 0.35) return grid
+        const ri = Math.floor(Math.random() * grid.length)
+        const ci = Math.floor(Math.random() * (grid[0]?.length ?? 1))
+        return grid.map((row, r) =>
+          row.map((cell, c) => {
+            if (r !== ri || c !== ci) return cell
             const delta = Math.random() > 0.5 ? 1 : -1
             return Math.max(0, Math.min(4, cell + delta))
           }),
-        ),
-      )
+        )
+      })
 
       if (Math.random() > 0.55) {
         const extra = loopPyExtra[Math.floor(Math.random() * loopPyExtra.length)]!
@@ -185,7 +186,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
           [{ id, time: padTime(new Date()), text }, ...d].slice(0, 8),
         )
       }
-    }, 900)
+    }, 1100)
     return () => clearInterval(id)
   }, [])
 

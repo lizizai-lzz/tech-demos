@@ -1,15 +1,13 @@
 @import 'tailwindcss';
 
 :root {
-  --fui-bg: #05080c;
-  --fui-panel: rgba(8, 16, 24, 0.92);
-  --fui-border: rgba(34, 211, 238, 0.22);
-  --fui-text: #e2e8f0;
+  --fui-bg: #030508;
+  --fui-panel: rgba(6, 10, 14, 0.94);
+  --fui-border: rgba(148, 163, 184, 0.18);
+  --fui-text: #e5e7eb;
   --fui-muted: #64748b;
-  --fui-cyan: #22d3ee;
-  --fui-magenta: #e879f9;
-  --fui-green: #4ade80;
-  --fui-yellow: #facc15;
+  --fui-cyan: #7dd3fc;
+  --fui-accent: #f43f5e;
 }
 
 * {
@@ -26,7 +24,7 @@ body,
 
 body {
   font-family:
-    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'JetBrains Mono',
     monospace;
   background: var(--fui-bg);
   color: var(--fui-text);
@@ -35,18 +33,17 @@ body {
 .fui-panel {
   background: var(--fui-panel);
   border: 1px solid var(--fui-border);
-  backdrop-filter: blur(8px);
 }
 
 .fui-title {
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
 @keyframes pulse-bar {
   0%,
   100% {
-    opacity: 0.85;
+    opacity: 0.9;
   }
   50% {
     opacity: 1;
@@ -54,13 +51,12 @@ body {
 }
 
 .animate-pulse-bar {
-  animation: pulse-bar 2s ease-in-out infinite;
+  animation: pulse-bar 2.4s ease-in-out infinite;
 }
 
 .scroll-thin::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.35);
-  border-radius: 2px;
+  background: rgba(148, 163, 184, 0.35);
 }

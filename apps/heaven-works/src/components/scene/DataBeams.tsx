@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { FiberBeam } from '@/components/scene/FiberBeam'
 
 export type BeamLink = {
   agent: THREE.Vector3
@@ -15,105 +16,59 @@ type Props = {
 export function DataBeams({ links }: Props) {
   return (
     <group>
-      {links.map((link, i) => (
-        <BeamPair key={i} link={link} phase={i * 0.35} />
+      {links.slice(0, 6).map((link, i) => (
+        <group key={i}>
+          <FiberBeam
+            from={link.agent}
+            to={link.card}
+            color="#e2e8f0"
+            radius={0.022}
+            phase={i * 0.5}
+          />
+          <DottedDownBeam from={link.card} to={link.target} phase={i * 0.4} />
+        </group>
       ))}
     </group>
   )
 }
 
-function BeamPair({ link, phase }: { link: BeamLink; phase: number }) {
-  const upper = useMemo(
-    () => new THREE.Vector3().lerpVectors(link.agent, link.card, 0.5),
-    [link.agent, link.card],
-  )
-  const lowerMid = useMemo(
-    () => new THREE.Vector3().lerpVectors(link.card, link.target, 0.45),
-    [link.card, link.target],
-  )
-
-  return (
-    <>
-      <AnimatedBeam from={link.agent} to={link.card} color="#a5f3fc" phase={phase} />
-      <AnimatedBeam
-        from={link.card}
-        to={link.target}
-        color="#e879f9"
-        phase={phase + 1.2}
-        thin
-      />
-      <PulseDot position={upper} phase={phase} color="#22d3ee" />
-      <PulseDot position={lowerMid} phase={phase + 0.5} color="#facc15" />
-    </>
-  )
-}
-
-function AnimatedBeam({
+function DottedDownBeam({
   from,
   to,
-  color,
   phase,
-  thin,
 }: {
   from: THREE.Vector3
   to: THREE.Vector3
-  color: string
   phase: number
-  thin?: boolean
 }) {
-  const ref = useRef<THREE.Mesh>(null)
-  const dir = useMemo(() => new THREE.Vector3().subVectors(to, from), [from, to])
-  const length = dir.length()
-  const mid = useMemo(
-    () => new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5),
-    [from, to],
-  )
-  const quat = useMemo(() => {
-    const q = new THREE.Quaternion()
-    const up = new THREE.Vector3(0, 1, 0)
-    q.setFromUnitVectors(up, dir.clone().normalize())
-    return q
-  }, [dir])
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const count = 14
+
+  const dummy = useMemo(() => new THREE.Object3D(), [])
 
   useFrame(({ clock }) => {
     if (!ref.current) return
-    const mat = ref.current.material as THREE.MeshBasicMaterial
-    mat.opacity = 0.25 + Math.sin(clock.elapsedTime * 2 + phase) * 0.15
+    for (let i = 0; i < count; i++) {
+      const t = i / (count - 1)
+      dummy.position.lerpVectors(from, to, t)
+      dummy.position.y += Math.sin(clock.elapsedTime * 2 + phase + i * 0.3) * 0.015
+      dummy.scale.setScalar(0.025 + (i % 3) * 0.008)
+      dummy.updateMatrix()
+      ref.current.setMatrixAt(i, dummy.matrix)
+    }
+    ref.current.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <mesh ref={ref} position={mid} quaternion={quat}>
-      <cylinderGeometry args={[thin ? 0.008 : 0.014, thin ? 0.004 : 0.008, length, 6]} />
-      <meshBasicMaterial color={color} transparent opacity={0.35} blending={2} />
-    </mesh>
-  )
-}
-
-function PulseDot({
-  position,
-  phase,
-  color,
-}: {
-  position: THREE.Vector3
-  phase: number
-  color: string
-}) {
-  const ref = useRef<THREE.Mesh>(null)
-  useFrame(({ clock }) => {
-    if (!ref.current) return
-    const t = (clock.elapsedTime + phase) % 1
-    ref.current.position.lerpVectors(
-      position,
-      position.clone().add(new THREE.Vector3(0, -0.5, 0)),
-      t,
-    )
-    ref.current.visible = t < 0.85
-  })
-
-  return (
-    <mesh ref={ref} position={position}>
-      <sphereGeometry args={[0.025, 8, 8]} />
-      <meshBasicMaterial color={color} transparent opacity={0.9} blending={2} />
-    </mesh>
+    <instancedMesh ref={ref} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshBasicMaterial
+        color="#f8fafc"
+        transparent
+        opacity={0.55}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </instancedMesh>
   )
 }

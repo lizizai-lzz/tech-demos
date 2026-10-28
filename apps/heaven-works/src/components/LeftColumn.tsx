@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useSimulation } from '@/context/SimulationContext'
 import type { LoopUnit } from '@/data/simulation'
 import { CodeConsole } from '@/components/CodeConsole'
@@ -9,43 +10,68 @@ const statusLabel: Record<LoopUnit['status'], string> = {
   WAIT: '[等待 WAIT]',
 }
 
+function Sparkline({ seed }: { seed: number }) {
+  const points = useMemo(() => {
+    const pts: number[] = []
+    let v = seed % 7
+    for (let i = 0; i < 16; i++) {
+      v = (v * 3 + i) % 11
+      pts.push(v)
+    }
+    const max = Math.max(...pts, 1)
+    return pts.map((p, i) => `${(i / 15) * 100},${100 - (p / max) * 100}`).join(' ')
+  }, [seed])
+
+  return (
+    <svg viewBox="0 0 100 100" className="h-4 w-14 shrink-0 opacity-70" preserveAspectRatio="none">
+      <polyline
+        fill="none"
+        stroke="#94a3b8"
+        strokeWidth="6"
+        points={points}
+      />
+    </svg>
+  )
+}
+
 export function LeftColumn() {
   const { units } = useSimulation()
   const activeId = 'U04'
 
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-2 overflow-hidden p-2">
-      <div className="fui-panel rounded p-2 text-[9px] leading-relaxed text-slate-400">
-        <p className="text-cyan-200/80">PANEL 01 · 线程序列</p>
-        <p>轨道卫星指挥 · 八单元并发织网 · 全息投影 dry-run</p>
+    <aside className="flex h-full min-h-0 flex-col gap-1 overflow-hidden p-1.5">
+      <div className="fui-panel rounded-sm p-1.5 text-[8px] leading-relaxed text-slate-500">
+        <p className="text-slate-400">PANEL 01 · 线程序列</p>
+        <p>轨道卫星指挥 · 八单元织网 · 全息 dry-run 可视化</p>
       </div>
 
-      <section className="fui-panel flex min-h-0 flex-1 flex-col rounded p-2">
-        <header className="mb-2 flex items-center justify-between text-[10px] text-cyan-200/90">
+      <section className="fui-panel flex min-h-0 flex-[1.1] flex-col rounded-sm p-1.5">
+        <header className="mb-1 flex items-center justify-between text-[9px] text-slate-400">
           <span>LOOP UNITS · U01–U08</span>
-          <span className="text-slate-500">SILK THREAD</span>
+          <span className="text-slate-600">SILK THREAD</span>
         </header>
-        <ul className="scroll-thin min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
-          {units.map((u) => {
+        <ul className="scroll-thin min-h-0 flex-1 space-y-1 overflow-y-auto">
+          {units.map((u, idx) => {
             const active = u.id === activeId
             return (
               <li
                 key={u.id}
-                className={`rounded border px-2 py-1.5 text-[9px] ${
+                className={`rounded-sm border px-1.5 py-1 text-[8px] ${
                   active
-                    ? 'border-fuchsia-400/70 bg-fuchsia-950/30 shadow-[0_0_12px_rgba(232,121,249,0.25)]'
-                    : 'border-cyan-900/40 bg-black/20'
+                    ? 'border-red-500 bg-red-950/40 ring-1 ring-red-500/80'
+                    : 'border-slate-800/80 bg-black/25'
                 }`}
               >
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-cyan-300">{u.id}</span>
-                  <span className="truncate text-slate-300">{u.code}</span>
-                  <span className="text-slate-500">{statusLabel[u.status]}</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-6 text-slate-300">{u.id}</span>
+                  <span className="min-w-0 flex-1 truncate text-slate-200">{u.code}</span>
+                  <Sparkline seed={idx * 13 + u.progress} />
+                  <span className="text-[7px] text-slate-500">{statusLabel[u.status]}</span>
                 </div>
-                <p className="text-slate-500">{u.nameZh}</p>
-                <div className="mt-1 h-1 overflow-hidden rounded bg-slate-800">
+                <p className="text-[7px] text-slate-600">{u.nameZh}</p>
+                <div className="mt-0.5 h-0.5 overflow-hidden bg-slate-800">
                   <div
-                    className="animate-pulse-bar h-full bg-gradient-to-r from-cyan-600 to-cyan-300"
+                    className="animate-pulse-bar h-full bg-slate-400"
                     style={{ width: `${u.progress}%` }}
                   />
                 </div>
@@ -55,8 +81,8 @@ export function LeftColumn() {
         </ul>
       </section>
 
-      <section className="fui-panel flex h-[38%] min-h-[140px] flex-col rounded p-2">
-        <header className="mb-1 text-[10px] text-cyan-200/90">
+      <section className="fui-panel flex h-[42%] min-h-[150px] flex-col rounded-sm p-1.5">
+        <header className="mb-0.5 text-[9px] text-slate-400">
           PANEL 05 · 执行代码 · LOOP.PY
         </header>
         <CodeConsole />

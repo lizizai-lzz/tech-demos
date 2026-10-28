@@ -12,12 +12,12 @@ const browser = await chromium.launch({
   args: ['--use-gl=angle', '--use-angle=swiftshader'],
 })
 const context = await browser.newContext({
-  viewport: { width: 1600, height: 900 },
-  recordVideo: { dir: artifactDir, size: { width: 1600, height: 900 } },
+  viewport: { width: 1920, height: 1200 },
+  recordVideo: { dir: artifactDir, size: { width: 1920, height: 1200 } },
 })
 const page = await context.newPage()
-await page.goto(base, { waitUntil: 'networkidle', timeout: 60000 })
-await page.waitForTimeout(2500)
+await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 })
+await page.waitForTimeout(4000)
 
 await page.getByRole('button', { name: '视角切换' }).click()
 await page.waitForTimeout(1200)

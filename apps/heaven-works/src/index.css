@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+:root {
+  --fui-bg: #05080c;
+  --fui-panel: rgba(8, 16, 24, 0.92);
+  --fui-border: rgba(34, 211, 238, 0.22);
+  --fui-text: #e2e8f0;
+  --fui-muted: #64748b;
+  --fui-cyan: #22d3ee;
+  --fui-magenta: #e879f9;
+  --fui-green: #4ade80;
+  --fui-yellow: #facc15;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+  background: var(--fui-bg);
+  color: var(--fui-text);
+}
+
+.fui-panel {
+  background: var(--fui-panel);
+  border: 1px solid var(--fui-border);
+  backdrop-filter: blur(8px);
+}
+
+.fui-title {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes pulse-bar {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-bar {
+  animation: pulse-bar 2s ease-in-out infinite;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.35);
+  border-radius: 2px;
+}

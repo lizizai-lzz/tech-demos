@@ -23,7 +23,7 @@ bun run preview
 
 - 赛博朋克 FUI 侧栏 + 模拟 tick
 - **混合 3D：** 网格 / 卫星与单元 / 阶段卡 / 光柱为 **实时 R3F**
-- **底部全息：** 预渲染 `public/hologram-devices.webm`（1280×720，VP9 alpha，5s 循环）— 显示器 / 平板 / 手机粒子线框，非运行时 Points 生成
+- **底部全息：** 运行时播放 `public/hologram-devices-additive.webm`（alpha 母带 `hologram-devices.webm` 合成到黑底后的 VP9 yuv420p）+ **AdditiveBlending**（避免 Chromium WebGL 误处理 VP9 alpha premul）
 - Bloom 后处理；顶栏视角切换与假指标
 
 ## 浏览器说明

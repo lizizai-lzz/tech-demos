@@ -20,8 +20,8 @@ const CAMERA_PRESETS: Record<
   CameraPreset,
   { position: [number, number, number]; target: [number, number, number] }
 > = {
-  default: { position: [0.15, 2.65, 7.4], target: [0.55, 1.25, 0.05] },
-  hologram: { position: [0.2, 2.1, 5.8], target: [0.8, 1.0, 0.08] },
+  default: { position: [0.25, 2.55, 7.2], target: [0.35, 1.05, 0.08] },
+  hologram: { position: [0.3, 2.0, 5.5], target: [0.35, 0.95, 0.1] },
   orbit: { position: [-4.8, 3.2, 6.8], target: [0.4, 1.8, 0] },
 }
 

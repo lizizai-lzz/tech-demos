@@ -93,7 +93,7 @@ export const stageCards: StageCard[] = [
     labelEn: 'Navigation',
     ok: true,
     progress: 100,
-    beamTarget: [0.02, 1.2, -0.5],
+    beamTarget: [-1.05, 1.25, 0.09],
   },
   {
     id: 'S02',

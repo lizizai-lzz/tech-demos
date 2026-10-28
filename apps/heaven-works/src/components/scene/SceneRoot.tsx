@@ -7,7 +7,6 @@ import { stageCards } from '@/data/simulation'
 import {
   HOLOGRAM_BEAM_TARGETS,
   agentAnchors,
-  makeHologramGeometry,
   stageCardWorldPositions,
 } from '@/lib/hologramPoints'
 import { DataBeams } from '@/components/scene/DataBeams'
@@ -21,14 +20,13 @@ const CAMERA_PRESETS: Record<
   CameraPreset,
   { position: [number, number, number]; target: [number, number, number] }
 > = {
-  default: { position: [0.2, 3.05, 8.8], target: [0.5, 2.05, 0] },
-  hologram: { position: [1.8, 2.35, 6.2], target: [1.2, 1.35, 0] },
-  orbit: { position: [-5.5, 3.8, 7.5], target: [0.3, 2.3, 0] },
+  default: { position: [0.15, 2.65, 7.4], target: [0.55, 1.25, 0.05] },
+  hologram: { position: [0.2, 2.1, 5.8], target: [0.8, 1.0, 0.08] },
+  orbit: { position: [-4.8, 3.2, 6.8], target: [0.4, 1.8, 0] },
 }
 
 export function SceneRoot() {
   const { cameraPreset } = useSimulation()
-  const hologramGeo = useMemo(() => makeHologramGeometry(9000), [])
   const agents = useMemo(() => agentAnchors(), [])
   const cardPositions = useMemo(() => stageCardWorldPositions(), [])
 
@@ -51,7 +49,7 @@ export function SceneRoot() {
       <CameraRig preset={cameraPreset} />
 
       <GridFloor />
-      <HologramParticles geometry={hologramGeo} />
+      <HologramParticles />
       <StageDeck cards={stageCards} positions={cardPositions} />
       <DataBeams links={beamLinks} />
       <OrbitalLayer agents={agents} />

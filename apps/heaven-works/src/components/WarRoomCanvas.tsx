@@ -7,7 +7,7 @@ export function WarRoomCanvas() {
     <div className="relative h-full w-full min-h-[320px] bg-[#030508]">
       <Canvas
         dpr={[1, 1.25]}
-        camera={{ fov: 36, near: 0.1, far: 45, position: [0.2, 3.05, 8.8] }}
+        camera={{ fov: 38, near: 0.1, far: 45, position: [0.15, 2.65, 7.4] }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         performance={{ min: 0.85 }}
       >

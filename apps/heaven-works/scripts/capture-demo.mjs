@@ -17,24 +17,24 @@ const context = await browser.newContext({
 })
 const page = await context.newPage()
 await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 })
-await page.waitForTimeout(4000)
-
-await page.getByRole('button', { name: '视角切换' }).click()
-await page.waitForTimeout(1200)
-await page.getByRole('button', { name: '视角切换' }).click()
-await page.waitForTimeout(1200)
+await page.waitForTimeout(6500)
 
 await page.screenshot({
   path: `${outDir}/heaven-works-dashboard.png`,
   fullPage: false,
 })
 
-await page.waitForTimeout(4000)
+await page.screenshot({
+  path: `${outDir}/heaven-works-hologram-crop.png`,
+  clip: { x: 380, y: 420, width: 1160, height: 680 },
+})
+
+await page.waitForTimeout(3500)
 await context.close()
 await browser.close()
 
 const files = await readdir(artifactDir)
-const webm = files.find((f) => f.endsWith('.webm'))
+const webm = files.find((f) => f.endsWith('.webm') && f !== 'heaven-works-demo.webm')
 if (webm) {
   await rename(`${artifactDir}/${webm}`, `${artifactDir}/heaven-works-demo.webm`)
 }

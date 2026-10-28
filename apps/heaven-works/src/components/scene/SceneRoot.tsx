@@ -11,7 +11,7 @@ import {
 } from '@/lib/hologramPoints'
 import { DataBeams } from '@/components/scene/DataBeams'
 import { GridFloor } from '@/components/scene/GridFloor'
-import { HologramParticles } from '@/components/scene/HologramParticles'
+import { HologramVideo } from '@/components/scene/HologramVideo'
 import { OrbitalLayer } from '@/components/scene/OrbitalLayer'
 import { StageDeck } from '@/components/scene/StageDeck'
 
@@ -49,7 +49,7 @@ export function SceneRoot() {
       <CameraRig preset={cameraPreset} />
 
       <GridFloor />
-      <HologramParticles />
+      <HologramVideo />
       <StageDeck cards={stageCards} positions={cardPositions} />
       <DataBeams links={beamLinks} />
       <OrbitalLayer agents={agents} />

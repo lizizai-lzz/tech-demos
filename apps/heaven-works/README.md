@@ -1,6 +1,6 @@
 # HEAVEN WORKS 天工开物
 
-**Dry-run 可视化演示** — 灵感来自网络上流行的 HEAVEN WORKS 风格 Agent 作战室大屏；**不是**真实的卫星或多 Agent 编排系统，所有数据均为本地模拟 tick。
+**Dry-run 可视化演示** — 灵感来自 HEAVEN WORKS 风格 Agent 作战室大屏；**不是**真实卫星或多 Agent 编排。
 
 ## 运行
 
@@ -10,7 +10,7 @@ bun install
 bun run dev
 ```
 
-浏览器打开终端提示的本地地址（默认 `5173`）。建议 **桌面宽屏** 查看左右 FUI 面板与中央 Three.js 场景。
+建议桌面宽屏（Chrome / Chromium）查看。底部全息为 **VP9 透明 WebM** 循环贴图。
 
 ## 构建
 
@@ -21,15 +21,20 @@ bun run preview
 
 ## 功能概览
 
-- 赛博朋克 FUI 作战室布局：Loop Units、LOOP.PY 滚动控制台、项目管线、SILK 热力图、交付日志
-- 中央 **React Three Fiber** 场景：遥控卫星 + 8 单元无人机、阶段卡片平台、**底部粒子全息网站线框**（桌面 / 平板 / 手机）与透视网格地面
-- **光柱**从单元 → 阶段卡 → 全息投影点；Bloom 后处理增强粒子发光
-- 顶栏 **视角切换** 切换三种相机预设；指标 FPS / Heartbeat / Knots 等为假数据循环
+- 赛博朋克 FUI 侧栏 + 模拟 tick
+- **混合 3D：** 网格 / 卫星与单元 / 阶段卡 / 光柱为 **实时 R3F**
+- **底部全息：** 预渲染 `public/hologram-devices.webm`（1280×720，VP9 alpha，5s 循环）— 显示器 / 平板 / 手机粒子线框，非运行时 Points 生成
+- Bloom 后处理；顶栏视角切换与假指标
+
+## 浏览器说明
+
+- **Chrome / Edge / Chromium：** VP9 alpha WebM 正常透明叠加在网格上。
+- **Safari：** 可能无法正确显示 WebM alpha；后续可接 qtrle MOV 回退（本仓库未包含 ~127MB 资产）。
 
 ## 技术栈
 
-Vite · React · TypeScript · Bun · Three.js · @react-three/fiber · @react-three/drei · @react-three/postprocessing · Tailwind CSS
+Vite · React · TypeScript · Bun · Three.js · R3F · drei · postprocessing · Tailwind
 
 ## 免责声明
 
-本项目仅用于 UI/3D 概念验证与 monorepo demo，不包含后端、认证、持久化或生产部署配置。
+仅 UI/3D 概念验证 demo，无后端、认证或生产部署。

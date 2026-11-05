@@ -1,0 +1,888 @@
+[
+  {
+    "id": "pose-001",
+    "name": "站姿-自然",
+    "nameEn": "Natural standing",
+    "system": "全身·标准系",
+    "category": "站姿",
+    "tags": [
+      "站立",
+      "放松"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 3
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 4
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      }
+    ]
+  },
+  {
+    "id": "pose-002",
+    "name": "站姿-叉腰",
+    "nameEn": "Hands on hips",
+    "system": "全身·标准系",
+    "category": "站姿",
+    "tags": [
+      "自信"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 3
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 4
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      }
+    ]
+  },
+  {
+    "id": "pose-003",
+    "name": "站姿-回眸",
+    "nameEn": "Looking back",
+    "system": "全身·标准系",
+    "category": "站姿",
+    "tags": [
+      "转身"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 4
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-004",
+    "name": "走步-前行",
+    "nameEn": "Walking forward",
+    "system": "全身·标准系",
+    "category": "走步",
+    "tags": [
+      "动态"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 2
+      }
+    ]
+  },
+  {
+    "id": "pose-005",
+    "name": "走步-停步",
+    "nameEn": "Mid-step pause",
+    "system": "全身·标准系",
+    "category": "走步",
+    "tags": [
+      "动态"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 2
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 3
+      }
+    ]
+  },
+  {
+    "id": "pose-006",
+    "name": "坐姿-椅子",
+    "nameEn": "Chair sit",
+    "system": "全身·标准系",
+    "category": "坐姿",
+    "tags": [
+      "室内"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 2
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 3
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      }
+    ]
+  },
+  {
+    "id": "pose-007",
+    "name": "坐姿-地面",
+    "nameEn": "Floor sit",
+    "system": "全身·标准系",
+    "category": "坐姿",
+    "tags": [
+      "休闲"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 2
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 3
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      }
+    ]
+  },
+  {
+    "id": "pose-008",
+    "name": "蹲姿-半蹲",
+    "nameEn": "Half squat",
+    "system": "全身·标准系",
+    "category": "蹲姿",
+    "tags": [
+      "运动"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 3
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      }
+    ]
+  },
+  {
+    "id": "pose-009",
+    "name": "伸展-侧弯",
+    "nameEn": "Side stretch",
+    "system": "全身·标准系",
+    "category": "伸展",
+    "tags": [
+      "瑜伽"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-010",
+    "name": "伸展-抬臂",
+    "nameEn": "Arms overhead",
+    "system": "全身·标准系",
+    "category": "伸展",
+    "tags": [
+      "热身"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 1
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 2
+      }
+    ]
+  },
+  {
+    "id": "pose-011",
+    "name": "倚靠-墙",
+    "nameEn": "Leaning on wall",
+    "system": "全身·标准系",
+    "category": "倚靠",
+    "tags": [
+      "街拍"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 1
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 2
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      }
+    ]
+  },
+  {
+    "id": "pose-012",
+    "name": "跳跃-离地",
+    "nameEn": "Small hop",
+    "system": "全身·标准系",
+    "category": "跳跃",
+    "tags": [
+      "活力"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 1
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 2
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      }
+    ]
+  },
+  {
+    "id": "pose-013",
+    "name": "跑步-冲刺",
+    "nameEn": "Sprint pose",
+    "system": "全身·标准系",
+    "category": "跑跳",
+    "tags": [
+      "运动"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 2
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      }
+    ]
+  },
+  {
+    "id": "pose-014",
+    "name": "平衡-单脚",
+    "nameEn": "One-leg balance",
+    "system": "全身·标准系",
+    "category": "平衡",
+    "tags": [
+      "瑜伽"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 0
+      }
+    ]
+  },
+  {
+    "id": "pose-015",
+    "name": "挥手-致意",
+    "nameEn": "Friendly wave",
+    "system": "全身·标准系",
+    "category": "手势",
+    "tags": [
+      "社交"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 0
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-016",
+    "name": "半身-抱胸",
+    "nameEn": "Arms crossed",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "冷静"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 5
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 0
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-017",
+    "name": "半身-托腮",
+    "nameEn": "Chin on hand",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "思考"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 0
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 1
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      }
+    ]
+  },
+  {
+    "id": "pose-018",
+    "name": "手势-比心",
+    "nameEn": "Finger heart",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "可爱"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 1
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      }
+    ]
+  },
+  {
+    "id": "pose-019",
+    "name": "手势-竖拇指",
+    "nameEn": "Thumbs up",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "肯定"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      }
+    ]
+  },
+  {
+    "id": "pose-020",
+    "name": "手势-张开",
+    "nameEn": "Open palms",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "讲解"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 5
+      }
+    ]
+  },
+  {
+    "id": "pose-021",
+    "name": "手势-指点",
+    "nameEn": "Pointing gesture",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "引导"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 4
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 5
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 0
+      }
+    ]
+  },
+  {
+    "id": "pose-022",
+    "name": "半身-打电话",
+    "nameEn": "Phone pose",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "日常"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 5
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 0
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-023",
+    "name": "半身-阅读",
+    "nameEn": "Reading pose",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "安静"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 0
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      }
+    ]
+  },
+  {
+    "id": "pose-024",
+    "name": "半身-举杯",
+    "nameEn": "Toast gesture",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "庆祝"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      }
+    ]
+  },
+  {
+    "id": "pose-025",
+    "name": "半身-遮阳",
+    "nameEn": "Hand shade eyes",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "户外"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 4
+      }
+    ]
+  },
+  {
+    "id": "pose-026",
+    "name": "手势-握拳",
+    "nameEn": "Fist pump",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "加油"
+    ],
+    "views": [
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 3
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 4
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 5
+      }
+    ]
+  },
+  {
+    "id": "pose-027",
+    "name": "手势-合十",
+    "nameEn": "Prayer hands",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "礼貌"
+    ],
+    "views": [
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 4
+      },
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 5
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      }
+    ]
+  },
+  {
+    "id": "pose-028",
+    "name": "半身-侧脸",
+    "nameEn": "Profile upper",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "肖像"
+    ],
+    "views": [
+      {
+        "angle": "仰视",
+        "framing": "略低机位强调身形",
+        "variant": 5
+      },
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      }
+    ]
+  },
+  {
+    "id": "pose-029",
+    "name": "手势-比耶",
+    "nameEn": "Peace sign",
+    "system": "上半身",
+    "category": "手势",
+    "tags": [
+      "活泼"
+    ],
+    "views": [
+      {
+        "angle": "正面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 0
+      },
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      }
+    ]
+  },
+  {
+    "id": "pose-030",
+    "name": "半身-整理衣领",
+    "nameEn": "Adjust collar",
+    "system": "上半身",
+    "category": "半身",
+    "tags": [
+      "正式"
+    ],
+    "views": [
+      {
+        "angle": "斜侧",
+        "framing": "人物居中，留足上下空间",
+        "variant": 1
+      },
+      {
+        "angle": "侧面",
+        "framing": "人物居中，留足上下空间",
+        "variant": 2
+      },
+      {
+        "angle": "俯视",
+        "framing": "全身入镜，头顶留白",
+        "variant": 3
+      }
+    ]
+  }
+]

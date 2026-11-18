@@ -1,0 +1,43 @@
+[
+  {"id":"tr-01","lemma":"itinerary","phonetic":"/aɪˈtɪnəreri/","zh":"行程；路线","gloss":"a planned route or journey","example":"We followed a detailed itinerary across southern Spain.","topic":"travel"},
+  {"id":"tr-02","lemma":"departure","phonetic":"/dɪˈpɑːrtʃər/","zh":"出发；离开","gloss":"the act of leaving","example":"Our departure was delayed by fog at the airport.","topic":"travel"},
+  {"id":"tr-03","lemma":"landmark","phonetic":"/ˈlændmɑːrk/","zh":"地标；里程碑","gloss":"a well-known place or feature","example":"The tower is a famous landmark in the old town.","topic":"travel"},
+  {"id":"tr-04","lemma":"souvenir","phonetic":"/ˌsuːvəˈnɪr/","zh":"纪念品","gloss":"something kept as a reminder of a trip","example":"She bought a small souvenir from the night market.","topic":"travel"},
+  {"id":"tr-05","lemma":"visa","phonetic":"/ˈviːzə/","zh":"签证","gloss":"official permission to enter a country","example":"Apply for a visa at least three weeks ahead.","topic":"travel"},
+  {"id":"tr-06","lemma":"backpack","phonetic":"/ˈbækpæk/","zh":"背包；旅行","gloss":"to travel with a backpack","example":"They backpacked through the Alps last summer.","topic":"travel"},
+
+  {"id":"ac-01","lemma":"hypothesis","phonetic":"/haɪˈpɑːθəsɪs/","zh":"假设","gloss":"an idea tested by experiments","example":"The hypothesis was supported by the new data.","topic":"academic"},
+  {"id":"ac-02","lemma":"citation","phonetic":"/saɪˈteɪʃn/","zh":"引用；引证","gloss":"a reference to a source","example":"Every claim in the essay needs a proper citation.","topic":"academic"},
+  {"id":"ac-03","lemma":"methodology","phonetic":"/ˌmeθəˈdɑːlədʒi/","zh":"方法论","gloss":"a system of methods used in study","example":"The methodology section explains how samples were chosen.","topic":"academic"},
+  {"id":"ac-04","lemma":"peer review","phonetic":"/pɪr rɪˈvjuː/","zh":"同行评审","gloss":"evaluation by experts in the same field","example":"The paper survived rigorous peer review.","topic":"academic"},
+  {"id":"ac-05","lemma":"abstract","phonetic":"/ˈæbstrækt/","zh":"摘要","gloss":"a short summary of a longer work","example":"Read the abstract before diving into the full article.","topic":"academic"},
+  {"id":"ac-06","lemma":"plagiarism","phonetic":"/ˈpleɪdʒərɪzəm/","zh":"剽窃","gloss":"using others' work without credit","example":"The university treats plagiarism as a serious offense.","topic":"academic"},
+
+  {"id":"em-01","lemma":"nostalgia","phonetic":"/nəˈstældʒə/","zh":"怀旧","gloss":"a longing for the past","example":"Old photos filled her with gentle nostalgia.","topic":"emotion"},
+  {"id":"em-02","lemma":"anxious","phonetic":"/ˈæŋkʃəs/","zh":"焦虑的；担心的","gloss":"feeling worried or nervous","example":"He felt anxious before the speaking test.","topic":"emotion"},
+  {"id":"em-03","lemma":"gratitude","phonetic":"/ˈɡrætɪtuːd/","zh":"感激","gloss":"the feeling of being thankful","example":"She expressed gratitude for their quiet support.","topic":"emotion"},
+  {"id":"em-04","lemma":"empathy","phonetic":"/ˈempəθi/","zh":"共情","gloss":"understanding others' feelings","example":"Empathy helps teachers respond to stressed students.","topic":"emotion"},
+  {"id":"em-05","lemma":"frustrated","phonetic":"/ˈfrʌstreɪtɪd/","zh":"沮丧的","gloss":"feeling blocked or annoyed","example":"I grew frustrated when the app kept crashing.","topic":"emotion"},
+  {"id":"em-06","lemma":"relieved","phonetic":"/rɪˈliːvd/","zh":"如释重负的","gloss":"feeling less worry after something ends","example":"We were relieved when the results finally arrived.","topic":"emotion"},
+
+  {"id":"te-01","lemma":"algorithm","phonetic":"/ˈælɡərɪðəm/","zh":"算法","gloss":"a step-by-step procedure for solving problems","example":"The sorting algorithm runs in linear time.","topic":"tech"},
+  {"id":"te-02","lemma":"bandwidth","phonetic":"/ˈbændwɪdθ/","zh":"带宽","gloss":"data capacity of a network link","example":"Video calls need more bandwidth than email.","topic":"tech"},
+  {"id":"te-03","lemma":"encryption","phonetic":"/ɪnˈkrɪpʃn/","zh":"加密","gloss":"encoding data to keep it private","example":"End-to-end encryption protects your messages.","topic":"tech"},
+  {"id":"te-04","lemma":"latency","phonetic":"/ˈleɪtənsi/","zh":"延迟","gloss":"delay before a response","example":"Low latency matters for live collaboration tools.","topic":"tech"},
+  {"id":"te-05","lemma":"prototype","phonetic":"/ˈproʊtətaɪp/","zh":"原型","gloss":"an early model to test an idea","example":"We shipped a clickable prototype in one week.","topic":"tech"},
+  {"id":"te-06","lemma":"scalable","phonetic":"/ˈskeɪləbl/","zh":"可扩展的","gloss":"able to grow without breaking","example":"The design must be scalable to millions of users.","topic":"tech"},
+
+  {"id":"na-01","lemma":"ecosystem","phonetic":"/ˈiːkoʊsɪstəm/","zh":"生态系统","gloss":"community of living things and their environment","example":"Wetlands support a fragile ecosystem.","topic":"nature"},
+  {"id":"na-02","lemma":"biodiversity","phonetic":"/ˌbaɪoʊdaɪˈvɜːrsəti/","zh":"生物多样性","gloss":"variety of life in a place","example":"Rainforests hold remarkable biodiversity.","topic":"nature"},
+  {"id":"na-03","lemma":"drought","phonetic":"/draʊt/","zh":"干旱","gloss":"a long period without rain","example":"Farmers struggled after three years of drought.","topic":"nature"},
+  {"id":"na-04","lemma":"pollination","phonetic":"/ˌpɑːləˈneɪʃn/","zh":"授粉","gloss":"transfer of pollen between plants","example":"Bees play a key role in pollination.","topic":"nature"},
+  {"id":"na-05","lemma":"renewable","phonetic":"/rɪˈnuːəbl/","zh":"可再生的","gloss":"naturally replenished, e.g. solar or wind","example":"The city aims for fully renewable power by 2035.","topic":"nature"},
+  {"id":"na-06","lemma":"habitat","phonetic":"/ˈhæbɪtæt/","zh":"栖息地","gloss":"the natural home of an organism","example":"Urban sprawl shrinks wildlife habitat.","topic":"nature"},
+
+  {"id":"da-01","lemma":"groceries","phonetic":"/ˈɡroʊsəriz/","zh":"食品杂货","gloss":"food and household items from a store","example":"I pick up groceries on my way home.","topic":"daily"},
+  {"id":"da-02","lemma":"commute","phonetic":"/kəˈmjuːt/","zh":"通勤","gloss":"travel between home and work","example":"Her commute takes forty minutes by train.","topic":"daily"},
+  {"id":"da-03","lemma":"laundry","phonetic":"/ˈlɔːndri/","zh":"洗衣；待洗衣物","gloss":"clothes that need washing","example":"I do laundry every Sunday morning.","topic":"daily"},
+  {"id":"da-04","lemma":"appointment","phonetic":"/əˈpɔɪntmənt/","zh":"预约","gloss":"a fixed time to meet someone","example":"Don't forget your dentist appointment on Tuesday.","topic":"daily"},
+  {"id":"da-05","lemma":"budget","phonetic":"/ˈbʌdʒɪt/","zh":"预算","gloss":"a plan for spending money","example":"We set a monthly budget for dining out.","topic":"daily"},
+  {"id":"da-06","lemma":"routine","phonetic":"/ruːˈtiːn/","zh":"日常惯例","gloss":"regular way of doing things","example":"A calm morning routine helps me focus.","topic":"daily"}
+]

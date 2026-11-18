@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --color-mesh-cyan: #22d3ee;
+  --color-mesh-teal: #2dd4bf;
+  --color-mesh-purple: #a78bfa;
+  --color-mesh-orange: #fb923c;
+  --color-mesh-red: #f87171;
+  --color-mesh-navy: #070b14;
+  --color-mesh-panel: #0d1324;
+}
+
+@layer base {
+  * {
+    @apply border-white/10 outline-none;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    @apply antialiased bg-[#050810] text-slate-100;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+}
+
+.mesh-grid-bg {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.tool-chip-ok {
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.35);
+}
+.tool-chip-fail {
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.55);
+}
+
+.agent-pill-glow {
+  transition: box-shadow 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+
+.mesh-dim {
+  opacity: 0.22;
+  filter: saturate(0.35);
+}
+
+.mesh-highlight {
+  opacity: 1;
+  filter: saturate(1.2);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.live-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}

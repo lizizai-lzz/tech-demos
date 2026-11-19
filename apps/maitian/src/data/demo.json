@@ -1,0 +1,1837 @@
+{
+  "generatedAt": "2026-11-19T08:00:00+08:00",
+  "latestEpisodeId": "ep-708",
+  "lastPublishDate": "2026-11-18",
+  "platforms": [
+    "bilibili",
+    "douyin",
+    "xiaohongshu",
+    "wechat",
+    "youtube",
+    "x",
+    "course"
+  ],
+  "platformMeta": {
+    "bilibili": {
+      "name": "哔哩哔哩",
+      "short": "B站",
+      "color": "#FB7299"
+    },
+    "douyin": {
+      "name": "抖音",
+      "short": "抖音",
+      "color": "#1C1C1E"
+    },
+    "xiaohongshu": {
+      "name": "小红书",
+      "short": "小红书",
+      "color": "#FF2442"
+    },
+    "wechat": {
+      "name": "视频号",
+      "short": "视频号",
+      "color": "#07C160"
+    },
+    "youtube": {
+      "name": "YouTube",
+      "short": "YT",
+      "color": "#FF0000"
+    },
+    "x": {
+      "name": "X",
+      "short": "X",
+      "color": "#14171A"
+    },
+    "course": {
+      "name": "课程站",
+      "short": "课程",
+      "color": "#7C3AED"
+    }
+  },
+  "followers": {
+    "bilibili": {
+      "followers": 128400,
+      "dailyNet": [
+        8,
+        10,
+        12,
+        14,
+        16,
+        12,
+        13,
+        13,
+        13,
+        13,
+        7,
+        7,
+        7,
+        7,
+        8,
+        4,
+        6,
+        8,
+        10,
+        12,
+        9,
+        12,
+        13,
+        15,
+        16,
+        12,
+        12,
+        12,
+        11,
+        11
+      ]
+    },
+    "douyin": {
+      "followers": 89200,
+      "dailyNet": [
+        10,
+        13,
+        15,
+        17,
+        19,
+        15,
+        16,
+        16,
+        15,
+        15,
+        9,
+        8,
+        8,
+        8,
+        9,
+        5,
+        7,
+        9,
+        12,
+        14,
+        12,
+        14,
+        16,
+        18,
+        19,
+        14,
+        14,
+        14,
+        13,
+        13
+      ]
+    },
+    "xiaohongshu": {
+      "followers": 67300,
+      "dailyNet": [
+        12,
+        15,
+        18,
+        20,
+        22,
+        18,
+        18,
+        18,
+        18,
+        17,
+        11,
+        10,
+        9,
+        9,
+        10,
+        6,
+        8,
+        11,
+        13,
+        16,
+        14,
+        17,
+        19,
+        21,
+        22,
+        17,
+        17,
+        16,
+        16,
+        15
+      ]
+    },
+    "wechat": {
+      "followers": 54200,
+      "dailyNet": [
+        14,
+        17,
+        20,
+        23,
+        25,
+        21,
+        21,
+        21,
+        20,
+        19,
+        13,
+        11,
+        11,
+        10,
+        11,
+        7,
+        9,
+        12,
+        15,
+        18,
+        17,
+        20,
+        22,
+        24,
+        25,
+        20,
+        20,
+        19,
+        18,
+        16
+      ]
+    },
+    "youtube": {
+      "followers": 31800,
+      "dailyNet": [
+        16,
+        20,
+        23,
+        26,
+        28,
+        24,
+        24,
+        24,
+        23,
+        21,
+        14,
+        13,
+        12,
+        12,
+        12,
+        8,
+        10,
+        13,
+        17,
+        20,
+        19,
+        22,
+        25,
+        27,
+        28,
+        23,
+        23,
+        21,
+        20,
+        18
+      ]
+    },
+    "x": {
+      "followers": 24100,
+      "dailyNet": [
+        18,
+        22,
+        26,
+        29,
+        31,
+        27,
+        27,
+        27,
+        25,
+        23,
+        16,
+        14,
+        13,
+        13,
+        13,
+        9,
+        12,
+        15,
+        18,
+        22,
+        21,
+        25,
+        28,
+        30,
+        31,
+        26,
+        25,
+        24,
+        22,
+        20
+      ]
+    },
+    "course": {
+      "followers": 15600,
+      "dailyNet": [
+        20,
+        24,
+        28,
+        31,
+        34,
+        30,
+        30,
+        29,
+        28,
+        25,
+        18,
+        16,
+        14,
+        14,
+        14,
+        10,
+        13,
+        16,
+        20,
+        25,
+        24,
+        28,
+        31,
+        33,
+        34,
+        29,
+        28,
+        26,
+        24,
+        22
+      ]
+    }
+  },
+  "episodes": [
+    {
+      "id": "ep-708",
+      "title": "空跑演示：七站一屏怎么排期",
+      "scheduledAt": "2026-11-18T19:30:00+08:00",
+      "status": "published",
+      "coverSeed": 42,
+      "platforms": {
+        "bilibili": {
+          "plays": 42000,
+          "likes": 3360,
+          "comments": 504,
+          "shares": 252,
+          "publishState": "live"
+        },
+        "douyin": {
+          "plays": 43200,
+          "likes": 3400,
+          "comments": 509,
+          "shares": 254,
+          "publishState": "live"
+        },
+        "xiaohongshu": {
+          "plays": 44400,
+          "likes": 3440,
+          "comments": 514,
+          "shares": 256,
+          "publishState": "live"
+        },
+        "wechat": {
+          "plays": 45600,
+          "likes": 3480,
+          "comments": 519,
+          "shares": 258,
+          "publishState": "live"
+        },
+        "youtube": {
+          "plays": 54800,
+          "likes": 3520,
+          "comments": 524,
+          "shares": 260,
+          "publishState": "live"
+        },
+        "x": {
+          "plays": 48000,
+          "likes": 3560,
+          "comments": 529,
+          "shares": 262,
+          "publishState": "live"
+        },
+        "course": {
+          "plays": 49200,
+          "likes": 3600,
+          "comments": 534,
+          "shares": 264,
+          "publishState": "live"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 14700,
+          "day3": 26040,
+          "day7": 39900
+        },
+        "douyin": {
+          "day1": 14780,
+          "day3": 26190,
+          "day7": 40180
+        },
+        "xiaohongshu": {
+          "day1": 14860,
+          "day3": 26340,
+          "day7": 40460
+        },
+        "wechat": {
+          "day1": 14940,
+          "day3": 26490,
+          "day7": 40740
+        },
+        "youtube": {
+          "day1": 15020,
+          "day3": 26640,
+          "day7": 41020
+        },
+        "x": {
+          "day1": 15100,
+          "day3": 26790,
+          "day7": 41300
+        },
+        "course": {
+          "day1": 15180,
+          "day3": 26940,
+          "day7": 41580
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          8400,
+          14700,
+          21000,
+          27300,
+          33600,
+          39900,
+          46200
+        ],
+        "douyin": [
+          8450,
+          14750,
+          21050,
+          27350,
+          33650,
+          39950,
+          46250
+        ],
+        "xiaohongshu": [
+          8500,
+          14800,
+          21100,
+          27400,
+          33700,
+          40000,
+          46300
+        ],
+        "wechat": [
+          8550,
+          14850,
+          21150,
+          27450,
+          33750,
+          40050,
+          46350
+        ],
+        "youtube": [
+          8600,
+          14900,
+          21200,
+          27500,
+          33800,
+          40100,
+          46400
+        ],
+        "x": [
+          8650,
+          14950,
+          21250,
+          27550,
+          33850,
+          40150,
+          46450
+        ],
+        "course": [
+          8700,
+          15000,
+          21300,
+          27600,
+          33900,
+          40200,
+          46500
+        ]
+      }
+    },
+    {
+      "id": "ep-707",
+      "title": "同龄复盘：第3天播放倍率",
+      "scheduledAt": "2026-11-15T20:00:00+08:00",
+      "status": "published",
+      "coverSeed": 17,
+      "platforms": {
+        "bilibili": {
+          "plays": 36500,
+          "likes": 2920,
+          "comments": 438,
+          "shares": 219,
+          "publishState": "live"
+        },
+        "douyin": {
+          "plays": 37700,
+          "likes": 2960,
+          "comments": 443,
+          "shares": 221,
+          "publishState": "live"
+        },
+        "xiaohongshu": {
+          "plays": 38900,
+          "likes": 3000,
+          "comments": 448,
+          "shares": 223,
+          "publishState": "live"
+        },
+        "wechat": {
+          "plays": 40100,
+          "likes": 3040,
+          "comments": 453,
+          "shares": 225,
+          "publishState": "live"
+        },
+        "youtube": {
+          "plays": 49300,
+          "likes": 3080,
+          "comments": 458,
+          "shares": 227,
+          "publishState": "live"
+        },
+        "x": {
+          "plays": 42500,
+          "likes": 3120,
+          "comments": 463,
+          "shares": 229,
+          "publishState": "live"
+        },
+        "course": {
+          "plays": 43700,
+          "likes": 3160,
+          "comments": 468,
+          "shares": 231,
+          "publishState": "live"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 12775,
+          "day3": 22630,
+          "day7": 34675
+        },
+        "douyin": {
+          "day1": 12855,
+          "day3": 22780,
+          "day7": 34955
+        },
+        "xiaohongshu": {
+          "day1": 12935,
+          "day3": 22930,
+          "day7": 35235
+        },
+        "wechat": {
+          "day1": 13015,
+          "day3": 23080,
+          "day7": 35515
+        },
+        "youtube": {
+          "day1": 13095,
+          "day3": 23230,
+          "day7": 35795
+        },
+        "x": {
+          "day1": 13175,
+          "day3": 23380,
+          "day7": 36075
+        },
+        "course": {
+          "day1": 13255,
+          "day3": 23530,
+          "day7": 36355
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          7300,
+          12775,
+          18250,
+          23725,
+          29200,
+          34675,
+          40150
+        ],
+        "douyin": [
+          7350,
+          12825,
+          18300,
+          23775,
+          29250,
+          34725,
+          40200
+        ],
+        "xiaohongshu": [
+          7400,
+          12875,
+          18350,
+          23825,
+          29300,
+          34775,
+          40250
+        ],
+        "wechat": [
+          7450,
+          12925,
+          18400,
+          23875,
+          29350,
+          34825,
+          40300
+        ],
+        "youtube": [
+          7500,
+          12975,
+          18450,
+          23925,
+          29400,
+          34875,
+          40350
+        ],
+        "x": [
+          7550,
+          13025,
+          18500,
+          23975,
+          29450,
+          34925,
+          40400
+        ],
+        "course": [
+          7600,
+          13075,
+          18550,
+          24025,
+          29500,
+          34975,
+          40450
+        ]
+      }
+    },
+    {
+      "id": "ep-706",
+      "title": "转化漏斗：从播放到会员",
+      "scheduledAt": "2026-11-12T18:45:00+08:00",
+      "status": "published",
+      "coverSeed": 9,
+      "platforms": {
+        "bilibili": {
+          "plays": 30100,
+          "likes": 2408,
+          "comments": 361,
+          "shares": 181,
+          "publishState": "live"
+        },
+        "douyin": {
+          "plays": 31300,
+          "likes": 2448,
+          "comments": 366,
+          "shares": 183,
+          "publishState": "live"
+        },
+        "xiaohongshu": {
+          "plays": 32500,
+          "likes": 2488,
+          "comments": 371,
+          "shares": 185,
+          "publishState": "live"
+        },
+        "wechat": {
+          "plays": 33700,
+          "likes": 2528,
+          "comments": 376,
+          "shares": 187,
+          "publishState": "live"
+        },
+        "youtube": {
+          "plays": 42900,
+          "likes": 2568,
+          "comments": 381,
+          "shares": 189,
+          "publishState": "live"
+        },
+        "x": {
+          "plays": 36100,
+          "likes": 2608,
+          "comments": 386,
+          "shares": 191,
+          "publishState": "live"
+        },
+        "course": {
+          "plays": 37300,
+          "likes": 2648,
+          "comments": 391,
+          "shares": 193,
+          "publishState": "live"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 10535,
+          "day3": 18662,
+          "day7": 28595
+        },
+        "douyin": {
+          "day1": 10615,
+          "day3": 18812,
+          "day7": 28875
+        },
+        "xiaohongshu": {
+          "day1": 10695,
+          "day3": 18962,
+          "day7": 29155
+        },
+        "wechat": {
+          "day1": 10775,
+          "day3": 19112,
+          "day7": 29435
+        },
+        "youtube": {
+          "day1": 10855,
+          "day3": 19262,
+          "day7": 29715
+        },
+        "x": {
+          "day1": 10935,
+          "day3": 19412,
+          "day7": 29995
+        },
+        "course": {
+          "day1": 11015,
+          "day3": 19562,
+          "day7": 30275
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          6020,
+          10535,
+          15050,
+          19565,
+          24080,
+          28595,
+          33110
+        ],
+        "douyin": [
+          6070,
+          10585,
+          15100,
+          19615,
+          24130,
+          28645,
+          33160
+        ],
+        "xiaohongshu": [
+          6120,
+          10635,
+          15150,
+          19665,
+          24180,
+          28695,
+          33210
+        ],
+        "wechat": [
+          6170,
+          10685,
+          15200,
+          19715,
+          24230,
+          28745,
+          33260
+        ],
+        "youtube": [
+          6220,
+          10735,
+          15250,
+          19765,
+          24280,
+          28795,
+          33310
+        ],
+        "x": [
+          6270,
+          10785,
+          15300,
+          19815,
+          24330,
+          28845,
+          33360
+        ],
+        "course": [
+          6320,
+          10835,
+          15350,
+          19865,
+          24380,
+          28895,
+          33410
+        ]
+      }
+    },
+    {
+      "id": "ep-705",
+      "title": "小红书封面 A/B 虚构复盘",
+      "scheduledAt": "2026-11-08T21:00:00+08:00",
+      "status": "published",
+      "coverSeed": 31,
+      "platforms": {
+        "bilibili": {
+          "plays": 27800,
+          "likes": 2224,
+          "comments": 334,
+          "shares": 167,
+          "publishState": "live"
+        },
+        "douyin": {
+          "plays": 29000,
+          "likes": 2264,
+          "comments": 339,
+          "shares": 169,
+          "publishState": "live"
+        },
+        "xiaohongshu": {
+          "plays": 30200,
+          "likes": 2304,
+          "comments": 344,
+          "shares": 171,
+          "publishState": "live"
+        },
+        "wechat": {
+          "plays": 31400,
+          "likes": 2344,
+          "comments": 349,
+          "shares": 173,
+          "publishState": "live"
+        },
+        "youtube": {
+          "plays": 40600,
+          "likes": 2384,
+          "comments": 354,
+          "shares": 175,
+          "publishState": "live"
+        },
+        "x": {
+          "plays": 33800,
+          "likes": 2424,
+          "comments": 359,
+          "shares": 177,
+          "publishState": "live"
+        },
+        "course": {
+          "plays": 35000,
+          "likes": 2464,
+          "comments": 364,
+          "shares": 179,
+          "publishState": "live"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 9730,
+          "day3": 17236,
+          "day7": 26410
+        },
+        "douyin": {
+          "day1": 9810,
+          "day3": 17386,
+          "day7": 26690
+        },
+        "xiaohongshu": {
+          "day1": 9890,
+          "day3": 17536,
+          "day7": 26970
+        },
+        "wechat": {
+          "day1": 9970,
+          "day3": 17686,
+          "day7": 27250
+        },
+        "youtube": {
+          "day1": 10050,
+          "day3": 17836,
+          "day7": 27530
+        },
+        "x": {
+          "day1": 10130,
+          "day3": 17986,
+          "day7": 27810
+        },
+        "course": {
+          "day1": 10210,
+          "day3": 18136,
+          "day7": 28090
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          5560,
+          9730,
+          13900,
+          18070,
+          22240,
+          26410,
+          30580
+        ],
+        "douyin": [
+          5610,
+          9780,
+          13950,
+          18120,
+          22290,
+          26460,
+          30630
+        ],
+        "xiaohongshu": [
+          5660,
+          9830,
+          14000,
+          18170,
+          22340,
+          26510,
+          30680
+        ],
+        "wechat": [
+          5710,
+          9880,
+          14050,
+          18220,
+          22390,
+          26560,
+          30730
+        ],
+        "youtube": [
+          5760,
+          9930,
+          14100,
+          18270,
+          22440,
+          26610,
+          30780
+        ],
+        "x": [
+          5810,
+          9980,
+          14150,
+          18320,
+          22490,
+          26660,
+          30830
+        ],
+        "course": [
+          5860,
+          10030,
+          14200,
+          18370,
+          22540,
+          26710,
+          30880
+        ]
+      }
+    },
+    {
+      "id": "ep-704",
+      "title": "视频号晚高峰试播记录",
+      "scheduledAt": "2026-11-04T12:15:00+08:00",
+      "status": "published",
+      "coverSeed": 5,
+      "platforms": {
+        "bilibili": {
+          "plays": 22400,
+          "likes": 1792,
+          "comments": 269,
+          "shares": 134,
+          "publishState": "live"
+        },
+        "douyin": {
+          "plays": 23600,
+          "likes": 1832,
+          "comments": 274,
+          "shares": 136,
+          "publishState": "live"
+        },
+        "xiaohongshu": {
+          "plays": 24800,
+          "likes": 1872,
+          "comments": 279,
+          "shares": 138,
+          "publishState": "live"
+        },
+        "wechat": {
+          "plays": 26000,
+          "likes": 1912,
+          "comments": 284,
+          "shares": 140,
+          "publishState": "live"
+        },
+        "youtube": {
+          "plays": 35200,
+          "likes": 1952,
+          "comments": 289,
+          "shares": 142,
+          "publishState": "live"
+        },
+        "x": {
+          "plays": 28400,
+          "likes": 1992,
+          "comments": 294,
+          "shares": 144,
+          "publishState": "live"
+        },
+        "course": {
+          "plays": 29600,
+          "likes": 2032,
+          "comments": 299,
+          "shares": 146,
+          "publishState": "live"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 7840,
+          "day3": 13888,
+          "day7": 21280
+        },
+        "douyin": {
+          "day1": 7920,
+          "day3": 14038,
+          "day7": 21560
+        },
+        "xiaohongshu": {
+          "day1": 8000,
+          "day3": 14188,
+          "day7": 21840
+        },
+        "wechat": {
+          "day1": 8080,
+          "day3": 14338,
+          "day7": 22120
+        },
+        "youtube": {
+          "day1": 8160,
+          "day3": 14488,
+          "day7": 22400
+        },
+        "x": {
+          "day1": 8240,
+          "day3": 14638,
+          "day7": 22680
+        },
+        "course": {
+          "day1": 8320,
+          "day3": 14788,
+          "day7": 22960
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          4480,
+          7840,
+          11200,
+          14560,
+          17920,
+          21280,
+          24640
+        ],
+        "douyin": [
+          4530,
+          7890,
+          11250,
+          14610,
+          17970,
+          21330,
+          24690
+        ],
+        "xiaohongshu": [
+          4580,
+          7940,
+          11300,
+          14660,
+          18020,
+          21380,
+          24740
+        ],
+        "wechat": [
+          4630,
+          7990,
+          11350,
+          14710,
+          18070,
+          21430,
+          24790
+        ],
+        "youtube": [
+          4680,
+          8040,
+          11400,
+          14760,
+          18120,
+          21480,
+          24840
+        ],
+        "x": [
+          4730,
+          8090,
+          11450,
+          14810,
+          18170,
+          21530,
+          24890
+        ],
+        "course": [
+          4780,
+          8140,
+          11500,
+          14860,
+          18220,
+          21580,
+          24940
+        ]
+      }
+    },
+    {
+      "id": "ep-703",
+      "title": "YouTube 英文字幕版占位",
+      "scheduledAt": "2026-11-22T10:00:00+08:00",
+      "status": "scheduled",
+      "coverSeed": 66,
+      "platforms": {
+        "bilibili": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "douyin": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "xiaohongshu": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "wechat": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "youtube": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "x": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        },
+        "course": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "scheduled"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "douyin": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "xiaohongshu": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "wechat": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "youtube": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "x": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "course": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "douyin": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "xiaohongshu": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "wechat": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "youtube": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "course": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ep-702",
+      "title": "等你点发布：多平台定时对齐",
+      "scheduledAt": "2026-11-20T19:00:00+08:00",
+      "status": "ready",
+      "coverSeed": 88,
+      "platforms": {
+        "bilibili": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "douyin": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "xiaohongshu": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "wechat": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "youtube": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "x": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        },
+        "course": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "draft"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "douyin": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "xiaohongshu": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "wechat": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "youtube": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "x": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "course": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "douyin": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "xiaohongshu": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "wechat": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "youtube": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "course": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ep-701",
+      "title": "计划中：年末合集草稿",
+      "scheduledAt": "2026-11-28T20:30:00+08:00",
+      "status": "planned",
+      "coverSeed": 12,
+      "platforms": {
+        "bilibili": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "douyin": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "xiaohongshu": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "wechat": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "youtube": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "x": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        },
+        "course": {
+          "plays": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "publishState": "planned"
+        }
+      },
+      "agePlays": {
+        "bilibili": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "douyin": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "xiaohongshu": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "wechat": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "youtube": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "x": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        },
+        "course": {
+          "day1": 0,
+          "day3": 0,
+          "day7": 0
+        }
+      },
+      "playTrend": {
+        "bilibili": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "douyin": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "xiaohongshu": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "wechat": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "youtube": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "course": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "conversion": {
+    "channels": [
+      {
+        "platform": "bilibili",
+        "signups": 420,
+        "members": 88,
+        "orders": 24,
+        "revenue": 4776
+      },
+      {
+        "platform": "douyin",
+        "signups": 385,
+        "members": 80,
+        "orders": 22,
+        "revenue": 4378
+      },
+      {
+        "platform": "xiaohongshu",
+        "signups": 350,
+        "members": 72,
+        "orders": 20,
+        "revenue": 3980
+      },
+      {
+        "platform": "wechat",
+        "signups": 315,
+        "members": 64,
+        "orders": 18,
+        "revenue": 3582
+      },
+      {
+        "platform": "youtube",
+        "signups": 280,
+        "members": 56,
+        "orders": 16,
+        "revenue": 3184
+      },
+      {
+        "platform": "x",
+        "signups": 245,
+        "members": 48,
+        "orders": 14,
+        "revenue": 2786
+      },
+      {
+        "platform": "course",
+        "signups": 210,
+        "members": 40,
+        "orders": 12,
+        "revenue": 2388
+      }
+    ],
+    "byEpisode": {
+      "ep-708": {
+        "plays": 327200,
+        "signups": 186,
+        "members": 42,
+        "revenue": 8360
+      },
+      "ep-707": {
+        "plays": 288700,
+        "signups": 186,
+        "members": 42,
+        "revenue": 8360
+      },
+      "ep-706": {
+        "plays": 243900,
+        "signups": 186,
+        "members": 42,
+        "revenue": 8360
+      },
+      "ep-705": {
+        "plays": 227800,
+        "signups": 186,
+        "members": 42,
+        "revenue": 8360
+      },
+      "ep-704": {
+        "plays": 190000,
+        "signups": 186,
+        "members": 42,
+        "revenue": 8360
+      }
+    }
+  },
+  "archive": [
+    {
+      "episodeId": "ep-708",
+      "synopsis": "【演示文案】空跑演示：七站一屏怎么排期 — 本地假数据，无真实链接。",
+      "links": [
+        {
+          "platform": "bilibili",
+          "label": "B站 · 占位页"
+        },
+        {
+          "platform": "douyin",
+          "label": "抖音 · 占位页"
+        },
+        {
+          "platform": "xiaohongshu",
+          "label": "小红书 · 占位页"
+        },
+        {
+          "platform": "wechat",
+          "label": "视频号 · 占位页"
+        },
+        {
+          "platform": "youtube",
+          "label": "YT · 占位页"
+        },
+        {
+          "platform": "x",
+          "label": "X · 占位页"
+        },
+        {
+          "platform": "course",
+          "label": "课程 · 占位页"
+        }
+      ]
+    },
+    {
+      "episodeId": "ep-707",
+      "synopsis": "【演示文案】同龄复盘：第3天播放倍率 — 本地假数据，无真实链接。",
+      "links": [
+        {
+          "platform": "bilibili",
+          "label": "B站 · 占位页"
+        },
+        {
+          "platform": "douyin",
+          "label": "抖音 · 占位页"
+        },
+        {
+          "platform": "xiaohongshu",
+          "label": "小红书 · 占位页"
+        },
+        {
+          "platform": "wechat",
+          "label": "视频号 · 占位页"
+        },
+        {
+          "platform": "youtube",
+          "label": "YT · 占位页"
+        },
+        {
+          "platform": "x",
+          "label": "X · 占位页"
+        },
+        {
+          "platform": "course",
+          "label": "课程 · 占位页"
+        }
+      ]
+    },
+    {
+      "episodeId": "ep-706",
+      "synopsis": "【演示文案】转化漏斗：从播放到会员 — 本地假数据，无真实链接。",
+      "links": [
+        {
+          "platform": "bilibili",
+          "label": "B站 · 占位页"
+        },
+        {
+          "platform": "douyin",
+          "label": "抖音 · 占位页"
+        },
+        {
+          "platform": "xiaohongshu",
+          "label": "小红书 · 占位页"
+        },
+        {
+          "platform": "wechat",
+          "label": "视频号 · 占位页"
+        },
+        {
+          "platform": "youtube",
+          "label": "YT · 占位页"
+        },
+        {
+          "platform": "x",
+          "label": "X · 占位页"
+        },
+        {
+          "platform": "course",
+          "label": "课程 · 占位页"
+        }
+      ]
+    },
+    {
+      "episodeId": "ep-705",
+      "synopsis": "【演示文案】小红书封面 A/B 虚构复盘 — 本地假数据，无真实链接。",
+      "links": [
+        {
+          "platform": "bilibili",
+          "label": "B站 · 占位页"
+        },
+        {
+          "platform": "douyin",
+          "label": "抖音 · 占位页"
+        },
+        {
+          "platform": "xiaohongshu",
+          "label": "小红书 · 占位页"
+        },
+        {
+          "platform": "wechat",
+          "label": "视频号 · 占位页"
+        },
+        {
+          "platform": "youtube",
+          "label": "YT · 占位页"
+        },
+        {
+          "platform": "x",
+          "label": "X · 占位页"
+        },
+        {
+          "platform": "course",
+          "label": "课程 · 占位页"
+        }
+      ]
+    },
+    {
+      "episodeId": "ep-704",
+      "synopsis": "【演示文案】视频号晚高峰试播记录 — 本地假数据，无真实链接。",
+      "links": [
+        {
+          "platform": "bilibili",
+          "label": "B站 · 占位页"
+        },
+        {
+          "platform": "douyin",
+          "label": "抖音 · 占位页"
+        },
+        {
+          "platform": "xiaohongshu",
+          "label": "小红书 · 占位页"
+        },
+        {
+          "platform": "wechat",
+          "label": "视频号 · 占位页"
+        },
+        {
+          "platform": "youtube",
+          "label": "YT · 占位页"
+        },
+        {
+          "platform": "x",
+          "label": "X · 占位页"
+        },
+        {
+          "platform": "course",
+          "label": "课程 · 占位页"
+        }
+      ]
+    }
+  ]
+}
